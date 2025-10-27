@@ -1,0 +1,49 @@
+/* Reset / Base styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  background-color: #fafafa;
+  color: #333;
+  line-height: 1.6;
+}
+
+.container {
+  max-width: 1200px;
+  margin: auto;
+  padding: 0px;
+}
+
+.hero {
+  text-align: center;
+ 
+}
+
+.hero h1 {
+  font-size: 48px;
+  margin-bottom: 10px;
+}
+
+.hero p {
+  font-size: 18px;
+  color: #555;
+}
+
+.app {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh; /* full height */
+}
+
+.app > *:nth-last-child(1) {  /* targets Footer */
+  margin-top: auto; 
+}
