@@ -5,6 +5,7 @@ import "swiper/css/pagination";
 import "swiper/css/navigation";
 import "./HeroCarousel.css";
 
+//test comment
 import img1 from "../assets/ILJ-Complete-logo.png";
 import img2 from "../assets/Img2.jpeg";
 import img3 from "../assets/Img3.jpeg";
