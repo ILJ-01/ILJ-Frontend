@@ -8,7 +8,7 @@ import "./HeroCarousel.css";
 import img1 from "../assets/ILJ-Complete-logo.png";
 import img2 from "../assets/Img2.jpeg";
 import img3 from "../assets/Img3.jpeg";
-import video1 from "../assets/vid1.mp4";
+import video1 from "../assets/ILJ-Complete-logo.png";
 import img4 from "../assets/Img4.jpeg";
 
 export default function HeroCarousel() {
