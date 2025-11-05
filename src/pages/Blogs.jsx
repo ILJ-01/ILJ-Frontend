@@ -10,7 +10,7 @@ const BlogPage = () => {
   useEffect(() => {
     const fetchBlogs = async () => {
       try {
-        const response = await fetch('http://localhost:5000/api/articles');  // Fetch from backend API
+        const response = await fetch('https://ilj-backend.vercel.app/api/articles');  // Fetch from backend API
         const data = await response.json();  // Convert response to JSON
         setBlogs(data);  // Store the fetched articles in state
       } catch (error) {
