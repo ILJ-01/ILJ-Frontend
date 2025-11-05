@@ -8,14 +8,14 @@ import "./HeroCarousel.css";
 import img1 from "../assets/ILJ-Complete-logo.png";
 import img2 from "../assets/Img2.jpeg";
 import img3 from "../assets/Img3.jpeg";
-import video1 from "../assets/ILJ-Complete-logo.png";
+// import video1 from "../assets/ILJ-Complete-logo.png";
 import img4 from "../assets/Img4.jpeg";
 
 export default function HeroCarousel() {
   const slides = [
     { type: "image", src: img1, caption: "Community Meetups" },
     { type: "image", src: img2, caption: "Workshops & Events" },
-    { type: "video", src: video1, caption: "Highlights" },
+    // { type: "video", src: video1, caption: "Highlights" },
     { type: "image", src: img3, caption: "Creative Projects" },
     { type: "image", src: img4, caption: "Memorable Moments" },
   ];
