@@ -2,8 +2,6 @@
 @import "tailwindcss";
 
 * {
-  margin: 0;
-  padding: 0;
   box-sizing: border-box;
 }
 
@@ -22,12 +20,12 @@ body {
 .container {
   max-width: 1200px;
   margin: auto;
-  padding: 0px;
+  padding: 0;
 }
 
 .hero {
   text-align: center;
- 
+
 }
 
 .hero h1 {
@@ -47,5 +45,5 @@ body {
 }
 
 .app > *:nth-last-child(1) {  /* targets Footer */
-  margin-top: auto; 
+  margin-top: auto;
 }
