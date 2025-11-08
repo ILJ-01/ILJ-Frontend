@@ -8,7 +8,6 @@ export default function Home() {
     <div className="home-container">
       <img src={img1} alt="" />
       {/* <HeroCarousel /> */}
-      <MissionVision />
       <ProjectsPage/>
     </div>
   );
