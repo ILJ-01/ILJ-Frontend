@@ -1,4 +1,3 @@
-import HeroCarousel from "../components/HeroCarousel";
 import ProjectsPage from "../components/ProjectsPage";
 import img1 from "../assets/MainBanner.jpeg";
 
