@@ -4,7 +4,7 @@ import "./Blog.css";
 const BlogList = ({ blogs, onSelectBlog }) => {
   return (
     <div className="blog-list">
-        <h1 className="blogPage-header">Articles</h1>
+        <h1 className="blogPage-header" style={{ color: "#ae2b2b" }}>Articles</h1>
       {blogs.map((blog) => (
         <div 
           key={blog.id} 

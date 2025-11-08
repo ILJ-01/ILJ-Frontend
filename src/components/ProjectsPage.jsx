@@ -7,10 +7,10 @@ const ProjectsPage = () => {
   const projects = [
     {
       id: 1,
-      title: "Self-Defense Workshop",
+      title: "Veer Vanshaj",
       status: "Completed",
       description:
-        "A safety and empowerment workshop for Jain girls and women, organized by I ❤️ Jinshasan.",
+        "The Veer Vanshaj - Self Defence Workshop empowers individuals, especially women, with the skills and confidence to protect themselves in any situation. The initiative offers practical self-defence training, focusing on building physical strength, awareness, and mental resilience. Launched with the aim of ensuring safety and independence, the workshops have already gained momentum with multiple successful sessions. Our future vision includes expanding this impactful program across Mumbai, reaching more individuals in need of self-defence training.",
       date: "June 2025",
       image: "/images/selfdefense.jpg",
     },
@@ -19,7 +19,7 @@ const ProjectsPage = () => {
       title: "The Sanskar Library",
       status: "Ongoing",
       description:
-        "A community event encouraging donation and exchange of Jain religious books.",
+        "The Sanskaar Library is an initiative designed to nurture reading habits and instill moral values in children through curated books. By creating a rotating library system that promotes morals, ethics, principles of Jainism and personal growth, we aim to build a foundation of knowledge and integrity among the younger generation. Currently, the library operates in several pathshalas (religious schools) in Dombivli, with over 200 books available for circulation. We are committed to expanding the library across Mumbai, providing more children with access to inspirational and educational resources.",
       date: "April 2025",
       image: "/images/bookdrive.jpg",
     },
@@ -28,7 +28,7 @@ const ProjectsPage = () => {
       title: "Jainism - A Scientific Lens",
       status: "Completed",
       description:
-        "A 6-week Sunday series focused on self-awareness and spiritual connection.",
+        "Jainism: A Scientific Lens is an innovative exhibition designed to explore the intersection of ancient Jain principles and modern science. The exhibition features interactive models, charts, and experiments that demonstrate the compatibility of Jain teachings with scientific concepts like E=MC², Theory of Evolution, Sustainability, and Law of Attraction. After the successful launch of the first exhibition in Dombivli, we are now expanding to other cities to further engage the public and promote awareness of Jainism’s relevance in the modern world.",
       date: "July–August 2025",
       image: "/images/shibir.jpg",
     },
@@ -43,22 +43,14 @@ const ProjectsPage = () => {
     },
     {
       id: 5,
-      title: "Youth Awareness Drive",
+      title: "Promotion of Jainism on Social Media",
       status: "Ongoing",
       description:
-        "An initiative to spread spiritual awareness and compassion among youth.",
+        "We are committed to spreading the timeless wisdom of Jainism through modern channels. Our Promotion of Jainism on Social Media, primarily through the Instagram page @ilovejinshasan, seeks to inspire a global audience by highlighting the profound values and principles of Jain philosophy. Through engaging content such as the Veer Gatha Series, Festive Series, Veer Vigyan Series, we aim to promote awareness and foster a deeper connection to Jainism. With plans for future series covering topics like Anekantvad, our social media presence is steadily growing, empowering individuals to embrace teachings if Jainism in everyday life.",
       date: "September 2025",
       image: "../assets/MainBanner.jpeg",
     },
-    {
-      id: 6,
-      title: "Eco Living Camp",
-      status: "Completed",
-      description:
-        "A weekend camp promoting mindful and eco-friendly living through Jain principles.",
-      date: "October 2025",
-      image: "../assets/MainBanner.jpeg",
-    },
+    
   ];
 
   // Function to scroll smoothly left/right

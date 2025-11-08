@@ -3,7 +3,8 @@ import "./Footer.css";
 export default function Footer() {
   return (
     <footer className="footer">
-      <p>© {new Date().getFullYear()} ILJ. All rights reserved.</p>
+      {/* <p>© {new Date().getFullYear()} ILJ. All rights reserved.</p> */}
+      <p>I Love Jinshasan</p>
     </footer>
   );
 }
