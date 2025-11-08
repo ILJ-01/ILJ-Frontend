@@ -1,0 +1,52 @@
+
+
+/* === Instagram Section === */
+.instagram-section {
+  width: 100%;
+  max-width: 1300px;
+  margin: 3rem auto;
+  padding: 2rem 1rem;
+  text-align: center;
+}
+
+.insta-title {
+  font-size: 1.8rem;
+  font-weight: 700;
+  margin-bottom: 2rem;
+  color: #222;
+}
+
+.reels-container {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.5rem;
+  justify-content: center;
+}
+
+/* Instagram embeds */
+.instagram-media {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  width: 100% !important;
+  min-width: 0 !important;
+}
+
+/* Responsive Layout */
+@media (max-width: 1024px) {
+  .reels-container {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .reels-container {
+    grid-template-columns: 1fr;
+  }
+  .insta-title {
+    font-size: 1.5rem;
+  }
+}
+
+

@@ -1,15 +1,30 @@
+
 import HeroCarousel from "../components/HeroCarousel";
 import MissionVision from "../components/MissionVision";
-import ProjectsPage from "../components/ProjectsPage";
-import img1 from "../assets/MainBanner.jpeg";
+import Cardview from "../components/Cardview";
+import Instagram from "../components/Instagram";
+import "../pages/Home.css";
+import { useEffect } from "react";
+
 
 export default function Home() {
+
+useEffect(() => {
+    // Load Instagram embed script
+    const script = document.createElement("script");
+    script.src = "https://www.instagram.com/embed.js";
+    script.async = true;
+    document.body.appendChild(script);
+  }, []);
+
+
   return (
     <div className="home-container">
-      <img src={img1} alt="" />
-      {/* <HeroCarousel /> */}
+      <HeroCarousel />
+      {/* <Cardview /> */}
+      <Instagram />
+
       <MissionVision />
-      <ProjectsPage/>
     </div>
   );
 }

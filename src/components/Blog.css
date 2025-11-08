@@ -18,8 +18,6 @@ body {
 }
 
 .blogPage-header {
-  font-size: xx-large;
-  font-weight: bolder;
   display: flex;
   justify-content: center;
   padding: 2%;

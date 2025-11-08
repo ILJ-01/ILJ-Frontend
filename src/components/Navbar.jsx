@@ -11,7 +11,7 @@ function Navbar() {
       <nav className="navbar">
         <div className="logo">
           <Link to="/" onClick={() => setIsOpen(false)}>
-            <img src={logo} alt="I Love Jinshasan" className="logo-img" />
+            <img src={logo} alt="Logo" className="logo-img" />
           </Link>
         </div>
         <ul className="nav-links">
