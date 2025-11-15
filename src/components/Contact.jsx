@@ -105,8 +105,7 @@ export default function Contact() {
             Get in Touch
           </h2>
           <p className="text-gray-600 mb-6 text-sm leading-relaxed">
-            This form is for you to send us your queries or give suggestions
-            regarding Jainism-related books and articles.
+            This form is for you to send us your queries or give suggestions.
           </p>
 
           <form className="flex flex-col gap-4">

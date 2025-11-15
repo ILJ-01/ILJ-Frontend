@@ -6,7 +6,7 @@ function About() {
       {/* What is ILF Foundation */}
       <div className="w-full bg-[#ae2b2b]">
         <div className="mx-auto m-5">
-          <h1 className="text-white text-[48px] text-center">What is ILJ Foundation?</h1>
+          <h1 className="text-white text-[48px] text-center">What is I Love Jinshasan?</h1>
           <p className="text-white text-[22px] mx-5 text-center">
             A collective devoted to the timeless values of the Jinshasan.
             We empower individuals to convert devotion into

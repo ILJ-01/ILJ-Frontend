@@ -15,10 +15,10 @@ function Navbar() {
           </Link>
         </div>
         <ul className="nav-links">
-          <li><Link to="/" onClick={() => setIsOpen(false)}>Home</Link></li>
-          <li><Link to="/about" onClick={() => setIsOpen(false)}>About</Link></li>
-          <li><Link to="/blogs" onClick={() => setIsOpen(false)}>Blog</Link></li>
-          <li><Link to="/contact" onClick={() => setIsOpen(false)}>Contact</Link></li>
+          <li><Link to="/" onClick={() => setIsOpen(false)}>HOME</Link></li>
+          <li><Link to="/projects" onClick={() => setIsOpen(false)}>PROJECTS</Link></li>
+          <li><Link to="/blogs" onClick={() => setIsOpen(false)}>ARTICLES</Link></li>
+          <li><Link to="/aboutus" onClick={() => setIsOpen(false)}>ABOUT US</Link></li>
         </ul>
         <div
           className="hamburger"
@@ -32,10 +32,10 @@ function Navbar() {
       <div className={`side-panel ${isOpen ? "open" : ""}`}>
         <button className="close-btn" onClick={() => setIsOpen(false)}>✕</button>
         <ul>
-          <li><Link to="/" onClick={() => setIsOpen(false)}>Home</Link></li>
-          <li><Link to="/about" onClick={() => setIsOpen(false)}>About</Link></li>
-          <li><Link to="/blogs" onClick={() => setIsOpen(false)}>Blog</Link></li>
-          <li><Link to="/contact" onClick={() => setIsOpen(false)}>Contact</Link></li>
+          <li><Link to="/" onClick={() => setIsOpen(false)}>HOME</Link></li>
+          <li><Link to="/projects" onClick={() => setIsOpen(false)}>PROJECTS</Link></li>
+          <li><Link to="/blogs" onClick={() => setIsOpen(false)}>ARTICLES</Link></li>
+          <li><Link to="/aboutus" onClick={() => setIsOpen(false)}>ABOUT US</Link></li>
         </ul>
       </div>
 
