@@ -5,6 +5,7 @@ import Home from "./pages/Home";
 import Blogs from "./pages/Blogs";
 import AboutUs from "./pages/AboutUs";
 import Projects from "./pages/Projects";
+import Feedback from "./components/Feedback.jsx";
 import "./styles/global.css";
 
 function App() {
@@ -19,12 +20,12 @@ function App() {
             <Route path="/blog/*" element={<Blogs />} />
             <Route path="/aboutus" element={<AboutUs />} />
             <Route path="/projects" element={<Projects />} />
+            <Route path="/feedback" element={<Feedback />} />
           </Routes>
         </main>
         <Footer />
       </div>
     </Router>
-    
   );
 }
 
