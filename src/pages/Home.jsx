@@ -1,11 +1,11 @@
 import Projects from "../components/Projects";
 import Instagram from "../components/Instagram"
-import img1 from "../assets/MainBanner.jpeg";
+import ExhibitionBanner from "../assets/ExhibitionBanner.jpeg";
 
 export default function Home() {
   return (
     <div className="home-container">
-      <img src={img1} alt="I ❤️ Jinshasan" />
+      <img src={ExhibitionBanner} className='mx-auto' alt="I ❤️ Jinshasan" />
       {/* <HeroCarousel /> */}
       <Projects/>
       <Instagram/>
