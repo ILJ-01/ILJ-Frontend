@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import BlogList from "../components/BlogList";
 import BlogDetail from "../components/BlogDetail";
+import LoadingSpinner from "../components/LoadingSpinner.jsx";
 
 const BlogPage = () => {
   const [blogs, setBlogs] = useState([]);        // State for storing articles
@@ -28,13 +29,7 @@ const BlogPage = () => {
     // 👇 Show a loading spinner or text while fetching data
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-      <div
-        className="w-12 h-12 border-4 border-gray-200 border-t-[#ae2b2b] rounded-full animate-spin"
-        role="status"
-      ></div>
-    </div>
-
+      <LoadingSpinner />
     );
   }
 

@@ -6,6 +6,7 @@ import Blogs from "./pages/Blogs";
 import AboutUs from "./pages/AboutUs";
 import Projects from "./pages/Projects";
 import Feedback from "./components/Feedback.jsx";
+import Project from "./components/Project.jsx";
 import "./styles/global.css";
 
 function App() {
@@ -20,6 +21,7 @@ function App() {
             <Route path="/blog/*" element={<Blogs />} />
             <Route path="/aboutus" element={<AboutUs />} />
             <Route path="/projects" element={<Projects />} />
+            <Route path="/project/:id" element={<Project />} />
             <Route path="/feedback" element={<Feedback />} />
           </Routes>
         </main>
