@@ -1,5 +1,5 @@
 import React from "react";
-import projects from "../data/projects.json";
+import projects from "../data/projects-full.json";
 import {useNavigate} from "react-router";
 
 // =============================
@@ -34,7 +34,7 @@ const ProjectsPage = () => {
           return (
             <div
               key={project.id}
-              onClick={() => navigate(`/project/${project.id}`)}
+              onClick={() => navigate(`/project/${project.title}`)}
               className="bg-white rounded-2xl shadow-md hover:shadow-xl transition cursor-pointer"
             >
               <img
