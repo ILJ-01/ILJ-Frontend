@@ -1,7 +1,7 @@
 import React, {useEffect, useState} from 'react';
-import {useParams} from "react-router-dom";
+import {Link, useParams} from "react-router-dom";
 import {useNavigate} from "react-router";
-import projects from "../data/projects.json";
+import projects from "../data/projects-full.json";
 import LoadingSpinner from "./LoadingSpinner.jsx";
 
 const projectThumbs = import.meta.glob(
@@ -30,18 +30,18 @@ const getGalleryImages = (projectId) => {
 export default function Project() {
   const navigate = useNavigate();
 
-  const { id } = useParams();
+  const { title } = useParams();
   const [openProject, setOpenProject] = useState(null);
 
   useEffect(() => {
-    const idNum = Number.parseInt(id);
+    const project = projects.find((project) => project.title === title);
 
-    if (isNaN(idNum) || idNum < 0 || idNum >= projects.length) {
+    if (!project) {
       navigate('/projects');
       return;
     }
-    setOpenProject(projects[id]);
-  }, [id, navigate]);
+    setOpenProject(project);
+  }, [title, navigate]);
 
   const gallery = getGalleryImages();
 
@@ -57,7 +57,7 @@ export default function Project() {
         onClick={() => navigate(-1)}
         className="text-[#ae2b2b] mb-6 font-semibold hover:underline"
       >
-        ← Back to Projects
+        ← Back
       </button>
 
       <div className="grid md:grid-cols-2 gap-8">
@@ -89,23 +89,23 @@ export default function Project() {
 
           <div className='flex gap-2'>
             {openProject.link && (
-              <a
-                href={openProject.link}
+              <Link
+                to={`/form?formLink=${encodeURIComponent(openProject.link)}`}
                 target="_blank"
                 className="mt-6 inline-block bg-[#ae2b2b] text-white px-5 py-2 rounded-lg shadow-md hover:scale-105 transition"
               >
                 Open Form / Link
-              </a>
+              </Link>
             )}
 
             {openProject.feedback && (
-              <a
-                href={openProject.feedback}
+              <Link
+                to={`/form?formLink=${encodeURIComponent(openProject.feedback)}`}
                 target="_blank"
                 className="mt-6 inline-block bg-[#ae2b2b] text-white px-5 py-2 rounded-lg shadow-md hover:scale-105 transition"
               >
                 Share Feedback
-              </a>
+              </Link>
             )}
           </div>
         </div>
