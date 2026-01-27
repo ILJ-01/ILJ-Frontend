@@ -3,10 +3,12 @@ body {
   /* Use a classic serif font stack */
   font-family: Georgia, "Times New Roman", Times, serif;
 }
+
 .navbar,
-.side-panel{
+.side-panel {
   font-family: Georgia, "Times New Roman", Times, serif;
 }
+
 .navbar {
   display: flex;
   justify-content: space-between;
@@ -14,13 +16,15 @@ body {
   background: #ffffff;
   color: #ae2b2b;
   padding: 0px 20px;
-  height: 60px; /* Reduced height */
+  height: 60px;
+  /* Reduced height */
   position: relative;
   z-index: 1000;
 }
 
 .logo-img {
-  height: 50px; /* Smaller */
+  height: 50px;
+  /* Smaller */
   width: auto;
   display: block;
 }
@@ -41,6 +45,59 @@ body {
 
 .nav-links a:hover {
   color: #f39c12;
+}
+
+/* Profile Icon Styles */
+.profile-icon-container {
+  display: flex;
+  align-items: center;
+}
+
+.profile-icon-btn {
+  position: relative;
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  border: 2px solid #ae2b2b;
+  background: linear-gradient(135deg, rgba(174, 43, 43, 0.05) 0%, rgba(174, 43, 43, 0.1) 100%);
+  color: #ae2b2b;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  padding: 0;
+}
+
+.profile-icon-btn:hover {
+  background: linear-gradient(135deg, #ae2b2b 0%, #c73e3e 100%);
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(174, 43, 43, 0.3);
+}
+
+.profile-icon-svg {
+  width: 22px;
+  height: 22px;
+}
+
+.profile-initials {
+  font-family: Georgia, serif;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.online-indicator {
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  width: 12px;
+  height: 12px;
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+  border: 2px solid white;
+  border-radius: 50%;
+  box-shadow: 0 2px 6px rgba(22, 163, 74, 0.4);
 }
 
 /* Hamburger */
@@ -103,17 +160,83 @@ body {
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0,0,0,0.4);
+  background: rgba(0, 0, 0, 0.4);
   z-index: 1000;
 }
 
 /* Mobile Responsive */
 @media (max-width: 768px) {
+  .navbar {
+    padding: 0 15px;
+  }
+
   .nav-links {
     display: none;
   }
 
   .hamburger {
     display: block;
+  }
+
+  /* On mobile, profile icon appears to the left of hamburger */
+  .profile-icon-container {
+    order: 1;
+    margin-right: 15px;
+  }
+
+  .logo {
+    order: 0;
+    flex: 1;
+  }
+
+  .hamburger {
+    order: 2;
+  }
+
+  .profile-icon-btn {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+  }
+
+  .profile-icon-svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .profile-initials {
+    font-size: 13px;
+  }
+
+  .online-indicator {
+    width: 10px;
+    height: 10px;
+  }
+}
+
+/* Desktop - profile icon to the left */
+@media (min-width: 769px) {
+  .navbar {
+    justify-content: flex-start;
+    gap: 20px;
+  }
+
+  .profile-icon-container {
+    order: 0;
+  }
+
+  .logo {
+    order: 1;
+    flex: 0;
+  }
+
+  .nav-links {
+    order: 2;
+    flex: 1;
+    justify-content: center;
+  }
+
+  .hamburger {
+    display: none;
   }
 }
