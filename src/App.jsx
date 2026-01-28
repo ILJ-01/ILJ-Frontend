@@ -10,6 +10,10 @@ import Profile from "./pages/Profile";
 import Form from "./components/Form.jsx";
 import VolunteerRegistration from "./pages/VolunteerRegistration";
 import Project from "./components/Project.jsx";
+import AdminLogin from "./pages/AdminLogin";
+import AdminDashboard from "./pages/AdminDashboard";
+import AdminAddProject from "./pages/AdminAddProject";
+import AdminEditProject from "./pages/AdminEditProject";
 import "./styles/global.css";
 
 function App() {
@@ -29,6 +33,10 @@ function App() {
               <Route path="/profile" element={<Profile />} />
               <Route path="/form" element={<Form />} />
               <Route path="/volunteer-registration" element={<VolunteerRegistration />} />
+              <Route path="/admin" element={<AdminLogin />} />
+              <Route path="/admin/dashboard" element={<AdminDashboard />} />
+              <Route path="/admin/add-project" element={<AdminAddProject />} />
+              <Route path="/admin/edit-project/:id" element={<AdminEditProject />} />
             </Routes>
           </main>
           <Footer />

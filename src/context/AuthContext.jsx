@@ -52,26 +52,20 @@ export function AuthProvider({ children }) {
 
     const updatePassword = async (iljId, email, newPassword) => {
         try {
-            // Verify ILJ ID and email match
-            const { data: volunteer, error: findError } = await supabase
-                .from('volunteers')
-                .select('id, ilj_id, email')
-                .eq('ilj_id', iljId.toUpperCase())
-                .eq('email', email.toLowerCase())
-                .single();
+            const { data, error } = await supabase
+                .rpc('reset_volunteer_password', {
+                    p_ilj_id: iljId,
+                    p_email: email,
+                    p_new_password: newPassword
+                });
 
-            if (findError || !volunteer) {
-                return { success: false, error: 'ILJ ID and Email do not match our records' };
+            if (error) {
+                console.error('RPC Error:', error);
+                return { success: false, error: 'Failed to request password reset. Please try again.' };
             }
 
-            // Update password
-            const { error: updateError } = await supabase
-                .from('volunteers')
-                .update({ password_hash: newPassword })
-                .eq('id', volunteer.id);
-
-            if (updateError) {
-                return { success: false, error: 'Failed to update password' };
+            if (!data.success) {
+                return { success: false, error: data.error };
             }
 
             return { success: true, message: 'Password updated successfully' };

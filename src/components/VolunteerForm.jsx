@@ -25,8 +25,11 @@ const formSchema = z.object({
     firstName: z.string().min(2, "First name is required"),
     middleName: z.string().optional(),
     lastName: z.string().min(2, "Last name is required"),
-    dob: z.date({ required_error: "Date of birth is required" }),
-    gender: z.enum(["Male", "Female", "Other", "Prefer not to say"], { required_error: "Please select your gender" }),
+    dob: z.date({
+        required_error: "Date of birth is required",
+        invalid_type_error: "Date of birth is required"
+    }),
+    gender: z.enum(["Male", "Female"], { required_error: "Please select your gender" }),
 
     // 2. Contact Info
     mobileNumber: z.string().min(10, "Mobile number must be at least 10 digits"),
@@ -34,12 +37,13 @@ const formSchema = z.object({
 
     // 3. Address
     addressLine1: z.string().min(1, "Address Line 1 is required"),
-    addressLine2: z.string().min(1, "Area/Locality is required"), // Changed from optional per prompt implying "Street/Locality" is a field
+    addressLine2: z.string().min(1, "Area/Locality is required"),
     district: z.string().min(1, "District is required"),
     city: z.string().min(1, "City is required"),
     state: z.string().min(1, "State is required"),
-    pincode: z.string().min(1, "Postal Code is required"),
     country: z.string().min(1, "Country is required"),
+    pincode: z.string().min(1, "Postal Code is required"),
+    sanghName: z.string().optional(),
 
     // 4. Educational & Dharmik
     dharmikStudies: z.string().optional(),
@@ -62,6 +66,9 @@ const formSchema = z.object({
     volunteeringPreference2: z.string().optional(),
     volunteeringPreference3: z.string().optional(),
 
+    // Additional Areas (Checkboxes)
+    additionalAreas: z.array(z.string()).optional(),
+
     // 9. Availability
     availabilityDays: z.enum(["Weekdays", "Weekends", "Flexible"], { required_error: "Availability is required" }),
     timeCommitment: z.string().optional(),
@@ -80,17 +87,20 @@ const volunteeringOptions = [
     { label: "Marketing & Outreach", icon: Megaphone },
     { label: "Pathshala & Educational Activities", icon: School },
     { label: "IT & Technical Support", icon: Code },
-    { label: "Community & Government Relations", icon: Users },
-    { label: "Defending Jainism", icon: Shield },
-    { label: "On-field engagement", icon: MapPin },
-    { label: "Social media & digital platforms", icon: Share2 }
+];
+
+// Special additional options as checkboxes
+const additionalOptions = [
+    { label: "Building Community & Government Relations", icon: Users },
+    { label: "Defending Jainism On-field engagement", icon: Shield },
+    { label: "Defending Jainism on Social media & digital platforms", icon: Share2 }
 ];
 
 export default function VolunteerForm() {
     const [age, setAge] = useState(null);
     const [preferenceCount, setPreferenceCount] = useState(1);
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [submitResult, setSubmitResult] = useState(null); // { success: boolean, ilj_id?: string, error?: string }
+    const [submitResult, setSubmitResult] = useState(null);
 
     const form = useForm({
         resolver: zodResolver(formSchema),
@@ -106,8 +116,9 @@ export default function VolunteerForm() {
             district: "",
             city: "",
             state: "",
-            pincode: "",
             country: "",
+            pincode: "",
+            sanghName: "",
             dharmikStudies: "",
             qualification: "",
             specialization: "",
@@ -119,13 +130,13 @@ export default function VolunteerForm() {
             volunteeringPreference1: undefined,
             volunteeringPreference2: undefined,
             volunteeringPreference3: undefined,
+            additionalAreas: [],
             availabilityDays: undefined,
             timeCommitment: "",
             participationMode: undefined,
         },
     });
 
-    // Watch DOB to calculate age
     const dob = form.watch("dob");
     useEffect(() => {
         if (dob) {
@@ -139,7 +150,6 @@ export default function VolunteerForm() {
         setSubmitResult(null);
 
         try {
-            // Check if email already exists
             const emailExists = await checkEmailExists(values.email);
             if (emailExists) {
                 setSubmitResult({
@@ -150,16 +160,12 @@ export default function VolunteerForm() {
                 return;
             }
 
-            // Add age to form values
             const formDataWithAge = { ...values, age };
-
-            // Register the volunteer
             const result = await registerVolunteer(formDataWithAge);
 
             setSubmitResult(result);
 
             if (result.success) {
-                // Reset form on success
                 form.reset();
                 setAge(null);
                 setPreferenceCount(1);
@@ -182,8 +188,8 @@ export default function VolunteerForm() {
                 {/* 1. Personal Information */}
                 <Card className="border-l-4 border-l-[#ae2b2b]">
                     <CardHeader className="bg-gray-50/50">
-                        <CardTitle className="flex items-center text-[#ae2b2b] font-serif tracking-wide">
-                            <User className="mr-2 h-5 w-5" /> Personal Information
+                        <CardTitle className="flex items-center text-[#ae2b2b] font-serif tracking-wide text-xl md:text-2xl">
+                            <User className="mr-2 h-6 w-6" /> Personal Information
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-6 p-4 md:p-8 pt-2">
@@ -192,7 +198,7 @@ export default function VolunteerForm() {
                             name="firstName"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>First Name</FormLabel>
+                                    <FormLabel>First Name <span className="text-red-500">*</span></FormLabel>
                                     <FormControl>
                                         <Input placeholder="Enter first name" {...field} />
                                     </FormControl>
@@ -218,7 +224,7 @@ export default function VolunteerForm() {
                             name="lastName"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Last Name</FormLabel>
+                                    <FormLabel>Last Name <span className="text-red-500">*</span></FormLabel>
                                     <FormControl>
                                         <Input placeholder="Enter last name" {...field} />
                                     </FormControl>
@@ -232,7 +238,7 @@ export default function VolunteerForm() {
                             name="dob"
                             render={({ field }) => (
                                 <FormItem className="flex flex-col">
-                                    <FormLabel>Date of Birth</FormLabel>
+                                    <FormLabel>Date of Birth <span className="text-red-500">*</span></FormLabel>
                                     <Popover>
                                         <PopoverTrigger asChild>
                                             <FormControl>
@@ -282,7 +288,7 @@ export default function VolunteerForm() {
                             name="gender"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Gender</FormLabel>
+                                    <FormLabel>Gender <span className="text-red-500">*</span></FormLabel>
                                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                                         <FormControl>
                                             <SelectTrigger>
@@ -292,8 +298,6 @@ export default function VolunteerForm() {
                                         <SelectContent className="bg-white">
                                             <SelectItem value="Male">Male</SelectItem>
                                             <SelectItem value="Female">Female</SelectItem>
-                                            <SelectItem value="Other">Other</SelectItem>
-                                            <SelectItem value="Prefer not to say">Prefer not to say</SelectItem>
                                         </SelectContent>
                                     </Select>
                                     <FormMessage />
@@ -306,8 +310,8 @@ export default function VolunteerForm() {
                 {/* 2. Contact Information */}
                 <Card className="border-l-4 border-l-[#ae2b2b]">
                     <CardHeader className="bg-gray-50/50">
-                        <CardTitle className="flex items-center text-[#ae2b2b] font-serif tracking-wide">
-                            <Phone className="mr-2 h-5 w-5" /> Contact Information
+                        <CardTitle className="flex items-center text-[#ae2b2b] font-serif tracking-wide text-xl md:text-2xl">
+                            <Phone className="mr-2 h-6 w-6" /> Contact Information
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6">
@@ -316,7 +320,7 @@ export default function VolunteerForm() {
                             name="mobileNumber"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Mobile Number</FormLabel>
+                                    <FormLabel>Mobile Number <span className="text-red-500">*</span></FormLabel>
                                     <FormControl>
                                         <Input placeholder="+91 XXXXX XXXXX" {...field} />
                                     </FormControl>
@@ -329,7 +333,7 @@ export default function VolunteerForm() {
                             name="email"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Email Address</FormLabel>
+                                    <FormLabel>Email Address <span className="text-red-500">*</span></FormLabel>
                                     <FormControl>
                                         <Input placeholder="email@example.com" {...field} />
                                     </FormControl>
@@ -343,8 +347,8 @@ export default function VolunteerForm() {
                 {/* 3. Address */}
                 <Card className="border-l-4 border-l-[#ae2b2b]">
                     <CardHeader className="bg-gray-50/50">
-                        <CardTitle className="flex items-center text-[#ae2b2b] font-serif tracking-wide">
-                            <MapPin className="mr-2 h-5 w-5" /> Residential Address
+                        <CardTitle className="flex items-center text-[#ae2b2b] font-serif tracking-wide text-xl md:text-2xl">
+                            <MapPin className="mr-2 h-6 w-6" /> Residential Address
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6">
@@ -353,7 +357,7 @@ export default function VolunteerForm() {
                             name="addressLine1"
                             render={({ field }) => (
                                 <FormItem className="col-span-1 md:col-span-2">
-                                    <FormLabel>Address Line 1</FormLabel>
+                                    <FormLabel>Address Line 1 <span className="text-red-500">*</span></FormLabel>
                                     <FormControl>
                                         <Input placeholder="Building / House No., Apartment Name" {...field} />
                                     </FormControl>
@@ -366,7 +370,7 @@ export default function VolunteerForm() {
                             name="addressLine2"
                             render={({ field }) => (
                                 <FormItem className="col-span-1 md:col-span-2">
-                                    <FormLabel>Address Line 2</FormLabel>
+                                    <FormLabel>Address Line 2 <span className="text-red-500">*</span></FormLabel>
                                     <FormControl>
                                         <Input placeholder="Street / Locality / Area" {...field} />
                                     </FormControl>
@@ -379,7 +383,7 @@ export default function VolunteerForm() {
                             name="city"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>City</FormLabel>
+                                    <FormLabel>City <span className="text-red-500">*</span></FormLabel>
                                     <FormControl>
                                         <Input placeholder="City" {...field} />
                                     </FormControl>
@@ -392,9 +396,22 @@ export default function VolunteerForm() {
                             name="district"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>District</FormLabel>
+                                    <FormLabel>District <span className="text-red-500">*</span></FormLabel>
                                     <FormControl>
                                         <Input placeholder="District" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="sanghName"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Sangh Name <span className="text-gray-400 font-normal">(Optional)</span></FormLabel>
+                                    <FormControl>
+                                        <Input placeholder="Your Sangh Name" {...field} />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>
@@ -405,22 +422,9 @@ export default function VolunteerForm() {
                             name="state"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>State / Province</FormLabel>
+                                    <FormLabel>State / Province <span className="text-red-500">*</span></FormLabel>
                                     <FormControl>
                                         <Input placeholder="State" {...field} />
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-                        <FormField
-                            control={form.control}
-                            name="pincode"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Postal Code (PIN)</FormLabel>
-                                    <FormControl>
-                                        <Input placeholder="PIN Code" {...field} />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>
@@ -431,9 +435,22 @@ export default function VolunteerForm() {
                             name="country"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Country</FormLabel>
+                                    <FormLabel>Country <span className="text-red-500">*</span></FormLabel>
                                     <FormControl>
                                         <Input placeholder="Country" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="pincode"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Postal Code (PIN) <span className="text-red-500">*</span></FormLabel>
+                                    <FormControl>
+                                        <Input placeholder="PIN Code" {...field} />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>
@@ -445,8 +462,8 @@ export default function VolunteerForm() {
                 {/* 4. Educational & Dharmik Background */}
                 <Card className="border-l-4 border-l-[#ae2b2b]">
                     <CardHeader className="bg-gray-50/50">
-                        <CardTitle className="flex items-center text-[#ae2b2b] font-serif tracking-wide">
-                            <GraduationCap className="mr-2 h-5 w-5" /> Educational & Dharmik Background
+                        <CardTitle className="flex items-center text-[#ae2b2b] font-serif tracking-wide text-xl md:text-2xl">
+                            <GraduationCap className="mr-2 h-10 w-10" /> Educational & Dharmik Background
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6">
@@ -455,7 +472,7 @@ export default function VolunteerForm() {
                             name="dharmikStudies"
                             render={({ field }) => (
                                 <FormItem className="col-span-1 md:col-span-2">
-                                    <FormLabel>Dharmik Studies</FormLabel>
+                                    <FormLabel>Dharmik Studies <span className="text-gray-400 font-normal">(Optional)</span></FormLabel>
                                     <FormControl>
                                         <Textarea
                                             placeholder="Mention any Jain religious education, courses, Pathshala learning, scriptures studied..."
@@ -472,7 +489,7 @@ export default function VolunteerForm() {
                             name="qualification"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Highest Qualification</FormLabel>
+                                    <FormLabel>Highest Qualification (completed / pursuing) <span className="text-red-500">*</span></FormLabel>
                                     <FormControl>
                                         <Input placeholder="e.g. B.Tech, MBA, PhD" {...field} />
                                     </FormControl>
@@ -485,7 +502,7 @@ export default function VolunteerForm() {
                             name="specialization"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Field of Study / Specialization</FormLabel>
+                                    <FormLabel>Field of Study / Specialization <span className="text-red-500">*</span></FormLabel>
                                     <FormControl>
                                         <Input placeholder="e.g. Computer Science, Finance, Arts" {...field} />
                                     </FormControl>
@@ -499,8 +516,8 @@ export default function VolunteerForm() {
                 {/* 5. Occupation */}
                 <Card className="border-l-4 border-l-[#ae2b2b]">
                     <CardHeader className="bg-gray-50/50">
-                        <CardTitle className="flex items-center text-[#ae2b2b] font-serif tracking-wide">
-                            <Briefcase className="mr-2 h-5 w-5" /> Current Occupation Status
+                        <CardTitle className="flex items-center text-[#ae2b2b] font-serif tracking-wide text-xl md:text-2xl">
+                            <Briefcase className="mr-2 h-6 w-6" /> Current Occupation Status
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-6 pt-6">
@@ -509,7 +526,7 @@ export default function VolunteerForm() {
                             name="occupation"
                             render={({ field }) => (
                                 <FormItem className="space-y-3">
-                                    <FormLabel>Current Status</FormLabel>
+                                    <FormLabel>Current Status <span className="text-red-500">*</span></FormLabel>
                                     <FormControl>
                                         <RadioGroup
                                             onValueChange={field.onChange}
@@ -553,8 +570,8 @@ export default function VolunteerForm() {
                 {/* 6. Interests & Capabilities */}
                 <Card className="border-l-4 border-l-[#ae2b2b]">
                     <CardHeader className="bg-gray-50/50">
-                        <CardTitle className="flex items-center text-[#ae2b2b] font-serif tracking-wide">
-                            <Heart className="mr-2 h-5 w-5" /> Interests & Capabilities
+                        <CardTitle className="flex items-center text-[#ae2b2b] font-serif tracking-wide text-xl md:text-2xl">
+                            <Heart className="mr-2 h-6 w-6" /> Interests & Capabilities
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6">
@@ -590,8 +607,8 @@ export default function VolunteerForm() {
                 {/* 7. Referral */}
                 <Card className="border-l-4 border-l-[#ae2b2b]">
                     <CardHeader className="bg-gray-50/50">
-                        <CardTitle className="flex items-center text-[#ae2b2b] font-serif tracking-wide">
-                            <LinkIcon className="mr-2 h-5 w-5" /> Referral Information
+                        <CardTitle className="flex items-center text-[#ae2b2b] font-serif tracking-wide text-xl md:text-2xl">
+                            <LinkIcon className="mr-2 h-6 w-6" /> Referral Information
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="pt-6">
@@ -615,8 +632,8 @@ export default function VolunteerForm() {
                 {/* 8. Areas of Volunteering Interest */}
                 <Card className="border-l-4 border-l-[#ae2b2b]">
                     <CardHeader className="bg-gray-50/50">
-                        <CardTitle className="flex items-center text-[#ae2b2b] font-serif tracking-wide">
-                            <CheckSquare className="mr-2 h-5 w-5" /> Areas of Volunteering Interest
+                        <CardTitle className="flex items-center text-[#ae2b2b] font-serif tracking-wide text-xl md:text-2xl">
+                            <CheckSquare className="mr-2 h-6 w-6" /> Areas of Volunteering Interest
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="pt-6">
@@ -793,6 +810,65 @@ export default function VolunteerForm() {
                                     Add {preferenceCount === 1 ? "2nd" : "3rd"} Preference
                                 </Button>
                             )}
+
+                            {/* Separator for Additional Interests */}
+                            <Separator className="my-6 bg-gray-200" />
+
+                            {/* Additional Interests Checkboxes */}
+                            <FormField
+                                control={form.control}
+                                name="additionalAreas"
+                                render={() => (
+                                    <FormItem>
+                                        <div className="mb-4">
+                                            <FormLabel className="text-lg font-medium">Additional Areas of Interest</FormLabel>
+                                            <FormDescription>
+                                                Select any of these special areas you would like to contribute to (Optional).
+                                            </FormDescription>
+                                        </div>
+                                        <div className="grid grid-cols-1 gap-3">
+                                            {additionalOptions.map((option) => {
+                                                const Icon = option.icon;
+                                                return (
+                                                    <FormField
+                                                        key={option.label}
+                                                        control={form.control}
+                                                        name="additionalAreas"
+                                                        render={({ field }) => {
+                                                            return (
+                                                                <FormItem
+                                                                    key={option.label}
+                                                                    className="flex flex-row items-center space-x-3 space-y-0 rounded-md border p-4 hover:bg-gray-50 transition-colors"
+                                                                >
+                                                                    <FormControl>
+                                                                        <Checkbox
+                                                                            checked={field.value?.includes(option.label)}
+                                                                            onCheckedChange={(checked) => {
+                                                                                return checked
+                                                                                    ? field.onChange([...field.value, option.label])
+                                                                                    : field.onChange(
+                                                                                        field.value?.filter(
+                                                                                            (value) => value !== option.label
+                                                                                        )
+                                                                                    )
+                                                                            }}
+                                                                        />
+                                                                    </FormControl>
+                                                                    <FormLabel className="font-normal cursor-pointer w-full flex items-center gap-2">
+                                                                        <Icon className="h-4 w-4 text-[#ae2b2b] flex-shrink-0" />
+                                                                        {option.label}
+                                                                    </FormLabel>
+                                                                </FormItem>
+                                                            )
+                                                        }}
+                                                    />
+                                                )
+                                            })}
+                                        </div>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
                         </div>
                     </CardContent>
                 </Card>
@@ -800,8 +876,8 @@ export default function VolunteerForm() {
                 {/* 9. Availability & Mode */}
                 <Card className="border-l-4 border-l-[#ae2b2b]">
                     <CardHeader className="bg-gray-50/50">
-                        <CardTitle className="flex items-center text-[#ae2b2b] font-serif tracking-wide">
-                            <Clock className="mr-2 h-5 w-5" /> Availability & Participation
+                        <CardTitle className="flex items-center text-[#ae2b2b] font-serif tracking-wide text-xl md:text-2xl">
+                            <Clock className="mr-2 h-6 w-6" /> Availability & Participation
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-6">
@@ -809,7 +885,7 @@ export default function VolunteerForm() {
                         {/* Availability */}
                         <div className="space-y-6">
                             <h3 className="font-semibold text-gray-700 flex items-center">
-                                Days Available
+                                Days Available <span className="text-red-500 ml-1">*</span>
                             </h3>
                             <FormField
                                 control={form.control}
@@ -846,9 +922,27 @@ export default function VolunteerForm() {
                                 render={({ field }) => (
                                     <FormItem>
                                         <FormLabel>Time Commitment (Approx)</FormLabel>
-                                        <FormControl>
-                                            <Input placeholder="e.g. 5 hours/week" {...field} />
-                                        </FormControl>
+                                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                            <FormControl>
+                                                <SelectTrigger>
+                                                    <SelectValue placeholder="Select committed time" />
+                                                </SelectTrigger>
+                                            </FormControl>
+                                            <SelectContent className="bg-white max-h-60 overflow-y-auto">
+                                                {[
+                                                    "30 mins", "1 hour", "1 hour 30 mins", "2 hours", "2 hours 30 mins",
+                                                    "3 hours", "3 hours 30 mins", "4 hours", "4 hours 30 mins",
+                                                    "5 hours", "5 hours 30 mins", "6 hours", "6 hours 30 mins",
+                                                    "7 hours", "7 hours 30 mins", "8 hours", "8 hours 30 mins",
+                                                    "9 hours", "9 hours 30 mins", "10 hours", "10 hours 30 mins",
+                                                    "11 hours", "11 hours 30 mins", "12 hours", "12+ hours"
+                                                ].map((time) => (
+                                                    <SelectItem key={time} value={time}>
+                                                        {time}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
                                         <FormMessage />
                                     </FormItem>
                                 )}
@@ -858,7 +952,7 @@ export default function VolunteerForm() {
                         {/* Mode of Participation */}
                         <div className="space-y-6">
                             <h3 className="font-semibold text-gray-700 flex items-center">
-                                <HandHeart className="mr-2 h-4 w-4" /> Mode of Participation
+                                <HandHeart className="mr-2 h-4 w-4" /> Mode of Participation <span className="text-red-500 ml-1">*</span>
                             </h3>
                             <FormField
                                 control={form.control}
@@ -916,7 +1010,7 @@ export default function VolunteerForm() {
                                     Default Password: <span className="font-mono font-semibold">Pass@123</span>
                                 </p>
                                 <p className="text-xs text-amber-600 bg-amber-50 p-2 rounded">
-                                    ⚠️ Please change your password after your first login for security purposes.
+                                    ⚠️ Please change your password in loagin page by clicking on change password button.
                                 </p>
                             </div>
                         ) : (
@@ -928,25 +1022,27 @@ export default function VolunteerForm() {
                     </div>
                 )}
 
-                {/* Submit Button */}
-                <div className="flex justify-center pt-8">
-                    <Button
-                        type="submit"
-                        disabled={isSubmitting}
-                        className="bg-[#ae2b2b] hover:bg-[#8f1f1f] text-white px-10 py-6 text-xl rounded-full shadow-lg hover:shadow-xl transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                        {isSubmitting ? (
-                            <>
-                                <span className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></span>
-                                Submitting...
-                            </>
-                        ) : (
-                            <>
-                                Submit Registration <Send className="w-5 h-5" />
-                            </>
-                        )}
-                    </Button>
-                </div>
+                {/* Submit Button - Hidden if successful */}
+                {(!submitResult || !submitResult.success) && (
+                    <div className="flex justify-center pt-8">
+                        <Button
+                            type="submit"
+                            disabled={isSubmitting}
+                            className="bg-[#ae2b2b] hover:bg-[#8f1f1f] text-white px-10 py-6 text-xl rounded-full shadow-lg hover:shadow-xl transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            {isSubmitting ? (
+                                <>
+                                    <span className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></span>
+                                    Submitting...
+                                </>
+                            ) : (
+                                <>
+                                    Submit Registration <Send className="w-5 h-5" />
+                                </>
+                            )}
+                        </Button>
+                    </div>
+                )}
             </form>
         </Form>
     );

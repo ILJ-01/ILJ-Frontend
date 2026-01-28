@@ -33,8 +33,9 @@ export async function registerVolunteer(formData) {
             district: formData.district,
             city: formData.city,
             state: formData.state,
-            pincode: formData.pincode,
             country: formData.country,
+            pincode: formData.pincode,
+            sangh_name: formData.sanghName || null,
             dharmik_studies: formData.dharmikStudies || null,
             qualification: formData.qualification,
             specialization: formData.specialization,
@@ -49,6 +50,7 @@ export async function registerVolunteer(formData) {
             availability_days: formData.availabilityDays,
             time_commitment: formData.timeCommitment || null,
             participation_mode: formData.participationMode,
+            additional_areas: formData.additionalAreas || null,
             password_hash: DEFAULT_PASSWORD, // In production, use proper hashing
         };
 
