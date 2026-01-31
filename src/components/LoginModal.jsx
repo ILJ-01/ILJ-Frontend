@@ -60,7 +60,11 @@ export default function LoginModal({ isOpen, onClose }) {
             setMessage({ type: 'success', text: 'Login successful!' });
             setTimeout(() => {
                 onClose();
-                navigate('/profile');
+                if (window.innerWidth < 768) {
+                    navigate('/dashboard/profile');
+                } else {
+                    navigate('/dashboard');
+                }
             }, 500);
         } else {
             setMessage({ type: 'error', text: result.error });

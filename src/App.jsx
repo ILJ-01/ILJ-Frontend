@@ -16,30 +16,67 @@ import AdminAddProject from "./pages/AdminAddProject";
 import AdminEditProject from "./pages/AdminEditProject";
 import "./styles/global.css";
 
+// Dashboard Imports
+import DashboardLayout from "./components/dashboard/DashboardLayout";
+
+import EventsPage from "./pages/dashboard/EventsPage";
+import TasksPage from "./pages/dashboard/TasksPage";
+import TimesheetPage from "./pages/dashboard/TimesheetPage";
+import ProfilePage from "./pages/dashboard/ProfilePage";
+
+// Helper components for routing structure
+import { useAuth } from "./context/AuthContext";
+import { Navigate } from "react-router-dom";
+
+const MainLayout = ({ children }) => (
+  <>
+    <Navbar />
+    <main className="content">{children}</main>
+    <Footer />
+  </>
+);
+
+const ProtectedRoute = ({ children }) => {
+  const { user, loading } = useAuth();
+  if (loading) return <div>Loading...</div>;
+  if (!user) return <Navigate to="/" replace />;
+  return children;
+};
+
 function App() {
   return (
     <AuthProvider>
       <Router>
         <div className="app">
-          <Navbar />
-          <main className="content">
-            <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/blogs" element={<Blogs />} />
-              <Route path="/blog/*" element={<Blogs />} />
-              <Route path="/aboutus" element={<AboutUs />} />
-              <Route path="/projects" element={<Projects />} />
-              <Route path="/project/:title" element={<Project />} />
-              <Route path="/profile" element={<Profile />} />
-              <Route path="/form" element={<Form />} />
-              <Route path="/volunteer-registration" element={<VolunteerRegistration />} />
-              <Route path="/admin" element={<AdminLogin />} />
-              <Route path="/admin/dashboard" element={<AdminDashboard />} />
-              <Route path="/admin/add-project" element={<AdminAddProject />} />
-              <Route path="/admin/edit-project/:id" element={<AdminEditProject />} />
-            </Routes>
-          </main>
-          <Footer />
+          {/* Conditionally render Navbar/Footer based on route if needed, or handle inside layout */}
+          {/* For simplicity we keep main site structure separate from dashboard */}
+
+          <Routes>
+            {/* Main Public Site */}
+            <Route path="/" element={<MainLayout><Home /></MainLayout>} />
+            <Route path="/blogs" element={<MainLayout><Blogs /></MainLayout>} />
+            <Route path="/blog/*" element={<MainLayout><Blogs /></MainLayout>} />
+            <Route path="/aboutus" element={<MainLayout><AboutUs /></MainLayout>} />
+            <Route path="/projects" element={<MainLayout><Projects /></MainLayout>} />
+            <Route path="/project/:title" element={<MainLayout><Project /></MainLayout>} />
+            <Route path="/profile" element={<MainLayout><Profile /></MainLayout>} />
+            <Route path="/form" element={<MainLayout><Form /></MainLayout>} />
+            <Route path="/volunteer-registration" element={<MainLayout><VolunteerRegistration /></MainLayout>} />
+
+            {/* Admin Routes */}
+            <Route path="/admin" element={<AdminLogin />} />
+            <Route path="/admin/dashboard" element={<AdminDashboard />} />
+            <Route path="/admin/add-project" element={<AdminAddProject />} />
+            <Route path="/admin/edit-project/:id" element={<AdminEditProject />} />
+
+            {/* Volunteer Dashboard Routes */}
+            <Route path="/dashboard" element={<Navigate to="/dashboard/events" replace />} />
+            <Route path="/dashboard/events" element={<ProtectedRoute><DashboardLayout><EventsPage /></DashboardLayout></ProtectedRoute>} />
+            <Route path="/dashboard/tasks" element={<ProtectedRoute><DashboardLayout><TasksPage /></DashboardLayout></ProtectedRoute>} />
+            <Route path="/dashboard/timesheet" element={<ProtectedRoute><DashboardLayout><TimesheetPage /></DashboardLayout></ProtectedRoute>} />
+            <Route path="/dashboard/profile" element={<ProtectedRoute><DashboardLayout><ProfilePage /></DashboardLayout></ProtectedRoute>} />
+
+          </Routes>
         </div>
       </Router>
     </AuthProvider>

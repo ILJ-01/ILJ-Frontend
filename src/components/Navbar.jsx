@@ -18,7 +18,7 @@ function Navbar() {
 
   const handleProfileClick = () => {
     if (isLoggedIn) {
-      navigate('/profile');
+      navigate('/dashboard');
     } else {
       setShowLoginModal(true);
     }
@@ -63,7 +63,7 @@ function Navbar() {
           <li><Link to="/blogs" onClick={() => setIsOpen(false)}>ARTICLES</Link></li>
           <li><Link to="/aboutus" onClick={() => setIsOpen(false)}>ABOUT US</Link></li>
           {isLoggedIn && (
-            <li><Link to="/profile" onClick={() => setIsOpen(false)}>PROFILE</Link></li>
+            <li><Link to="/dashboard" onClick={() => setIsOpen(false)}>DASHBOARD</Link></li>
           )}
         </ul>
 
@@ -84,7 +84,7 @@ function Navbar() {
           <li><Link to="/blogs" onClick={() => setIsOpen(false)}>ARTICLES</Link></li>
           <li><Link to="/aboutus" onClick={() => setIsOpen(false)}>ABOUT US</Link></li>
           {isLoggedIn && (
-            <li><Link to="/profile" onClick={() => setIsOpen(false)}>PROFILE</Link></li>
+            <li><Link to="/dashboard" onClick={() => setIsOpen(false)}>DASHBOARD</Link></li>
           )}
         </ul>
       </div>

@@ -202,7 +202,7 @@ export default function Project() {
           <div className="flex flex-wrap items-center gap-3 mb-4">
             <span className={`px-3 py-1 text-xs font-bold rounded-full uppercase tracking-wider shadow-sm ${project.status === 'active' ? "bg-green-100 text-green-700" :
               project.status === 'completed' ? "bg-gray-100 text-gray-700" :
-                "bg-amber-100 text-amber-700"
+                "bg-[#ae2b2b]/10 text-[#ae2b2b]"
               }`}>
               {project.status || 'Upcoming'}
             </span>
@@ -230,22 +230,22 @@ export default function Project() {
 
           {/* Manager Contact Card (Only for logged in) */}
           {isLoggedIn && project.manager && (
-            <div className="bg-gradient-to-br from-amber-50 to-white rounded-2xl p-6 border border-amber-100 shadow-sm flex flex-col md:flex-row gap-6 items-start md:items-center">
-              <div className="bg-amber-100 p-4 rounded-full text-amber-700">
+            <div className="bg-gradient-to-br from-[#ae2b2b]/5 to-white rounded-2xl p-6 border border-[#ae2b2b]/10 shadow-sm flex flex-col md:flex-row gap-6 items-start md:items-center">
+              <div className="bg-[#ae2b2b]/10 p-4 rounded-full text-[#ae2b2b]">
                 <User size={32} />
               </div>
               <div className="flex-1">
-                <p className="text-xs font-bold text-amber-600 uppercase tracking-widest mb-1">Project Manager</p>
+                <p className="text-xs font-bold text-[#ae2b2b] uppercase tracking-widest mb-1">Project Manager</p>
                 <h3 className="text-xl font-semibold text-gray-900">{project.manager.first_name} {project.manager.last_name}</h3>
                 <p className="text-sm text-gray-500 mb-3">{project.manager.ilj_id}</p>
 
                 <div className="flex flex-wrap gap-4 text-sm">
-                  <div className="flex items-center gap-2 text-gray-700 bg-white px-3 py-1.5 rounded-lg border border-amber-100 shadow-sm">
-                    <Phone size={14} className="text-amber-600" />
+                  <div className="flex items-center gap-2 text-gray-700 bg-white px-3 py-1.5 rounded-lg border border-[#ae2b2b]/10 shadow-sm">
+                    <Phone size={14} className="text-[#ae2b2b]" />
                     {project.manager.mobile_number}
                   </div>
-                  <div className="flex items-center gap-2 text-gray-700 bg-white px-3 py-1.5 rounded-lg border border-amber-100 shadow-sm">
-                    <Mail size={14} className="text-amber-600" />
+                  <div className="flex items-center gap-2 text-gray-700 bg-white px-3 py-1.5 rounded-lg border border-[#ae2b2b]/10 shadow-sm">
+                    <Mail size={14} className="text-[#ae2b2b]" />
                     {project.manager.email}
                   </div>
                 </div>
@@ -280,12 +280,12 @@ export default function Project() {
                     <p className="text-sm text-green-600 mt-1">Check your dashboard for tasks.</p>
                   </div>
                 ) : applicationStatus === 'pending' ? (
-                  <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-center">
-                    <div className="mx-auto w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center mb-2">
-                      <Clock className="w-6 h-6 text-amber-600" />
+                  <div className="bg-[#ae2b2b]/5 border border-[#ae2b2b]/20 rounded-xl p-4 text-center">
+                    <div className="mx-auto w-12 h-12 bg-[#ae2b2b]/10 rounded-full flex items-center justify-center mb-2">
+                      <Clock className="w-6 h-6 text-[#ae2b2b]" />
                     </div>
-                    <h4 className="font-bold text-amber-800">Request Pending</h4>
-                    <p className="text-sm text-amber-600 mt-1">Approval sent to manager.</p>
+                    <h4 className="font-bold text-[#ae2b2b]">Request Pending</h4>
+                    <p className="text-sm text-[#ae2b2b] mt-1">Approval sent to manager.</p>
                   </div>
                 ) : (
                   <div className="space-y-3">

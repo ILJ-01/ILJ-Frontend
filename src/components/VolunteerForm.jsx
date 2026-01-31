@@ -181,9 +181,20 @@ export default function VolunteerForm() {
         }
     }
 
+    const onError = (errors, e) => {
+        // Wait for state update to reflect in DOM
+        setTimeout(() => {
+            const firstErrorElement = document.querySelector('[aria-invalid="true"], [data-invalid="true"]');
+            if (firstErrorElement) {
+                firstErrorElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                firstErrorElement.focus({ preventScroll: true });
+            }
+        }, 100);
+    }
+
     return (
         <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+            <form onSubmit={form.handleSubmit(onSubmit, onError)} className="space-y-8">
 
                 {/* 1. Personal Information */}
                 <Card className="border-l-4 border-l-[#ae2b2b]">
@@ -643,7 +654,7 @@ export default function VolunteerForm() {
                                 name="volunteeringPreference1"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel className="text-lg font-medium">1st Priority (Compulsory) <span className="text-red-500">*</span></FormLabel>
+                                        <FormLabel className="text-lg font-medium">1st Preference (Compulsory) <span className="text-red-500">*</span></FormLabel>
                                         <FormControl>
                                             <RadioGroup
                                                 onValueChange={field.onChange}
@@ -680,7 +691,7 @@ export default function VolunteerForm() {
                                         return (
                                             <FormItem className="animate-in fade-in slide-in-from-top-4 duration-500">
                                                 <div className="flex justify-between items-center mb-2">
-                                                    <FormLabel className="text-lg font-medium">2nd Priority</FormLabel>
+                                                    <FormLabel className="text-lg font-medium">2nd Preference</FormLabel>
                                                     <Button
                                                         type="button"
                                                         variant="ghost"
@@ -722,7 +733,7 @@ export default function VolunteerForm() {
                                                                         <Icon className="h-4 w-4 text-[#ae2b2b] flex-shrink-0" />
                                                                         <span className="flex-1">
                                                                             {option.label}
-                                                                            {isDisabled && <span className="block text-xs text-red-500">(Selected in 1st priority)</span>}
+                                                                            {isDisabled && <span className="block text-xs text-red-500">(Selected in 1st Preference)</span>}
                                                                         </span>
                                                                     </FormLabel>
                                                                 </FormItem>
@@ -747,7 +758,7 @@ export default function VolunteerForm() {
                                         return (
                                             <FormItem className="animate-in fade-in slide-in-from-top-4 duration-500">
                                                 <div className="flex justify-between items-center mb-2">
-                                                    <FormLabel className="text-lg font-medium">3rd Priority</FormLabel>
+                                                    <FormLabel className="text-lg font-medium">3rd Preference</FormLabel>
                                                     <Button
                                                         type="button"
                                                         variant="ghost"
@@ -1009,7 +1020,7 @@ export default function VolunteerForm() {
                                 <p className="text-sm text-gray-500">
                                     Default Password: <span className="font-mono font-semibold">Pass@123</span>
                                 </p>
-                                <p className="text-xs text-amber-600 bg-amber-50 p-2 rounded">
+                                <p className="text-xs text-[#ae2b2b] bg-[#ae2b2b]/5 p-2 rounded">
                                     ⚠️ Please change your password in loagin page by clicking on change password button.
                                 </p>
                             </div>

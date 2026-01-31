@@ -114,7 +114,7 @@ const ProjectsPage = () => {
         {/* SECTION 1: DATABASE PROJECTS (Dynamic) */}
         {dbProjects.length > 0 && (
           <section>
-            <h2 className="text-2xl font-bold text-gray-800 mb-6 border-l-4 border-amber-600 pl-4">Active Initiatives</h2>
+            <h2 className="text-2xl font-bold text-gray-800 mb-6 border-l-4 border-[#ae2b2b] pl-4">Active Initiatives</h2>
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
               {dbProjects.map((project) => (
                 <div
@@ -132,7 +132,7 @@ const ProjectsPage = () => {
                     <span className={`absolute top-3 right-3 px-3 py-1 text-xs font-bold rounded-full uppercase tracking-wider shadow-sm
                                     ${project.status === 'active' ? "bg-green-100 text-green-700" :
                         project.status === 'completed' ? "bg-gray-100 text-gray-700" :
-                          "bg-amber-100 text-amber-700"}
+                          "bg-[#ae2b2b]/10 text-[#ae2b2b]"}
                                 `}>
                       {project.status || 'Upcoming'}
                     </span>
@@ -159,7 +159,7 @@ const ProjectsPage = () => {
                           </span>
                         )}
                         {myApplications[project.id] === 'pending' && (
-                          <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded font-medium flex items-center gap-1">
+                          <span className="text-xs bg-[#ae2b2b]/10 text-[#ae2b2b] px-2 py-0.5 rounded font-medium flex items-center gap-1">
                             <Clock className="h-3 w-3" /> Pending
                           </span>
                         )}

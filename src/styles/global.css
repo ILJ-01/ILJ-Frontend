@@ -142,3 +142,17 @@ body {
     color: hsl(var(--foreground));
   }
 }
+
+/* Custom error highlighting */
+input[aria-invalid="true"],
+textarea[aria-invalid="true"],
+button[role="combobox"][aria-invalid="true"] {
+  border-color: #ef4444 !important;
+  box-shadow: 0 0 0 1px #ef4444 !important;
+}
+
+div[role="radiogroup"][aria-invalid="true"] {
+  border: 1px solid #ef4444;
+  border-radius: 6px;
+  padding: 8px;
+}

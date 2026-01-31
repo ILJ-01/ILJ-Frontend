@@ -309,14 +309,8 @@ export default function Profile() {
                             <CardTitle className="text-lg font-serif">Quick Stats</CardTitle>
                         </CardHeader>
                         <CardContent className="grid grid-cols-2 gap-4">
-                            <div className="bg-red-50 p-4 rounded-xl text-center">
-                                <p className="text-2xl font-bold text-[#ae2b2b]">{user.age || '-'}</p>
-                                <p className="text-xs text-gray-500 uppercase tracking-wide mt-1">Age</p>
-                            </div>
-                            <div className="bg-red-50 p-4 rounded-xl text-center">
-                                <p className="text-2xl font-bold text-[#ae2b2b]">{user.availability_days === 'Flexible' ? 'Flex' : 'Days'}</p>
-                                <p className="text-xs text-gray-500 uppercase tracking-wide mt-1">{user.availability_days || 'Avail'}</p>
-                            </div>
+
+
                             <div className="col-span-2 bg-gray-50 p-4 rounded-xl flex items-center justify-between">
                                 <div className="text-left">
                                     <p className="text-xs text-gray-500 uppercase">Mode</p>

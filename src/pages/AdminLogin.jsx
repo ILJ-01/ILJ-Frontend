@@ -41,7 +41,7 @@ const AdminLogin = () => {
                                 name="id"
                                 value={credentials.id}
                                 onChange={handleChange}
-                                className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all"
+                                className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent transition-all"
                                 placeholder="Enter Admin ID"
                                 required
                             />
@@ -59,7 +59,7 @@ const AdminLogin = () => {
                                 name="password"
                                 value={credentials.password}
                                 onChange={handleChange}
-                                className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all"
+                                className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent transition-all"
                                 placeholder="••••••••"
                                 required
                             />
@@ -74,7 +74,7 @@ const AdminLogin = () => {
 
                     <button
                         type="submit"
-                        className="w-full bg-amber-600 hover:bg-amber-700 text-white font-semibold py-3 rounded-lg transition-colors duration-200 shadow-md hover:shadow-lg focus:ring-2 focus:ring-offset-2 focus:ring-amber-500"
+                        className="w-full bg-[#ae2b2b] hover:bg-[#8b1e1e] text-white font-semibold py-3 rounded-lg transition-colors duration-200 shadow-md hover:shadow-lg focus:ring-2 focus:ring-offset-2 focus:ring-[#ae2b2b]"
                     >
                         Access Dashboard
                     </button>
