@@ -47,7 +47,7 @@ const Badge3D = ({ user }) => {
                 onMouseMove={handleMouseMove}
                 onMouseLeave={handleMouseLeave}
                 onClick={() => setIsFlipped(!isFlipped)}
-                className="relative w-full aspect-[1.586/1] cursor-pointer group shadow-xl hover:shadow-2xl transition-shadow rounded-2xl"
+                className="relative w-full aspect-[1.586/1.2] sm:aspect-[1.586/1.1] cursor-pointer group shadow-xl hover:shadow-2xl transition-shadow rounded-2xl"
             >
                 <motion.div
                     animate={{ rotateY: isFlipped ? 180 : 0 }}
@@ -58,7 +58,7 @@ const Badge3D = ({ user }) => {
                     {/* FRONT */}
                     <div className="absolute inset-0 backface-hidden rounded-2xl overflow-hidden" style={{ backfaceVisibility: 'hidden' }}>
                         <div className="absolute inset-0 rounded-2xl p-[2px] bg-gradient-to-tr from-gray-300 via-white to-gray-300 shadow-2xl">
-                            <div className="h-full w-full bg-gradient-to-br from-[#ae2b2b] via-[#8b1e1e] to-[#5c1212] rounded-[14px] p-6 flex flex-col justify-between text-white relative overflow-hidden">
+                            <div className="h-full w-full bg-gradient-to-br from-[#ae2b2b] via-[#8b1e1e] to-[#5c1212] rounded-[14px] p-4 sm:p-5 flex flex-col justify-between text-white relative overflow-hidden">
                                 <div className="absolute inset-0 z-50 opacity-0 group-hover:opacity-30 transition-opacity duration-500 pointer-events-none" style={{ background: 'linear-gradient(105deg, transparent 40%, rgba(255, 255, 255, 0.8) 45%, rgba(255, 255, 255, 0.1) 50%, transparent 54%)', mixBlendMode: 'overlay' }} />
                                 <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)', backgroundSize: '24px 24px' }}></div>
                                 <div className="absolute top-0 right-0 p-8 opacity-10 transform translate-x-1/3 -translate-y-1/3"><Shield size={200} /></div>
@@ -71,23 +71,22 @@ const Badge3D = ({ user }) => {
                                     <div className="bg-white/10 backdrop-blur-md px-3 py-1 rounded-full border border-white/20 shadow-inner"><span className="text-xs font-mono font-bold tracking-wider">{user.ilj_id}</span></div>
                                 </div>
 
-                                <div className="relative z-10 flex items-center gap-5 mt-4">
-                                    <div className="h-20 w-20 rounded-xl bg-gradient-to-br from-white to-gray-200 shadow-lg flex items-center justify-center text-[#ae2b2b] font-serif font-bold text-3xl border-2 border-white/30 truncate">{initials}</div>
+                                <div className="relative z-10 flex items-center gap-4 sm:gap-5 mt-2">
+                                    <div className="h-14 w-14 sm:h-16 sm:w-16 rounded-xl bg-gradient-to-br from-white to-gray-200 shadow-lg flex items-center justify-center text-[#ae2b2b] font-serif font-bold text-xl sm:text-2xl border-2 border-white/30 truncate">{initials}</div>
                                     <div>
-                                        <h2 className="text-xl font-bold leading-tight drop-shadow-sm">{user.first_name} {user.last_name}</h2>
-                                        <p className="text-xs text-red-100 mt-1 flex items-center gap-1">{user.occupation || 'Volunteer'}</p>
-
+                                        <h2 className="text-lg sm:text-xl font-bold leading-tight drop-shadow-sm truncate max-w-[150px] sm:max-w-none">{user.first_name} {user.last_name}</h2>
+                                        <p className="text-[10px] sm:text-xs text-red-100 mt-0.5 flex items-center gap-1">{user.occupation || 'Volunteer'}</p>
                                     </div>
                                 </div>
 
-                                <div className="relative z-10 flex justify-between items-end mt-2">
-                                    <div><p className="text-[9px] uppercase tracking-wider opacity-60">Member Since</p><p className="text-xs font-medium font-mono">{format(new Date(user.created_at || Date.now()), 'MMM yyyy')}</p>{user.kalyan_mitra && (
-                                        <p className="text-xs text-red-200 mt-0.5 flex items-center gap-1">
+                                <div className="relative z-10 flex justify-between items-end mt-1">
+                                    <div className="min-w-0 flex-1"><p className="text-[8px] sm:text-[9px] uppercase tracking-wider opacity-60">Member Since</p><p className="text-[10px] sm:text-xs font-medium font-mono">{format(new Date(user.created_at || Date.now()), 'MMM yyyy')}</p>{user.kalyan_mitra && (
+                                        <p className="text-[11px] text-red-200 mt-0.5 flex items-center gap-1 truncate font-medium" title={user.kalyan_mitra}>
                                             Kalyan Mitra: {user.kalyan_mitra}
                                         </p>
                                     )}</div>
 
-                                    <div> 
+                                    <div>
                                         <p className="text-[9px] uppercase tracking-wider opacity-60 font-bold">Status</p>
                                         <div className="flex items-center gap-1.5 bg-green-500/20 px-2 py-0.5 rounded-full border border-green-400/30"><span className="relative flex h-2 w-2"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span><span className="relative inline-flex rounded-full h-2 w-2 bg-green-400"></span></span><span className="text-[10px] font-bold text-green-300">ACTIVE</span></div></div>
                                 </div>
@@ -410,7 +409,6 @@ export default function ProfilePage() {
                                     <InfoItem icon={Award} label="Dharmik Studies" value={formData.dharmik_studies} isEditing={isEditing} field="dharmik_studies" onChange={handleUpdate} />
                                     <InfoItem icon={User} label="Sangh Name" value={formData.sangh_name} isEditing={isEditing} field="sangh_name" onChange={handleUpdate} />
                                     <InfoItem icon={Sparkles} label="Referred By" value={formData.referred_by} isEditing={isEditing} field="referred_by" onChange={handleUpdate} />
-                                    <InfoItem icon={User} label="Kalyan Mitra" value={formData.kalyan_mitra} />
                                 </div>
                             </div>
                         </motion.div>
