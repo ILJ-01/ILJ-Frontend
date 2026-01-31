@@ -375,66 +375,39 @@ export default function ManagerHub() {
             {/* ... */}
 
             {/* Tabs */}
-            <div className="flex border-b border-gray-200 overflow-x-auto">
-                <button
-                    onClick={() => setActiveTab("projects")}
-                    className={`px-6 py-3 font-medium text-sm transition-colors border-b-2 whitespace-nowrap ${activeTab === "projects"
-                        ? "border-[#ae2b2b] text-[#ae2b2b]"
-                        : "border-transparent text-gray-500 hover:text-gray-700"
-                        }`}
-                >
-                    <div className="flex items-center gap-2">
-                        <Briefcase className="h-4 w-4" /> My Projects
-                    </div>
-                </button>
-                <button
-                    onClick={() => setActiveTab("team")}
-                    className={`px-6 py-3 font-medium text-sm transition-colors border-b-2 whitespace-nowrap ${activeTab === "team"
-                        ? "border-[#ae2b2b] text-[#ae2b2b]"
-                        : "border-transparent text-gray-500 hover:text-gray-700"
-                        }`}
-                >
-                    <div className="flex items-center gap-2">
-                        <Users className="h-4 w-4" /> My Team
-                    </div>
-                </button>
-                <button
-                    onClick={() => setActiveTab("approvals")}
-                    className={`px-6 py-3 font-medium text-sm transition-colors border-b-2 whitespace-nowrap ${activeTab === "approvals"
-                        ? "border-[#ae2b2b] text-[#ae2b2b]"
-                        : "border-transparent text-gray-500 hover:text-gray-700"
-                        }`}
-                >
-                    <div className="flex items-center gap-2">
-                        <Clock className="h-4 w-4" />
-                        Approvals
-                        {pendingTimesheets.length > 0 && (
-                            <span className="bg-red-100 text-[#ae2b2b] px-2 py-0.5 rounded-full text-xs">{pendingTimesheets.length}</span>
-                        )}
-                    </div>
-                </button>
-                <button
-                    onClick={() => setActiveTab("tasks")}
-                    className={`px-6 py-3 font-medium text-sm transition-colors border-b-2 whitespace-nowrap ${activeTab === "tasks"
-                        ? "border-[#ae2b2b] text-[#ae2b2b]"
-                        : "border-transparent text-gray-500 hover:text-gray-700"
-                        }`}
-                >
-                    <div className="flex items-center gap-2">
-                        <CheckSquare className="h-4 w-4" /> Assign Tasks
-                    </div>
-                </button>
-                <button
-                    onClick={() => setActiveTab("opportunities")}
-                    className={`px-6 py-3 font-medium text-sm transition-colors border-b-2 whitespace-nowrap ${activeTab === "opportunities"
-                        ? "border-[#ae2b2b] text-[#ae2b2b]"
-                        : "border-transparent text-gray-500 hover:text-gray-700"
-                        }`}
-                >
-                    <div className="flex items-center gap-2">
-                        <Award className="h-4 w-4" /> Opportunities
-                    </div>
-                </button>
+            <div className="flex flex-wrap gap-2 md:gap-0 border-b-0 md:border-b border-gray-200">
+                {[
+                    { id: "projects", label: "My Projects", icon: Briefcase },
+                    { id: "team", label: "My Team", icon: Users },
+                    { id: "approvals", label: "Approvals", icon: Clock, count: pendingTimesheets.length },
+                    { id: "tasks", label: "Assign Tasks", icon: CheckSquare },
+                    { id: "opportunities", label: "Opportunities", icon: Award }
+                ].map((tab) => {
+                    const Icon = tab.icon;
+                    const isActive = activeTab === tab.id;
+                    return (
+                        <button
+                            key={tab.id}
+                            onClick={() => setActiveTab(tab.id)}
+                            className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-3 md:px-6 md:py-3 font-medium text-sm transition-all
+                                rounded-xl md:rounded-none md:border-b-2 whitespace-nowrap
+                                ${isActive
+                                    ? "bg-[#ae2b2b] text-white md:bg-transparent md:border-[#ae2b2b] md:text-[#ae2b2b]"
+                                    : "bg-white text-gray-500 border border-gray-100 md:bg-transparent md:border-transparent md:border-b-2 hover:text-gray-700"
+                                }
+                            `}
+                        >
+                            <Icon className="h-4 w-4" />
+                            <span>{tab.label}</span>
+                            {tab.count > 0 && (
+                                <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${isActive ? "bg-white text-[#ae2b2b] md:bg-red-100" : "bg-red-100 text-[#ae2b2b]"
+                                    }`}>
+                                    {tab.count}
+                                </span>
+                            )}
+                        </button>
+                    );
+                })}
             </div>
 
             {/* Projects Tab */}

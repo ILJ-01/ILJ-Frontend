@@ -76,10 +76,10 @@ export default function DashboardLayout({ children }) {
         <div className="min-h-screen bg-gray-50 flex font-sans">
             {/* Sidebar */}
             <aside
-                className={`fixed md:sticky top-0 h-screen bg-white border-r border-gray-200 z-40 transition-all duration-300 flex flex-col
+                className={`fixed md:sticky top-0 h-[100dvh] md:h-screen bg-white border-r border-gray-200 z-50 transition-all duration-300 flex flex-col
         ${isOpen ? "w-56" : "w-20"} ${isMobile && !isOpen ? "-translate-x-full" : "translate-x-0"}`}
             >
-                <div className="p-4 border-b border-gray-100 flex items-center justify-between h-16">
+                <div className="p-4 border-b border-gray-100 flex items-center justify-between h-16 flex-shrink-0">
                     <div className="flex items-center gap-2 overflow-hidden">
                         {isOpen && <span className="text-xl font-bold text-[#ae2b2b] whitespace-nowrap">ILJ Volunteers</span>}
                         {!isOpen && <span className="text-xl font-bold text-[#ae2b2b] w-full text-center">ILJ</span>}
@@ -91,7 +91,7 @@ export default function DashboardLayout({ children }) {
                     )}
                 </div>
 
-                <nav className="flex-1 py-6 px-3 space-y-2">
+                <nav className="flex-1 py-6 px-3 space-y-2 overflow-y-auto">
                     {menuItems.map((item) => {
                         const Icon = item.icon;
                         const isActive = location.pathname === item.path || (item.path !== '/dashboard' && location.pathname.startsWith(item.path));

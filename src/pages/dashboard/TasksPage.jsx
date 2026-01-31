@@ -130,21 +130,21 @@ export default function TasksPage() {
             </div>
 
             {/* Tabs */}
-            <div className="flex gap-4 border-b border-gray-200">
+            <div className="flex flex-wrap gap-2 md:gap-4 border-b-0 md:border-b border-gray-200">
                 <button
                     onClick={() => setActiveTab("assigned")}
-                    className={`pb-3 px-1 text-sm font-medium transition-all ${activeTab === "assigned"
-                        ? "border-b-2 border-[#ae2b2b] text-[#ae2b2b]"
-                        : "text-gray-500 hover:text-gray-700"
+                    className={`flex-1 md:flex-none py-2 px-4 md:py-3 md:px-1 text-sm font-medium transition-all rounded-lg md:rounded-none md:border-b-2 ${activeTab === "assigned"
+                            ? "bg-[#ae2b2b] text-white md:bg-transparent md:border-[#ae2b2b] md:text-[#ae2b2b]"
+                            : "bg-white text-gray-500 border border-gray-100 md:bg-transparent md:border-transparent hover:text-gray-700"
                         }`}
                 >
                     Assigned Tasks
                 </button>
                 <button
                     onClick={() => setActiveTab("opportunities")}
-                    className={`pb-3 px-1 text-sm font-medium transition-all ${activeTab === "opportunities"
-                        ? "border-b-2 border-[#ae2b2b] text-[#ae2b2b]"
-                        : "text-gray-500 hover:text-gray-700"
+                    className={`flex-1 md:flex-none py-2 px-4 md:py-3 md:px-1 text-sm font-medium transition-all rounded-lg md:rounded-none md:border-b-2 ${activeTab === "opportunities"
+                            ? "bg-[#ae2b2b] text-white md:bg-transparent md:border-[#ae2b2b] md:text-[#ae2b2b]"
+                            : "bg-white text-gray-500 border border-gray-100 md:bg-transparent md:border-transparent hover:text-gray-700"
                         }`}
                 >
                     General Opportunities
