@@ -1,5 +1,5 @@
 import VolunteerForm from "@/components/VolunteerForm";
-import { Shield } from "lucide-react";
+import { Shield, BookOpen } from "lucide-react";
 import { Link } from "react-router-dom";
 
 export default function VolunteerRegistration() {
@@ -27,13 +27,22 @@ export default function VolunteerRegistration() {
                             This form collects essential information to understand your background, interests, and availability,
                             so we can meaningfully engage you in activities aligned with Jain values and community service.
                         </p>
-                        <Link
-                            to="/policies"
-                            target="_blank"
-                            className="flex items-center gap-2 text-[#ae2b2b] font-semibold hover:bg-[#ae2b2b] hover:text-white transition-all px-4 py-2.5 rounded-lg border border-[#ae2b2b]/20 bg-white shadow-sm whitespace-nowrap text-sm"
-                        >
-                            <Shield className="h-4 w-4" /> View Policies
-                        </Link>
+                        <div className="flex items-center gap-3">
+                            <Link
+                                to="/interests"
+                                target="_blank"
+                                className="flex items-center gap-2 text-[#ae2b2b] font-semibold hover:bg-[#ae2b2b] hover:text-white transition-all px-4 py-2.5 rounded-lg border border-[#ae2b2b]/20 bg-[#ae2b2b]/5 shadow-sm whitespace-nowrap text-sm"
+                            >
+                                <BookOpen className="h-4 w-4" /> About Interests
+                            </Link>
+                            <Link
+                                to="/policies"
+                                target="_blank"
+                                className="flex items-center gap-2 text-gray-600 font-semibold hover:bg-gray-100 transition-all px-4 py-2.5 rounded-lg border border-gray-200 bg-white shadow-sm whitespace-nowrap text-sm"
+                            >
+                                <Shield className="h-4 w-4" /> View Policies
+                            </Link>
+                        </div>
                     </div>
                     <VolunteerForm />
                 </div>

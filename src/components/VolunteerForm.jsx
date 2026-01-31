@@ -4,7 +4,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { format, differenceInYears } from "date-fns";
-import { CalendarIcon, User, Phone, MapPin, GraduationCap, Briefcase, Heart, Link as LinkIcon, CheckSquare, Clock, HandHeart, Send, PlusCircle, Trash2, FileText, Mic, Palette, Camera, Calendar as LucideCalendar, Megaphone, School, Code, Users, Shield, Share2 } from "lucide-react";
+import { CalendarIcon, User, Phone, MapPin, GraduationCap, Briefcase, Heart, Link as LinkIcon, CheckSquare, Clock, HandHeart, Send, PlusCircle, Trash2, FileText, Mic, Palette, Camera, Calendar as LucideCalendar, Megaphone, School, Code, Users, Shield, Share2, Info } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -643,9 +643,18 @@ export default function VolunteerForm() {
                 {/* 8. Areas of Volunteering Interest */}
                 <Card className="border-l-4 border-l-[#ae2b2b]">
                     <CardHeader className="bg-gray-50/50">
-                        <CardTitle className="flex items-center text-[#ae2b2b] font-serif tracking-wide text-xl md:text-2xl">
-                            <CheckSquare className="mr-2 h-6 w-6" /> Areas of Volunteering Interest
-                        </CardTitle>
+                        <div className="flex justify-between items-center">
+                            <CardTitle className="flex items-center text-[#ae2b2b] font-serif tracking-wide text-xl md:text-2xl">
+                                <CheckSquare className="mr-2 h-6 w-6" /> Areas of Volunteering Interest
+                            </CardTitle>
+                            <a
+                                href="/interests"
+                                target="_blank"
+                                className="flex items-center gap-1.5 text-xs font-bold text-[#ae2b2b] hover:underline bg-white px-3 py-1.5 rounded-full border border-[#ae2b2b]/20 shadow-sm transition-all hover:shadow-md"
+                            >
+                                <Info className="h-3.5 w-3.5" /> Know about each task
+                            </a>
+                        </div>
                     </CardHeader>
                     <CardContent className="pt-6">
                         <div className="space-y-6">

@@ -14,6 +14,7 @@ import AdminLogin from "./pages/AdminLogin";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminAddProject from "./pages/AdminAddProject";
 import AdminEditProject from "./pages/AdminEditProject";
+import InterestsPage from "./pages/InterestsPage";
 import "./styles/global.css";
 
 // Dashboard Imports
@@ -68,6 +69,7 @@ function App() {
             <Route path="/form" element={<MainLayout><Form /></MainLayout>} />
             <Route path="/volunteer-registration" element={<MainLayout><VolunteerRegistration /></MainLayout>} />
             <Route path="/policies" element={<MainLayout><div className="bg-[#f8f9fa] pt-8 pb-16"><PoliciesPage /></div></MainLayout>} />
+            <Route path="/interests" element={<MainLayout><InterestsPage /></MainLayout>} />
 
             {/* Admin Routes */}
             <Route path="/admin" element={<AdminLogin />} />
