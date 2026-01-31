@@ -3,7 +3,7 @@ import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/lib/supabase";
 import {
     Briefcase, CheckSquare, Clock, Users, Award,
-    Plus, Check, X, Search, ChevronRight
+    Plus, Check, X, Search, ChevronRight, Trash2, Archive
 } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -46,6 +46,10 @@ export default function ManagerHub() {
     const [manageTeamSearch, setManageTeamSearch] = useState("");
     const [showManageTeamList, setShowManageTeamList] = useState(false);
 
+    // Tasks tracking
+    const [teamTasks, setTeamTasks] = useState([]);
+    const [showArchivedTasks, setShowArchivedTasks] = useState(false);
+
     useEffect(() => {
         if (!user) return;
 
@@ -58,6 +62,7 @@ export default function ManagerHub() {
 
             fetchManagerData();
             fetchTeamMembers(firstProjId);
+            fetchTeamTasks(firstProjId);
         } else {
             // User loaded but no projects
             setProjects([]);
@@ -81,6 +86,28 @@ export default function ManagerHub() {
             setTeamMembers(data?.map(d => d.volunteer) || []);
         } catch (error) {
             console.error("Fetch Team Error:", error);
+        }
+    };
+
+    const fetchTeamTasks = async (projId) => {
+        if (!projId) return;
+        try {
+            const { data, error } = await supabase
+                .from('tasks')
+                .select(`
+                    id,
+                    title,
+                    status,
+                    deadline,
+                    assignee:volunteers(first_name, last_name, ilj_id)
+                `)
+                .eq('project_id', projId)
+                .order('created_at', { ascending: false });
+
+            if (error) throw error;
+            setTeamTasks(data || []);
+        } catch (error) {
+            console.error("Fetch Team Tasks Error:", error);
         }
     };
 
@@ -251,8 +278,7 @@ export default function ManagerHub() {
                     description: taskForm.description,
                     project_id: taskForm.projectId,
                     assignee_id: m.volunteer_id,
-                    deadline: taskForm.deadline,
-                    created_by: user.id,
+                    deadline: taskForm.deadline || null,
                     status: 'pending'
                 }));
 
@@ -299,8 +325,7 @@ export default function ManagerHub() {
                     description: taskForm.description,
                     project_id: taskForm.projectId,
                     assignee_id: taskForm.assigneeId,
-                    deadline: taskForm.deadline,
-                    created_by: user.id,
+                    deadline: taskForm.deadline || null,
                     status: 'pending'
                 });
 
@@ -494,6 +519,7 @@ export default function ManagerHub() {
                                             <option value="active">Active</option>
                                             <option value="completed">Completed</option>
                                             <option value="paused">Paused</option>
+                                            <option value="archived">Archived</option>
                                         </select>
                                     </div>
                                     <div className="flex gap-3 pt-4">
@@ -532,6 +558,7 @@ export default function ManagerHub() {
                             onChange={(e) => {
                                 setTeamProjectId(e.target.value);
                                 fetchTeamMembers(e.target.value);
+                                fetchTeamTasks(e.target.value);
                             }}
                         >
                             {projects.map(p => <option key={p.id} value={p.id}>{p.title}</option>)}
@@ -596,10 +623,11 @@ export default function ManagerHub() {
                                 </div>
                                 <button
                                     onClick={() => handleRemoveFromTeam(member.id)}
-                                    className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
+                                    className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors md:opacity-0 md:group-hover:opacity-100"
                                     title="Remove from team"
                                 >
-                                    <X className="h-4 w-4" />
+                                    <Trash2 className="h-4 w-4 block md:hidden" />
+                                    <X className="h-4 w-4 hidden md:block" />
                                 </button>
                             </div>
                         ))}
@@ -607,6 +635,113 @@ export default function ManagerHub() {
                             <div className="col-span-full text-center py-12 text-gray-500 bg-gray-50 rounded-xl border border-dashed border-gray-200">
                                 <Users className="h-12 w-12 mx-auto mb-3 opacity-20" />
                                 <p>No team members assigned yet.</p>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Team Tasks Status Section */}
+                    <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm mt-8">
+                        <div className="flex items-center justify-between mb-6">
+                            <h3 className="font-bold text-gray-900 border-l-4 border-[#ae2b2b] pl-3">Team Task Status</h3>
+                            <div className="flex gap-4">
+                                <div className="flex items-center gap-1.5">
+                                    <div className="w-2.5 h-2.5 rounded-full bg-blue-500"></div>
+                                    <span className="text-xs text-gray-500">In Progress</span>
+                                </div>
+                                <div className="flex items-center gap-1.5">
+                                    <div className="w-2.5 h-2.5 rounded-full bg-green-500"></div>
+                                    <span className="text-xs text-gray-500">Completed</span>
+                                </div>
+                                <div className="flex items-center gap-1.5">
+                                    <div className="w-2.5 h-2.5 rounded-full bg-red-400"></div>
+                                    <span className="text-xs text-gray-500">Pending</span>
+                                </div>
+                                <button
+                                    onClick={() => setShowArchivedTasks(!showArchivedTasks)}
+                                    className={`text-xs px-2 py-1 rounded border transition-colors ${showArchivedTasks ? 'bg-amber-100 border-amber-300 text-amber-700' : 'bg-gray-50 border-gray-200 text-gray-500 hover:bg-gray-100'}`}
+                                >
+                                    {showArchivedTasks ? 'Show Active' : 'Show Archived'}
+                                </button>
+                            </div>
+                        </div>
+
+                        {teamTasks.filter(t => showArchivedTasks ? t.status === 'archived' : t.status !== 'archived').length === 0 ? (
+                            <div className="text-center py-8 text-gray-400 border border-dashed rounded-lg">
+                                {showArchivedTasks ? 'No archived tasks found.' : 'No tasks found for this project.'}
+                            </div>
+                        ) : (
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-sm text-left">
+                                    <thead>
+                                        <tr className="text-gray-500 border-b">
+                                            <th className="pb-3 font-semibold">Volunteer</th>
+                                            <th className="pb-3 font-semibold">Task Title</th>
+                                            <th className="pb-3 font-semibold">Status</th>
+                                            <th className="pb-3 font-semibold">Deadline</th>
+                                            <th className="pb-3 font-semibold text-right">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-gray-50">
+                                        {teamTasks
+                                            .filter(t => showArchivedTasks ? t.status === 'archived' : t.status !== 'archived')
+                                            .map(task => (
+                                                <tr key={task.id} className="hover:bg-gray-50 transition-colors">
+                                                    <td className="py-3">
+                                                        <p className="font-medium text-gray-900">{task.assignee?.first_name} {task.assignee?.last_name}</p>
+                                                        <p className="text-[10px] text-gray-400 font-mono">{task.assignee?.ilj_id}</p>
+                                                    </td>
+                                                    <td className="py-3 font-medium text-gray-700">{task.title}</td>
+                                                    <td className="py-3">
+                                                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider
+                                                        ${task.status === 'completed' ? 'bg-green-100 text-green-700' :
+                                                                task.status === 'in_progress' ? 'bg-blue-100 text-blue-700' :
+                                                                    'bg-red-50 text-red-600'}
+                                                    `}>
+                                                            {task.status.replace('_', ' ')}
+                                                        </span>
+                                                    </td>
+                                                    <td className="py-3 text-gray-500">
+                                                        {task.deadline ? new Date(task.deadline).toLocaleDateString() : '-'}
+                                                    </td>
+                                                    <td className="py-3 text-right">
+                                                        <div className="flex items-center justify-end gap-2">
+                                                            <button
+                                                                onClick={async () => {
+                                                                    const newStatus = task.status === 'archived' ? 'pending' : 'archived';
+                                                                    const { error } = await supabase.from('tasks').update({ status: newStatus }).eq('id', task.id);
+                                                                    if (error) {
+                                                                        console.error(error);
+                                                                        alert("Failed to update status");
+                                                                    }
+                                                                    else fetchTeamTasks(teamProjectId);
+                                                                }}
+                                                                className="text-gray-400 hover:text-amber-600 p-1.5 rounded hover:bg-amber-50 transition-colors"
+                                                                title={task.status === 'archived' ? "Unarchive" : "Archive Task"}
+                                                            >
+                                                                <Archive className="h-4 w-4" />
+                                                            </button>
+                                                            <button
+                                                                onClick={async () => {
+                                                                    if (!confirm("Are you sure you want to delete this task? This cannot be undone.")) return;
+                                                                    const { error } = await supabase.from('tasks').delete().eq('id', task.id);
+                                                                    if (error) {
+                                                                        console.error(error);
+                                                                        alert("Failed to delete task");
+                                                                    } else {
+                                                                        fetchTeamTasks(teamProjectId);
+                                                                    }
+                                                                }}
+                                                                className="text-gray-400 hover:text-red-600 p-1.5 rounded hover:bg-red-50 transition-colors"
+                                                                title="Delete Task"
+                                                            >
+                                                                <Trash2 className="h-4 w-4" />
+                                                            </button>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                    </tbody>
+                                </table>
                             </div>
                         )}
                     </div>

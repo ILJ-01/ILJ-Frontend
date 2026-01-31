@@ -27,6 +27,7 @@ const AdminDashboard = () => {
     // Projects State
     const [projects, setProjects] = useState([]);
     const [loadingProjects, setLoadingProjects] = useState(true);
+    const [showArchivedProjects, setShowArchivedProjects] = useState(false);
 
     useEffect(() => {
         const checkAuth = () => {
@@ -239,9 +240,17 @@ const AdminDashboard = () => {
 
                         {/* Action Buttons */}
                         {activeTab === 'projects' && (
-                            <button onClick={() => navigate('/admin/add-project')} className="flex items-center gap-2 bg-[#ae2b2b] text-white px-4 py-2 rounded-lg hover:bg-[#8b1e1e] transition-all shadow-md font-semibold text-sm whitespace-nowrap">
-                                <Plus className="h-5 w-5" /> Add Project
-                            </button>
+                            <div className="flex items-center gap-2">
+                                <button
+                                    onClick={() => setShowArchivedProjects(!showArchivedProjects)}
+                                    className={`px-4 py-2 rounded-lg border text-sm font-medium transition-all ${showArchivedProjects ? 'bg-amber-100 border-amber-300 text-amber-700' : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'}`}
+                                >
+                                    {showArchivedProjects ? 'Show Active' : 'Show Archived'}
+                                </button>
+                                <button onClick={() => navigate('/admin/add-project')} className="flex items-center gap-2 bg-[#ae2b2b] text-white px-4 py-2 rounded-lg hover:bg-[#8b1e1e] transition-all shadow-md font-semibold text-sm whitespace-nowrap">
+                                    <Plus className="h-5 w-5" /> Add Project
+                                </button>
+                            </div>
                         )}
                     </div>
                 </div>
@@ -355,24 +364,26 @@ const AdminDashboard = () => {
                             <div className="flex justify-center h-64 items-center"><div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#ae2b2b]"></div></div>
                         ) : (
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                {projects.length === 0 ? (
+                                {projects.filter(p => showArchivedProjects ? p.status === 'archived' : p.status !== 'archived').length === 0 ? (
                                     <div className="col-span-full text-center py-20 bg-white rounded-xl border border-gray-200 border-dashed">
                                         <Briefcase className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                                        <h3 className="text-lg font-medium text-gray-900">No Projects Yet</h3>
-                                        <p className="text-gray-500 mb-6">Create your first project to get started.</p>
-                                        <button
-                                            onClick={() => navigate('/admin/add-project')}
-                                            className="px-4 py-2 bg-[#ae2b2b] text-white rounded-lg hover:bg-[#8b1e1e] transition-colors"
-                                        >
-                                            Create Project
-                                        </button>
+                                        <h3 className="text-lg font-medium text-gray-900">No {showArchivedProjects ? 'Archived ' : ''}Projects Found</h3>
+                                        {!showArchivedProjects && <p className="text-gray-500 mb-6">Create your first project to get started.</p>}
+                                        {!showArchivedProjects && (
+                                            <button
+                                                onClick={() => navigate('/admin/add-project')}
+                                                className="px-4 py-2 bg-[#ae2b2b] text-white rounded-lg hover:bg-[#8b1e1e] transition-colors"
+                                            >
+                                                Create Project
+                                            </button>
+                                        )}
                                     </div>
                                 ) : (
-                                    projects.map(project => (
+                                    projects.filter(p => showArchivedProjects ? p.status === 'archived' : p.status !== 'archived').map(project => (
                                         <div
                                             key={project.id}
                                             onClick={() => navigate(`/admin/edit-project/${project.id}`)}
-                                            className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow duration-300 flex flex-col h-full cursor-pointer"
+                                            className={`bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow duration-300 flex flex-col h-full cursor-pointer ${project.status === 'archived' ? 'opacity-75 grayscale-[0.5]' : ''}`}
                                         >
                                             {/* Banner */}
                                             <div className="h-48 w-full bg-gray-100 relative">
@@ -386,8 +397,9 @@ const AdminDashboard = () => {
                                                 <div className="absolute top-3 right-3">
                                                     <span className={`px-2.5 py-1 rounded-full text-xs font-semibold uppercase tracking-wide border shadow-sm
                                                         ${project.status === 'active' ? 'bg-green-100 text-green-700 border-green-200' :
-                                                            project.status === 'completed' ? 'bg-gray-100 text-gray-700 border-gray-200' :
-                                                                'bg-[#ae2b2b]/10 text-[#ae2b2b] border-[#ae2b2b]/20'}`
+                                                            project.status === 'completed' ? 'bg-blue-100 text-blue-700 border-blue-200' :
+                                                                project.status === 'archived' ? 'bg-gray-100 text-gray-700 border-gray-200' :
+                                                                    'bg-[#ae2b2b]/10 text-[#ae2b2b] border-[#ae2b2b]/20'}`
                                                     }>
                                                         {project.status || 'Upcoming'}
                                                     </span>

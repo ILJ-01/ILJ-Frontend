@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
-import { CheckCircle, Plus, Trash2, X, Loader2, User, Clock, Search } from 'lucide-react';
+import { CheckCircle, Plus, Trash2, X, Loader2, User, Clock, Search, Archive } from 'lucide-react';
 
 export default function AdminTasks() {
     const [tasks, setTasks] = useState([]);
@@ -8,6 +8,7 @@ export default function AdminTasks() {
     const [volunteers, setVolunteers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
+    const [showArchived, setShowArchived] = useState(false);
 
     // Search State
     const [assigneeSearch, setAssigneeSearch] = useState('');
@@ -46,6 +47,13 @@ export default function AdminTasks() {
         if (!confirm("Delete this task?")) return;
         await supabase.from('tasks').delete().eq('id', id);
         setTasks(prev => prev.filter(t => t.id !== id));
+    };
+
+    const handleArchive = async (id, currentStatus) => {
+        const newStatus = currentStatus === 'archived' ? 'pending' : 'archived';
+        const { error } = await supabase.from('tasks').update({ status: newStatus }).eq('id', id);
+        if (error) alert("Failed to update task");
+        else fetchData();
     };
 
     const handleSubmit = async (e) => {
@@ -92,12 +100,20 @@ export default function AdminTasks() {
         <div className="space-y-6">
             <div className="flex justify-between items-center">
                 <h2 className="text-xl font-bold text-gray-800">Task Management</h2>
-                <button
-                    onClick={handleCreate}
-                    className="flex items-center gap-2 bg-[#ae2b2b] text-white px-4 py-2 rounded-lg hover:bg-[#8b1e1e] transition shadow-sm font-medium"
-                >
-                    <Plus className="h-4 w-4" /> Assign Task
-                </button>
+                <div className="flex items-center gap-3">
+                    <button
+                        onClick={() => setShowArchived(!showArchived)}
+                        className={`px-4 py-2 rounded-lg border text-sm font-medium transition-all ${showArchived ? 'bg-amber-100 border-amber-300 text-amber-700' : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'}`}
+                    >
+                        {showArchived ? 'Show Active' : 'Show Archived'}
+                    </button>
+                    <button
+                        onClick={handleCreate}
+                        className="flex items-center gap-2 bg-[#ae2b2b] text-white px-4 py-2 rounded-lg hover:bg-[#8b1e1e] transition shadow-sm font-medium"
+                    >
+                        <Plus className="h-4 w-4" /> Assign Task
+                    </button>
+                </div>
             </div>
 
             {loading ? (
@@ -105,17 +121,19 @@ export default function AdminTasks() {
             ) : (
                 <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
                     <div className="divide-y divide-gray-100">
-                        {tasks.map(task => (
-                            <div key={task.id} className="p-4 hover:bg-gray-50 flex items-center justify-between group">
+                        {tasks.filter(t => showArchived ? t.status === 'archived' : t.status !== 'archived').map(task => (
+                            <div key={task.id} className={`p-4 hover:bg-gray-50 flex items-center justify-between group ${task.status === 'archived' ? 'bg-gray-50/50' : ''}`}>
                                 <div className="flex-1 min-w-0 pr-4">
                                     <div className="flex items-center gap-2 mb-1">
                                         <span className={`text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded border
-                                            ${task.status === 'completed' ? 'bg-green-50 text-green-700 border-green-200' : 'bg-[#ae2b2b]/5 text-[#ae2b2b] border-[#ae2b2b]/20'}`}>
+                                            ${task.status === 'completed' ? 'bg-green-50 text-green-700 border-green-200' :
+                                                task.status === 'archived' ? 'bg-gray-100 text-gray-700 border-gray-200' :
+                                                    'bg-[#ae2b2b]/5 text-[#ae2b2b] border-[#ae2b2b]/20'}`}>
                                             {task.status}
                                         </span>
                                         {task.project && <span className="text-xs text-gray-500">• {task.project.title}</span>}
                                     </div>
-                                    <h3 className="font-bold text-gray-900 truncate">{task.title}</h3>
+                                    <h3 className={`font-bold text-gray-900 truncate ${task.status === 'archived' ? 'text-gray-500' : ''}`}>{task.title}</h3>
                                     <div className="flex items-center gap-4 mt-1 text-sm text-gray-500">
                                         <div className="flex items-center gap-1">
                                             <User className="h-3 w-3" />
@@ -131,9 +149,18 @@ export default function AdminTasks() {
                                         )}
                                     </div>
                                 </div>
-                                <button onClick={() => handleDelete(task.id)} className="text-gray-400 hover:text-red-500 p-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <Trash2 className="h-5 w-5" />
-                                </button>
+                                <div className="flex items-center gap-2">
+                                    <button
+                                        onClick={() => handleArchive(task.id, task.status)}
+                                        className="text-gray-400 hover:text-amber-600 p-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                                        title={task.status === 'archived' ? "Unarchive" : "Archive"}
+                                    >
+                                        <Archive className="h-5 w-5" />
+                                    </button>
+                                    <button onClick={() => handleDelete(task.id)} className="text-gray-400 hover:text-red-500 p-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <Trash2 className="h-5 w-5" />
+                                    </button>
+                                </div>
                             </div>
                         ))}
                         {tasks.length === 0 && <p className="text-gray-500 text-center py-8">No tasks found.</p>}

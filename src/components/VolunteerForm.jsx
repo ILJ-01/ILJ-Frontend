@@ -999,6 +999,25 @@ export default function VolunteerForm() {
                     </CardContent>
                 </Card>
 
+                <Card className="border-l-4 border-l-[#ae2b2b] bg-gray-50/30">
+                    <CardContent className="p-6">
+                        <div className="flex items-start space-x-3">
+                            <Checkbox id="policy-ack" required />
+                            <div className="grid gap-1.5 leading-none">
+                                <label
+                                    htmlFor="policy-ack"
+                                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                                >
+                                    I acknowledge that I have read and understood the organization's policies, including the Code of Conduct and Appraisal Plan.
+                                </label>
+                                <p className="text-sm text-muted-foreground">
+                                    You can view the full policies <a href="/policies" target="_blank" className="text-[#ae2b2b] font-semibold hover:underline">here</a>.
+                                </p>
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+
                 {/* Success/Error Messages */}
                 {submitResult && (
                     <div className={`rounded-lg p-6 ${submitResult.success ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'}`}>

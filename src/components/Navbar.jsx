@@ -19,9 +19,11 @@ function Navbar() {
   const handleProfileClick = () => {
     if (isLoggedIn) {
       navigate('/dashboard');
-    } else {
-      setShowLoginModal(true);
     }
+  };
+
+  const handleRegisterClick = () => {
+    navigate('/volunteer-registration');
   };
 
   return (
@@ -29,26 +31,43 @@ function Navbar() {
       <nav className="navbar">
         {/* Profile Icon - Left of hamburger on mobile, left of nav on desktop */}
         <div className="profile-icon-container">
-          <button
-            className="profile-icon-btn"
-            onClick={handleProfileClick}
-            aria-label="Profile"
-          >
-            {isLoggedIn && userInitials ? (
-              <span className="profile-initials">{userInitials}</span>
-            ) : (
-              <svg
-                className="profile-icon-svg"
-                viewBox="0 0 24 24"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
+          {isLoggedIn ? (
+            <button
+              className="profile-icon-btn"
+              onClick={handleProfileClick}
+              aria-label="Profile"
+            >
+              {userInitials ? (
+                <span className="profile-initials">{userInitials}</span>
+              ) : (
+                <svg
+                  className="profile-icon-svg"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <circle cx="12" cy="8" r="4" stroke="currentColor" strokeWidth="2" />
+                  <path d="M5 20C5 17.2386 8.13401 15 12 15C15.866 15 19 17.2386 19 20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                </svg>
+              )}
+              <span className="online-indicator"></span>
+            </button>
+          ) : (
+            <div className="nav-auth-buttons">
+              <button
+                className="nav-btn nav-btn-outline"
+                onClick={() => setShowLoginModal(true)}
               >
-                <circle cx="12" cy="8" r="4" stroke="currentColor" strokeWidth="2" />
-                <path d="M5 20C5 17.2386 8.13401 15 12 15C15.866 15 19 17.2386 19 20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-              </svg>
-            )}
-            {isLoggedIn && <span className="online-indicator"></span>}
-          </button>
+                LOGIN
+              </button>
+              <button
+                className="nav-btn nav-btn-solid"
+                onClick={handleRegisterClick}
+              >
+                JOIN AS VOLUNTEER
+              </button>
+            </div>
+          )}
         </div>
 
         <div className="logo">
@@ -83,6 +102,23 @@ function Navbar() {
           <li><Link to="/projects" onClick={() => setIsOpen(false)}>PROJECTS</Link></li>
           <li><Link to="/blogs" onClick={() => setIsOpen(false)}>ARTICLES</Link></li>
           <li><Link to="/aboutus" onClick={() => setIsOpen(false)}>ABOUT US</Link></li>
+          {!isLoggedIn && (
+            <div className="px-2 mt-4 space-y-2">
+              <button
+                className="mobile-nav-btn"
+                onClick={() => { setShowLoginModal(true); setIsOpen(false); }}
+              >
+                LOGIN
+              </button>
+              <Link
+                to="/volunteer-registration"
+                className="mobile-nav-btn solid"
+                onClick={() => setIsOpen(false)}
+              >
+                JOIN AS VOLUNTEER
+              </Link>
+            </div>
+          )}
           {isLoggedIn && (
             <li><Link to="/dashboard" onClick={() => setIsOpen(false)}>DASHBOARD</Link></li>
           )}

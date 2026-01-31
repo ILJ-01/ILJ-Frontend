@@ -367,6 +367,7 @@ const AdminEditProject = () => {
                                             <option value="upcoming">Upcoming</option>
                                             <option value="active">Active</option>
                                             <option value="completed">Completed</option>
+                                            <option value="archived">Archived</option>
                                         </select>
                                     </div>
                                 </div>

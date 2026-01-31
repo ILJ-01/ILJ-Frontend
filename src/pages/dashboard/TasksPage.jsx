@@ -114,6 +114,25 @@ export default function TasksPage() {
         }
     };
 
+    const handleRevokeTaskInterest = async (announcementId) => {
+        if (!confirm("Are you sure you want to revoke your interest for this opportunity?")) return;
+        try {
+            const { error } = await supabase
+                .from('announcement_interests')
+                .delete()
+                .eq('announcement_id', announcementId)
+                .eq('volunteer_id', user.id);
+
+            if (error) throw error;
+
+            setOpportunities(prev => prev.map(o => o.id === announcementId ? { ...o, alreadyInterested: false } : o));
+            alert("Interest revoked.");
+        } catch (e) {
+            console.error("Revoke Task Interest Error:", e);
+            alert("Action failed. Please try again.");
+        }
+    };
+
     const getStatusColor = (status) => {
         switch (status) {
             case 'completed': return 'bg-green-100 text-green-800 border-green-200';
@@ -134,8 +153,8 @@ export default function TasksPage() {
                 <button
                     onClick={() => setActiveTab("assigned")}
                     className={`flex-1 md:flex-none py-2 px-4 md:py-3 md:px-1 text-sm font-medium transition-all rounded-lg md:rounded-none md:border-b-2 ${activeTab === "assigned"
-                            ? "bg-[#ae2b2b] text-white md:bg-transparent md:border-[#ae2b2b] md:text-[#ae2b2b]"
-                            : "bg-white text-gray-500 border border-gray-100 md:bg-transparent md:border-transparent hover:text-gray-700"
+                        ? "bg-[#ae2b2b] text-white md:bg-transparent md:border-[#ae2b2b] md:text-[#ae2b2b]"
+                        : "bg-white text-gray-500 border border-gray-100 md:bg-transparent md:border-transparent hover:text-gray-700"
                         }`}
                 >
                     Assigned Tasks
@@ -143,8 +162,8 @@ export default function TasksPage() {
                 <button
                     onClick={() => setActiveTab("opportunities")}
                     className={`flex-1 md:flex-none py-2 px-4 md:py-3 md:px-1 text-sm font-medium transition-all rounded-lg md:rounded-none md:border-b-2 ${activeTab === "opportunities"
-                            ? "bg-[#ae2b2b] text-white md:bg-transparent md:border-[#ae2b2b] md:text-[#ae2b2b]"
-                            : "bg-white text-gray-500 border border-gray-100 md:bg-transparent md:border-transparent hover:text-gray-700"
+                        ? "bg-[#ae2b2b] text-white md:bg-transparent md:border-[#ae2b2b] md:text-[#ae2b2b]"
+                        : "bg-white text-gray-500 border border-gray-100 md:bg-transparent md:border-transparent hover:text-gray-700"
                         }`}
                 >
                     General Opportunities
@@ -249,14 +268,13 @@ export default function TasksPage() {
                                         </div>
 
                                         <button
-                                            onClick={() => handleOpportunityInterest(opp.id)}
-                                            disabled={opp.alreadyInterested}
+                                            onClick={() => opp.alreadyInterested ? handleRevokeTaskInterest(opp.id) : handleOpportunityInterest(opp.id)}
                                             className={`px-5 py-2.5 text-sm font-bold rounded-lg transition-all shadow-sm whitespace-nowrap ${opp.alreadyInterested
-                                                ? 'bg-green-100 text-green-700 cursor-default border border-green-200'
+                                                ? 'bg-red-50 text-red-600 border border-red-200 hover:bg-red-100'
                                                 : 'bg-[#ae2b2b] hover:bg-[#8b1e1e] text-white'
                                                 }`}
                                         >
-                                            {opp.alreadyInterested ? 'Interest Sent ✅' : 'I\'m Interested'}
+                                            {opp.alreadyInterested ? '✕ Revoke Interest' : 'I\'m Interested'}
                                         </button>
                                     </div>
                                 ))}

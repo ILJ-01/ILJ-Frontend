@@ -64,6 +64,29 @@ export default function EventsPage() {
         }
     };
 
+    const handleRevokeInterest = async (eventId) => {
+        if (!confirm("Are you sure you want to revoke your interest for this event?")) return;
+        try {
+            const { error } = await supabase
+                .from('event_interests')
+                .delete()
+                .eq('event_id', eventId)
+                .eq('volunteer_id', user.id);
+
+            if (error) throw error;
+
+            alert("Interest revoked.");
+            setInterestedEventIds(prev => {
+                const updated = new Set(prev);
+                updated.delete(eventId);
+                return updated;
+            });
+        } catch (e) {
+            console.error("Revoke Interest Error:", e);
+            alert("Action failed. Please try again.");
+        }
+    };
+
     return (
         <div className="space-y-6">
             <div>
@@ -129,14 +152,13 @@ export default function EventsPage() {
                                         </div>
 
                                         <button
-                                            onClick={() => handleVolunteer(event.id)}
-                                            disabled={isInterested}
+                                            onClick={() => isInterested ? handleRevokeInterest(event.id) : handleVolunteer(event.id)}
                                             className={`w-full py-2.5 font-medium rounded-lg transition-colors shadow-sm ${isInterested
-                                                ? "bg-green-100 text-green-700 cursor-not-allowed border border-green-200"
+                                                ? "bg-red-50 text-red-600 border border-red-200 hover:bg-red-100"
                                                 : "bg-[#ae2b2b] text-white hover:bg-[#8b1e1e]"
                                                 }`}
                                         >
-                                            {isInterested ? "✓ Interested" : "I am interested to volunteer"}
+                                            {isInterested ? "✕ Revoke Interest" : "I am interested to volunteer"}
                                         </button>
                                     </div>
                                 </div>

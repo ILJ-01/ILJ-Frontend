@@ -242,21 +242,34 @@ export default function ProfilePage() {
     const handleSave = async () => {
         setSaving(true);
         try {
-            // Remove email from update payload to prevent accidental changes if RLS/Auth doesn't allow it easily, or keep if you want to allow email updates (usually requires re-verification)
-            // For now, keeping it but backend might restrict it.
+            // Calculate age if DOB exists
+            let age = null;
+            if (formData.dob) {
+                const birthDate = new Date(formData.dob);
+                const today = new Date();
+                age = today.getFullYear() - birthDate.getFullYear();
+                const m = today.getMonth() - birthDate.getMonth();
+                if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+                    age--;
+                }
+            }
+
+            // Omit fields that shouldn't be updated directly via this form
+            const { email, ilj_id, id, created_at, ...updateData } = { ...formData, age };
+
             const { error } = await supabase
                 .from('volunteers')
-                .update(formData)
+                .update(updateData)
                 .eq('id', user.id);
 
             if (error) throw error;
 
             await refreshUser();
             setIsEditing(false);
-            alert("Profile updated!");
+            alert("Profile updated successfully!");
         } catch (err) {
             console.error("Profile Save Error:", err);
-            alert("Failed to save profile.");
+            alert(`Failed to save profile: ${err.message || 'Unknown error'}`);
         } finally {
             setSaving(false);
         }

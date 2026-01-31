@@ -67,6 +67,7 @@ function App() {
             <Route path="/profile" element={<MainLayout><Profile /></MainLayout>} />
             <Route path="/form" element={<MainLayout><Form /></MainLayout>} />
             <Route path="/volunteer-registration" element={<MainLayout><VolunteerRegistration /></MainLayout>} />
+            <Route path="/policies" element={<MainLayout><div className="bg-[#f8f9fa] pt-8 pb-16"><PoliciesPage /></div></MainLayout>} />
 
             {/* Admin Routes */}
             <Route path="/admin" element={<AdminLogin />} />
