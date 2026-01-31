@@ -517,6 +517,105 @@ const AdminDashboard = () => {
                                     <DetailItem label="Referred By" value={selectedVolunteer.referred_by} />
                                 </div>
                             </section>
+
+                            <section className="md:col-span-2 bg-gray-50 p-4 rounded-xl border border-gray-200">
+                                <h3 className="flex items-center gap-2 text-lg font-semibold text-gray-900 mb-4"><Users className="h-5 w-5 text-[#ae2b2b]" /> Assign Kalyan Mitra</h3>
+                                <div className="space-y-4">
+                                    <div className="flex items-center justify-between bg-white p-3 rounded-lg border border-gray-200">
+                                        <div>
+                                            <p className="text-xs font-medium text-gray-500 uppercase">Current Kalyan Mitra</p>
+                                            <p className="text-base font-semibold text-[#ae2b2b]">{selectedVolunteer.kalyan_mitra || "Not Assigned"}</p>
+                                        </div>
+                                    </div>
+
+                                    <div className="relative">
+                                        <label className="text-sm font-medium text-gray-700 mb-1 block">Search & Assign New Mitra</label>
+                                        <div className="relative">
+                                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                                            <input
+                                                type="text"
+                                                placeholder="Search volunteer name..."
+                                                className="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#ae2b2b] focus:border-transparent outline-none text-sm"
+                                                onChange={(e) => {
+                                                    const term = e.target.value.toLowerCase();
+                                                    // Simple local search logic attached to the input for now
+                                                    // Ideally this would be managed by state but we are injecting this block
+                                                    // We'll use a data attribute to store the container ID for the dropdown
+                                                    const dropdown = document.getElementById('mitra-dropdown');
+                                                    if (dropdown) {
+                                                        dropdown.style.display = term ? 'block' : 'none';
+                                                        const items = dropdown.querySelectorAll('.mitra-item');
+                                                        items.forEach(item => {
+                                                            const name = item.dataset.name.toLowerCase();
+                                                            item.style.display = name.includes(term) ? 'flex' : 'none';
+                                                        });
+                                                    }
+                                                }}
+                                            />
+                                        </div>
+
+                                        {/* Dropdown for search results */}
+                                        <div id="mitra-dropdown" className="hidden absolute z-20 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                                            {volunteers.filter(v => v.id !== selectedVolunteer.id).map(v => (
+                                                <div
+                                                    key={v.id}
+                                                    data-name={`${v.first_name} ${v.last_name}`}
+                                                    className="mitra-item flex items-center justify-between p-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-0"
+                                                    onClick={async () => {
+                                                        const confirmAssign = window.confirm(`Assign ${v.first_name} ${v.last_name} as Kalyan Mitra for ${selectedVolunteer.first_name}?`);
+                                                        if (confirmAssign) {
+                                                            try {
+                                                                const mitraName = `${v.first_name} ${v.last_name}`;
+                                                                // Use Edge Function to bypass RLS policies
+                                                                const EDGE_FUNC_URL = `https://pdcgcqsgzupoyzklvoju.supabase.co/functions/v1/assign-kalyan-mitra`;
+
+                                                                const response = await fetch(EDGE_FUNC_URL, {
+                                                                    method: 'POST',
+                                                                    headers: { 'Content-Type': 'application/json' },
+                                                                    body: JSON.stringify({
+                                                                        volunteer_id: selectedVolunteer.id,
+                                                                        kalyan_mitra: mitraName
+                                                                    })
+                                                                });
+
+                                                                const result = await response.json();
+
+                                                                if (!response.ok || result.error) {
+                                                                    throw new Error(result.error || 'Failed to update via Edge Function');
+                                                                }
+
+                                                                // Update local state
+                                                                const updated = { ...selectedVolunteer, kalyan_mitra: mitraName };
+                                                                setSelectedVolunteer(updated);
+                                                                setVolunteers(prev => prev.map(vol => vol.id === updated.id ? updated : vol));
+
+                                                                // Hide dropdown and clear input
+                                                                document.getElementById('mitra-dropdown').style.display = 'none';
+                                                                // alert("Kalyan Mitra Assigned Successfully!");
+                                                            } catch (err) {
+                                                                console.error("Error assigning mitra:", err);
+                                                                alert(`Failed to assign Kalyan Mitra. Error: ${err.message}`);
+                                                            }
+                                                        }
+                                                    }}
+                                                >
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-xs font-bold text-gray-600">
+                                                            {v.first_name?.[0]}{v.last_name?.[0]}
+                                                        </div>
+                                                        <div>
+                                                            <p className="text-sm font-medium text-gray-900">{v.first_name} {v.last_name}</p>
+                                                            <p className="text-xs text-gray-500">{v.ilj_id}</p>
+                                                        </div>
+                                                    </div>
+                                                    <Plus className="h-4 w-4 text-[#ae2b2b]" />
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
+                            </section>
+
                         </div>
                         <div className="bg-gray-50 px-6 py-4 border-t border-gray-200 flex justify-end"><button onClick={() => setSelectedVolunteer(null)} className="px-6 py-2 bg-white border rounded hover:bg-gray-50">Close</button></div>
                     </div>

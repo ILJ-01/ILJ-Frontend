@@ -35,10 +35,18 @@ export function AuthProvider({ children }) {
             }
 
             // Store user in state and localStorage
-            setUser(data);
-            localStorage.setItem('ilj_user', JSON.stringify(data));
+            // Fetch managed projects
+            const { data: projects } = await supabase
+                .from('projects')
+                .select('*')
+                .eq('manager_id', data.id);
 
-            return { success: true, user: data };
+            const userWithProjects = { ...data, managed_projects: projects || [] };
+
+            setUser(userWithProjects);
+            localStorage.setItem('ilj_user', JSON.stringify(userWithProjects));
+
+            return { success: true, user: userWithProjects };
         } catch (error) {
             console.error('Login error:', error);
             return { success: false, error: 'An error occurred during login' };
@@ -85,8 +93,14 @@ export function AuthProvider({ children }) {
             .single();
 
         if (!error && data) {
-            setUser(data);
-            localStorage.setItem('ilj_user', JSON.stringify(data));
+            const { data: projects } = await supabase
+                .from('projects')
+                .select('*')
+                .eq('manager_id', data.id);
+
+            const userWithProjects = { ...data, managed_projects: projects || [] };
+            setUser(userWithProjects);
+            localStorage.setItem('ilj_user', JSON.stringify(userWithProjects));
         }
     };
 

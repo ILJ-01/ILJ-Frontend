@@ -297,9 +297,6 @@ export default function LoginModal({ isOpen, onClose }) {
                     </Tabs>
                 </div>
 
-                <div className="bg-gray-50 p-4 text-center text-xs text-gray-500 border-t">
-                    By continuing, you agree to our Terms of Service and Privacy Policy.
-                </div>
             </DialogContent>
         </Dialog>
     );

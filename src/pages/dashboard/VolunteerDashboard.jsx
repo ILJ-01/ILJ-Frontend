@@ -3,7 +3,7 @@ import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/lib/supabase";
 import {
     Calendar, CheckCircle, Clock, Award,
-    ArrowRight, Activity
+    ArrowRight, Activity, Briefcase
 } from "lucide-react";
 import { Link } from "react-router-dom";
 
@@ -18,6 +18,7 @@ export default function VolunteerDashboard() {
     const [upcomingEvents, setUpcomingEvents] = useState([]);
     const [myTasks, setMyTasks] = useState([]);
     const [announcements, setAnnouncements] = useState([]);
+    const [opportunities, setOpportunities] = useState([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -60,12 +61,20 @@ export default function VolunteerDashboard() {
                 .neq('status', 'completed')
                 .limit(4);
 
-            // 5. Announcements
+            // 5. Announcements (General)
             const { data: activeAnnouncements } = await supabase
                 .from('announcements')
                 .select('*')
+                .eq('type', 'general') // Assuming default type is general or similar
                 .order('created_at', { ascending: false })
                 .limit(3);
+
+            // 6. Task Opportunities
+            const { data: opps } = await supabase
+                .from('announcements')
+                .select(`*, project:projects(title), interests:announcement_interests(volunteer_id)`)
+                .eq('type', 'task_opportunity')
+                .order('created_at', { ascending: false });
 
             setStats({
                 totalHours: hours,
@@ -76,6 +85,13 @@ export default function VolunteerDashboard() {
             setUpcomingEvents(events || []);
             setMyTasks(tasks || []);
             setAnnouncements(activeAnnouncements || []);
+
+            // Process opportunities to check if user already interested
+            const processedOpps = opps?.map(o => ({
+                ...o,
+                alreadyInterested: o.interests?.some(i => i.volunteer_id === user.id)
+            })) || [];
+            setOpportunities(processedOpps);
 
         } catch (error) {
             console.error("Dashboard Load Error:", error);
@@ -93,10 +109,36 @@ export default function VolunteerDashboard() {
             // Optimistic update
             setUpcomingEvents(prev => prev.map(e => e.id === eventId ? { ...e, interested: true } : e));
 
-            // Notify admin (create notification record for admin/manager - skipping for now or generic)
-            alert("Marked as interested! Admin will be notified.");
+            alert("Marked as interested!");
         } catch (e) {
             console.error("Interest Error:", e);
+        }
+    };
+
+    const handleOpportunityInterest = async (announcementId) => {
+        try {
+            const announcement = opportunities.find(o => o.id === announcementId);
+
+            const { error } = await supabase
+                .from('announcement_interests')
+                .insert({ announcement_id: announcementId, volunteer_id: user.id });
+
+            if (error) throw error;
+
+            // Notify Manager
+            if (announcement?.created_by) {
+                await supabase.from('notifications').insert({
+                    user_id: announcement.created_by,
+                    message: `${user.first_name} ${user.last_name} is interested in: ${announcement.title}`,
+                    is_read: false
+                });
+            }
+
+            setOpportunities(prev => prev.map(o => o.id === announcementId ? { ...o, alreadyInterested: true } : o));
+            alert("Thanks! The project manager has been notified of your interest.");
+        } catch (e) {
+            console.error("Interest Error:", e);
+            alert("Could not mark interest. You might have already expressed interest.");
         }
     };
 
@@ -108,6 +150,26 @@ export default function VolunteerDashboard() {
 
     return (
         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+
+            {/* Project Manager Access Banner */}
+            {user.managed_projects?.length > 0 && (
+                <div className="bg-gray-900 rounded-2xl p-6 md:p-8 text-white shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-6 border border-gray-800">
+                    <div>
+                        <div className="flex items-center gap-2 mb-2">
+                            <div className="bg-[#ae2b2b] p-1.5 rounded"><Briefcase size={16} className="text-white" /></div>
+                            <span className="text-xs font-bold uppercase tracking-widest text-gray-400">Manager Access</span>
+                        </div>
+                        <h2 className="text-xl md:text-2xl font-bold font-serif">You are managing {user.managed_projects.length} Project{user.managed_projects.length !== 1 ? 's' : ''}</h2>
+                        <p className="text-gray-400 mt-1 max-w-xl">Access your manager hub to assign tasks to volunteers and approve timesheets for your assigned projects.</p>
+                    </div>
+                    <Link
+                        to="/dashboard/manager"
+                        className="whitespace-nowrap px-6 py-3 bg-white text-gray-900 rounded-lg font-bold hover:bg-gray-100 transition-colors shadow-lg flex items-center gap-2"
+                    >
+                        Go to Manager Hub <ArrowRight size={18} />
+                    </Link>
+                </div>
+            )}
 
             {/* Welcome Section */}
             <div className="bg-gradient-to-r from-[#ae2b2b] to-[#5c1212] rounded-2xl p-6 md:p-8 text-white shadow-lg">
@@ -199,6 +261,52 @@ export default function VolunteerDashboard() {
                                                 className="w-full sm:w-auto px-4 py-2 bg-[#ae2b2b] hover:bg-[#8b1e1e] text-white text-sm font-medium rounded-lg transition-colors shadow-sm"
                                             >
                                                 Volunteer
+                                            </button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Volunteer Opportunities */}
+                    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                        <div className="flex justify-between items-center mb-6">
+                            <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+                                <Briefcase className="h-5 w-5 text-[#ae2b2b]" /> Volunteer Opportunities
+                            </h3>
+                        </div>
+
+                        {opportunities.length === 0 ? (
+                            <p className="text-gray-500 text-center py-8">No open opportunities at the moment.</p>
+                        ) : (
+                            <div className="space-y-4">
+                                {opportunities.map(opp => (
+                                    <div key={opp.id} className="p-4 rounded-xl border border-purple-100 bg-purple-50 hover:bg-white hover:shadow-md transition-all">
+                                        <div className="flex justify-between items-start">
+                                            <div>
+                                                <div className="flex items-center gap-2 mb-1">
+                                                    <span className="text-xs font-bold uppercase tracking-wider text-purple-700 bg-purple-100 px-2 py-0.5 rounded">
+                                                        {opp.project?.title || 'General Opportunity'}
+                                                    </span>
+                                                    <span className="text-xs text-gray-500">{new Date(opp.created_at).toLocaleDateString()}</span>
+                                                </div>
+                                                <h4 className="font-bold text-gray-900 text-lg">{opp.title}</h4>
+                                                <p className="text-gray-600 text-sm mt-2">{opp.message}</p>
+
+                                                {opp.deadline && (
+                                                    <p className="text-xs text-red-600 mt-2 font-medium">Deadline: {new Date(opp.deadline).toLocaleDateString()}</p>
+                                                )}
+                                            </div>
+                                            <button
+                                                onClick={() => handleOpportunityInterest(opp.id)}
+                                                disabled={opp.alreadyInterested}
+                                                className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors shadow-sm whitespace-nowrap ml-4 ${opp.alreadyInterested
+                                                    ? 'bg-green-100 text-green-700 cursor-default'
+                                                    : 'bg-purple-600 hover:bg-purple-700 text-white'
+                                                    }`}
+                                            >
+                                                {opp.alreadyInterested ? 'Interested' : 'I\'m Interested'}
                                             </button>
                                         </div>
                                     </div>

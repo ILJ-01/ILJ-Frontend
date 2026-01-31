@@ -10,12 +10,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-// Note: Assuming these components exist as they were used in the original Profile.jsx
-// If not, standard HTML/Tailwind fallbacks are provided in the logic below where possible
-// but for consistency we try to reuse them if the project has them.
-// We will use standard HTML/Divs for cards to ensure no missing dependency errors if those UI components aren't perfectly set up in the new path context, 
-// but styling them to match.
-
+// Badge3D Component
 const Badge3D = ({ user }) => {
     const [isFlipped, setIsFlipped] = useState(false);
     const x = useMotionValue(0);
@@ -78,12 +73,23 @@ const Badge3D = ({ user }) => {
 
                                 <div className="relative z-10 flex items-center gap-5 mt-4">
                                     <div className="h-20 w-20 rounded-xl bg-gradient-to-br from-white to-gray-200 shadow-lg flex items-center justify-center text-[#ae2b2b] font-serif font-bold text-3xl border-2 border-white/30 truncate">{initials}</div>
-                                    <div><h2 className="text-xl font-bold leading-tight drop-shadow-sm">{user.first_name} {user.last_name}</h2><p className="text-xs text-red-100 mt-1 flex items-center gap-1">{user.occupation || 'Volunteer'}</p></div>
+                                    <div>
+                                        <h2 className="text-xl font-bold leading-tight drop-shadow-sm">{user.first_name} {user.last_name}</h2>
+                                        <p className="text-xs text-red-100 mt-1 flex items-center gap-1">{user.occupation || 'Volunteer'}</p>
+
+                                    </div>
                                 </div>
 
                                 <div className="relative z-10 flex justify-between items-end mt-2">
-                                    <div><p className="text-[9px] uppercase tracking-wider opacity-60">Member Since</p><p className="text-xs font-medium font-mono">{format(new Date(user.created_at || Date.now()), 'MMM yyyy')}</p></div>
-                                    <div><p className="text-[9px] uppercase tracking-wider opacity-60 text-right">Status</p><div className="flex items-center gap-1.5 bg-green-500/20 px-2 py-0.5 rounded-full border border-green-400/30"><span className="relative flex h-2 w-2"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span><span className="relative inline-flex rounded-full h-2 w-2 bg-green-400"></span></span><span className="text-[10px] font-bold text-green-300">ACTIVE</span></div></div>
+                                    <div><p className="text-[9px] uppercase tracking-wider opacity-60">Member Since</p><p className="text-xs font-medium font-mono">{format(new Date(user.created_at || Date.now()), 'MMM yyyy')}</p>{user.kalyan_mitra && (
+                                        <p className="text-xs text-red-200 mt-0.5 flex items-center gap-1">
+                                            Kalyan Mitra: {user.kalyan_mitra}
+                                        </p>
+                                    )}</div>
+
+                                    <div> 
+                                        <p className="text-[9px] uppercase tracking-wider opacity-60 font-bold">Status</p>
+                                        <div className="flex items-center gap-1.5 bg-green-500/20 px-2 py-0.5 rounded-full border border-green-400/30"><span className="relative flex h-2 w-2"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span><span className="relative inline-flex rounded-full h-2 w-2 bg-green-400"></span></span><span className="text-[10px] font-bold text-green-300">ACTIVE</span></div></div>
                                 </div>
                             </div>
                         </div>
@@ -115,12 +121,12 @@ const InfoItem = ({ icon: Icon, label, value, delay, isEditing, field, onChange,
             <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">{label}</p>
             {isEditing ? (
                 type === "select" ? (
-                    <select className="w-full mt-1 p-1 border rounded text-sm bg-white focus:ring-1 focus:ring-gray-400 border-gray-300 focus:outline-none" value={value} onChange={(e) => onChange(field, e.target.value)}>
+                    <select className="w-full mt-1 p-1 border rounded text-sm bg-white focus:ring-1 focus:ring-gray-400 border-gray-300 focus:outline-none" value={value || ""} onChange={(e) => onChange(field, e.target.value)}>
                         <option value="">Select...</option>
                         {options.map(opt => <option key={opt} value={opt}>{opt}</option>)}
                     </select>
                 ) : (
-                    <input className="w-full mt-1 p-1 border rounded text-sm bg-white focus:ring-1 focus:ring-gray-400 border-gray-300 focus:outline-none" type={type} value={value} onChange={(e) => onChange(field, e.target.value)} />
+                    <input className="w-full mt-1 p-1 border rounded text-sm bg-white focus:ring-1 focus:ring-gray-400 border-gray-300 focus:outline-none" type={type} value={value || ""} onChange={(e) => onChange(field, e.target.value)} />
                 )
             ) : (
                 <p className="text-sm font-semibold text-gray-800 truncate" title={value}>{value || 'N/A'}</p>
@@ -139,34 +145,77 @@ export default function ProfilePage() {
     // Form State
     const [formData, setFormData] = useState({});
 
-    // Hardcoded options for now, can be fetched if needed
+    // Options for Dropdowns
     const preferenceOptions = [
-        "Teaching", "Event Management", "Content Creation", "Technical Support",
-        "Social Media", "Fundraising", "Community Outreach", "Design", "Medical",
-        "Legal", "Other"
+        "Research & Documentation",
+        "Content Writing (Articles, Blogs, Scripts)",
+        "Public Speaking, Acting & Stage Activities",
+        "Graphic Design & Video Editing",
+        "Photography & Videography",
+        "Event Planning & Management",
+        "Marketing & Outreach",
+        "Pathshala & Educational Activities",
+        "IT & Technical Support"
     ];
+
+    const genderOptions = ["Male", "Female"];
+    const occupationOptions = ["Student", "Working Professional", "Freelancer / Self-Employed", "Homemaker", "Other"];
+    const availabilityOptions = ["Weekdays", "Weekends", "Flexible"];
+    const participationModeOptions = ["Voluntary (Seva-based)", "Paid Basis (Project or Role-based)", "Flexible / Open to Discussion"];
+
+
+    useEffect(() => {
+        refreshUser();
+    }, []);
 
     useEffect(() => {
         if (user) {
             fetchStats();
             setFormData({
-                mobile_number: user.mobile_number || "",
-                skills: user.skills || "",
-                availability_days: user.availability_days || "Flexible",
-                participation_mode: user.participation_mode || "Voluntary (Seva-based)",
-                hobbies: user.hobbies || "",
-                occupation: user.occupation || "",
+                // Personal
+                first_name: user.first_name || "",
+                middle_name: user.middle_name || "",
+                last_name: user.last_name || "",
+                dob: user.dob || "",
+                gender: user.gender || "",
 
-                // Preferences
+                // Contact
+                email: user.email || "",
+                mobile_number: user.mobile_number || "",
+
+                // Address
+                address_line1: user.address_line1 || "",
+                address_line2: user.address_line2 || "",
+                city: user.city || "",
+                district: user.district || "",
+                state: user.state || "",
+                country: user.country || "",
+                pincode: user.pincode || "",
+                sangh_name: user.sangh_name || "",
+
+                // Education & Dharmik
+                dharmik_studies: user.dharmik_studies || "",
+                qualification: user.qualification || "",
+                specialization: user.specialization || "",
+
+                // Professional
+                occupation: user.occupation || "",
+                occupation_other: user.occupation_other || "",
+
+                // Interests
+                hobbies: user.hobbies || "",
+                skills: user.skills || "",
+                referred_by: user.referred_by || "",
+
+                // Volunteering Preferences
                 volunteering_preference1: user.volunteering_preference1 || "",
                 volunteering_preference2: user.volunteering_preference2 || "",
                 volunteering_preference3: user.volunteering_preference3 || "",
 
-                // Address fields
-                address_line1: user.address_line1 || "",
-                city: user.city || "",
-                state: user.state || "",
-                pincode: user.pincode || ""
+                // Additional
+                availability_days: user.availability_days || "",
+                participation_mode: user.participation_mode || "",
+                kalyan_mitra: user.kalyan_mitra || "",
             });
         }
     }, [user]);
@@ -194,6 +243,8 @@ export default function ProfilePage() {
     const handleSave = async () => {
         setSaving(true);
         try {
+            // Remove email from update payload to prevent accidental changes if RLS/Auth doesn't allow it easily, or keep if you want to allow email updates (usually requires re-verification)
+            // For now, keeping it but backend might restrict it.
             const { error } = await supabase
                 .from('volunteers')
                 .update(formData)
@@ -216,20 +267,22 @@ export default function ProfilePage() {
 
     const sections = [
         {
-            title: "Contact Details",
+            title: "Contact Information",
             icon: Phone,
             items: [
-                { icon: Mail, label: "Email", value: user.email, isRaw: true }, // ReadOnly
+                { icon: Mail, label: "Email", value: formData.email, isRaw: true }, // Usually read-only
                 { icon: Phone, label: "Mobile", value: formData.mobile_number, isEditing: isEditing, field: 'mobile_number', onChange: handleUpdate }
             ]
         },
         {
-            title: "Personal Info",
+            title: "Personal Information",
             icon: User,
             items: [
-                { icon: User, label: "Full Name", value: `${user.first_name} ${user.middle_name || ''} ${user.last_name}`, isRaw: true },
-                { icon: Calendar, label: "DOB", value: user.dob ? format(new Date(user.dob), 'MMMM d, yyyy') : 'N/A', isRaw: true },
-                { icon: User, label: "Gender", value: user.gender, isRaw: true },
+                { icon: User, label: "First Name", value: formData.first_name, isEditing: isEditing, field: 'first_name', onChange: handleUpdate },
+                { icon: User, label: "Middle Name", value: formData.middle_name, isEditing: isEditing, field: 'middle_name', onChange: handleUpdate },
+                { icon: User, label: "Last Name", value: formData.last_name, isEditing: isEditing, field: 'last_name', onChange: handleUpdate },
+                { icon: Calendar, label: "Date of Birth", value: formData.dob, isEditing: isEditing, field: 'dob', onChange: handleUpdate, type: "date" },
+                { icon: User, label: "Gender", value: formData.gender, isEditing: isEditing, field: 'gender', onChange: handleUpdate, type: "select", options: genderOptions },
             ]
         },
         {
@@ -239,6 +292,8 @@ export default function ProfilePage() {
                 { icon: CheckCircle2, label: "1st Preference", value: formData.volunteering_preference1, isEditing: isEditing, field: 'volunteering_preference1', onChange: handleUpdate, type: "select", options: preferenceOptions },
                 { icon: CheckCircle2, label: "2nd Preference", value: formData.volunteering_preference2, isEditing: isEditing, field: 'volunteering_preference2', onChange: handleUpdate, type: "select", options: preferenceOptions },
                 { icon: CheckCircle2, label: "3rd Preference", value: formData.volunteering_preference3, isEditing: isEditing, field: 'volunteering_preference3', onChange: handleUpdate, type: "select", options: preferenceOptions },
+                { icon: Calendar, label: "Availability", value: formData.availability_days, isEditing: isEditing, field: 'availability_days', onChange: handleUpdate, type: "select", options: availabilityOptions },
+                { icon: Layers, label: "Participation Mode", value: formData.participation_mode, isEditing: isEditing, field: 'participation_mode', onChange: handleUpdate, type: "select", options: participationModeOptions },
             ]
         }
     ];
@@ -264,23 +319,6 @@ export default function ProfilePage() {
                                 <p className="text-2xl font-bold text-gray-800">{stats.eventsCount}</p>
                                 <p className="text-xs text-gray-500 uppercase tracking-wide mt-1">Events</p>
                             </div>
-
-
-
-                            <div className="col-span-2 bg-gray-50 p-4 rounded-xl flex items-center justify-between">
-                                <div className="text-left w-full">
-                                    <p className="text-xs text-gray-500 uppercase">Participation Mode</p>
-                                    {isEditing ? (
-                                        <select className="w-full mt-1 text-sm border p-1 rounded" value={formData.participation_mode} onChange={e => handleUpdate('participation_mode', e.target.value)}>
-                                            <option>Voluntary (Seva-based)</option>
-                                            <option>Paid Basis (Project or Role-based)</option>
-                                            <option>Flexible / Open to Discussion</option>
-                                        </select>
-                                    ) : (
-                                        <p className="font-semibold text-gray-800 text-sm truncate">{formData.participation_mode || 'N/A'}</p>
-                                    )}
-                                </div>
-                            </div>
                         </div>
                     </div>
                 </motion.div>
@@ -292,7 +330,7 @@ export default function ProfilePage() {
                             <h1 className="text-3xl md:text-4xl font-serif font-bold text-gray-900">
                                 <span className="text-[#ae2b2b]">Hello,</span> {user.first_name}
                             </h1>
-                            <p className="text-gray-500 text-lg">Manage your profile details below.</p>
+                            <p className="text-gray-500 text-lg">Manage your complete profile details below.</p>
                         </motion.div>
                         <button
                             onClick={() => isEditing ? handleSave() : setIsEditing(true)}
@@ -318,7 +356,7 @@ export default function ProfilePage() {
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        {/* Dynamic Sections */}
+                        {/* Dynamic Sections Loop */}
                         {sections.map((section, idx) => (
                             <motion.div key={section.title} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 + (idx * 0.1), duration: 0.5 }}>
                                 <div className="h-full bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
@@ -331,9 +369,11 @@ export default function ProfilePage() {
                                             <InfoItem
                                                 key={i}
                                                 {...item}
-                                                isEditing={item.isEditing} // Pass specific edit flag
+                                                isEditing={item.isEditing}
                                                 field={item.field}
                                                 onChange={item.onChange}
+                                                type={item.type || "text"}
+                                                options={item.options || []}
                                             />
                                         ))}
                                     </div>
@@ -341,7 +381,7 @@ export default function ProfilePage() {
                             </motion.div>
                         ))}
 
-                        {/* Professional (Kept separate or merge?) - User asked for preferences, let's keep professional simple */}
+                        {/* Professional Section */}
                         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6, duration: 0.5 }}>
                             <div className="h-full bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
                                 <div className="p-4 border-b border-gray-100 bg-gray-50/50 flex items-center gap-2">
@@ -349,8 +389,28 @@ export default function ProfilePage() {
                                     <h3 className="font-bold text-gray-800">Professional</h3>
                                 </div>
                                 <div className="p-4 space-y-3">
-                                    <InfoItem icon={GraduationCap} label="Qualification" value={user.qualification} isRaw={true} />
-                                    <InfoItem icon={Briefcase} label="Occupation" value={user.occupation} isRaw={true} />
+                                    <InfoItem icon={GraduationCap} label="Qualification" value={formData.qualification} isEditing={isEditing} field="qualification" onChange={handleUpdate} />
+                                    <InfoItem icon={Sparkles} label="Specialization" value={formData.specialization} isEditing={isEditing} field="specialization" onChange={handleUpdate} />
+                                    <InfoItem icon={Briefcase} label="Occupation" value={formData.occupation} isEditing={isEditing} field="occupation" onChange={handleUpdate} type="select" options={occupationOptions} />
+                                    {formData.occupation === "Other" && (
+                                        <InfoItem icon={Briefcase} label="Specify Occupation" value={formData.occupation_other} isEditing={isEditing} field="occupation_other" onChange={handleUpdate} />
+                                    )}
+                                </div>
+                            </div>
+                        </motion.div>
+
+                        {/* Education & Dharmik Section */}
+                        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.65, duration: 0.5 }}>
+                            <div className="h-full bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+                                <div className="p-4 border-b border-gray-100 bg-gray-50/50 flex items-center gap-2">
+                                    <GraduationCap className="h-5 w-5 text-[#ae2b2b]" />
+                                    <h3 className="font-bold text-gray-800">Education & Jain Studies</h3>
+                                </div>
+                                <div className="p-4 space-y-3">
+                                    <InfoItem icon={Award} label="Dharmik Studies" value={formData.dharmik_studies} isEditing={isEditing} field="dharmik_studies" onChange={handleUpdate} />
+                                    <InfoItem icon={User} label="Sangh Name" value={formData.sangh_name} isEditing={isEditing} field="sangh_name" onChange={handleUpdate} />
+                                    <InfoItem icon={Sparkles} label="Referred By" value={formData.referred_by} isEditing={isEditing} field="referred_by" onChange={handleUpdate} />
+                                    <InfoItem icon={User} label="Kalyan Mitra" value={formData.kalyan_mitra} />
                                 </div>
                             </div>
                         </motion.div>
@@ -365,7 +425,7 @@ export default function ProfilePage() {
                                     <div>
                                         <p className="text-sm font-medium text-gray-500 mb-2 uppercase">Hobbies</p>
                                         {isEditing ? (
-                                            <textarea className="w-full border p-2 rounded text-sm focus:ring-1 focus:ring-gray-400 focus:outline-none" rows="2" value={formData.hobbies} onChange={e => handleUpdate('hobbies', e.target.value)} />
+                                            <textarea className="w-full border p-2 rounded text-sm focus:ring-1 focus:ring-gray-400 focus:outline-none" rows="2" value={formData.hobbies || ""} onChange={e => handleUpdate('hobbies', e.target.value)} />
                                         ) : (
                                             <div className="flex flex-wrap gap-2">
                                                 {formData.hobbies?.split(',').filter(Boolean).map((h, i) => <span key={i} className="px-3 py-1 bg-white border border-gray-200 rounded-full text-sm text-gray-700 shadow-sm">{h.trim()}</span>)}
@@ -377,7 +437,7 @@ export default function ProfilePage() {
                                     <div>
                                         <p className="text-sm font-medium text-gray-500 mb-2 uppercase">Skills</p>
                                         {isEditing ? (
-                                            <textarea className="w-full border p-2 rounded text-sm focus:ring-1 focus:ring-gray-400 focus:outline-none" rows="2" value={formData.skills} onChange={e => handleUpdate('skills', e.target.value)} />
+                                            <textarea className="w-full border p-2 rounded text-sm focus:ring-1 focus:ring-gray-400 focus:outline-none" rows="2" value={formData.skills || ""} onChange={e => handleUpdate('skills', e.target.value)} />
                                         ) : (
                                             <div className="flex flex-wrap gap-2">
                                                 {formData.skills?.split(',').filter(Boolean).map((s, i) => <span key={i} className="px-3 py-1 bg-red-50 text-[#ae2b2b] border border-red-100 rounded-full text-sm font-medium shadow-sm">{s.trim()}</span>)}
@@ -392,19 +452,45 @@ export default function ProfilePage() {
                             <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
                                 <div className="flex items-start gap-4">
                                     <div className="p-3 bg-red-50 rounded-full text-[#ae2b2b] shrink-0"><MapPin size={24} /></div>
-                                    <div className="flex-1">
+                                    <div className="flex-1 w-full">
                                         <h3 className="font-serif font-bold text-gray-900 text-lg mb-1">Residential Address</h3>
                                         {isEditing ? (
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-2">
-                                                <input placeholder="Address Line 1" className="border p-2 rounded text-sm" value={formData.address_line1} onChange={e => handleUpdate('address_line1', e.target.value)} />
-                                                <input placeholder="City" className="border p-2 rounded text-sm" value={formData.city} onChange={e => handleUpdate('city', e.target.value)} />
-                                                <input placeholder="State" className="border p-2 rounded text-sm" value={formData.state} onChange={e => handleUpdate('state', e.target.value)} />
-                                                <input placeholder="Pincode" className="border p-2 rounded text-sm" value={formData.pincode} onChange={e => handleUpdate('pincode', e.target.value)} />
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-2 w-full">
+                                                <div className="md:col-span-2">
+                                                    <label className="text-xs text-gray-500">Address Line 1</label>
+                                                    <input className="w-full border p-2 rounded text-sm" value={formData.address_line1 || ""} onChange={e => handleUpdate('address_line1', e.target.value)} />
+                                                </div>
+                                                <div className="md:col-span-2">
+                                                    <label className="text-xs text-gray-500">Address Line 2 (Area)</label>
+                                                    <input className="w-full border p-2 rounded text-sm" value={formData.address_line2 || ""} onChange={e => handleUpdate('address_line2', e.target.value)} />
+                                                </div>
+                                                <div>
+                                                    <label className="text-xs text-gray-500">City</label>
+                                                    <input className="w-full border p-2 rounded text-sm" value={formData.city || ""} onChange={e => handleUpdate('city', e.target.value)} />
+                                                </div>
+                                                <div>
+                                                    <label className="text-xs text-gray-500">District</label>
+                                                    <input className="w-full border p-2 rounded text-sm" value={formData.district || ""} onChange={e => handleUpdate('district', e.target.value)} />
+                                                </div>
+                                                <div>
+                                                    <label className="text-xs text-gray-500">State</label>
+                                                    <input className="w-full border p-2 rounded text-sm" value={formData.state || ""} onChange={e => handleUpdate('state', e.target.value)} />
+                                                </div>
+                                                <div>
+                                                    <label className="text-xs text-gray-500">Country</label>
+                                                    <input className="w-full border p-2 rounded text-sm" value={formData.country || ""} onChange={e => handleUpdate('country', e.target.value)} />
+                                                </div>
+                                                <div>
+                                                    <label className="text-xs text-gray-500">Pincode</label>
+                                                    <input className="w-full border p-2 rounded text-sm" value={formData.pincode || ""} onChange={e => handleUpdate('pincode', e.target.value)} />
+                                                </div>
                                             </div>
                                         ) : (
                                             <p className="text-gray-600 leading-relaxed">
                                                 {formData.address_line1}, <br />
-                                                {formData.city}, {formData.state} - {formData.pincode}
+                                                {formData.address_line2 && <>{formData.address_line2}, <br /></>}
+                                                {formData.city}, {formData.district}<br />
+                                                {formData.state}, {formData.country} - {formData.pincode}
                                             </p>
                                         )}
                                     </div>

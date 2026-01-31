@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
     Home, Calendar, CheckSquare, Clock, User, LogOut,
-    Menu, X, Bell
+    Menu, X, Bell, Briefcase, FileText
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/lib/supabase";
@@ -61,10 +61,16 @@ export default function DashboardLayout({ children }) {
 
     const menuItems = [
         { icon: Calendar, label: "Events", path: "/dashboard/events" },
-        { icon: CheckSquare, label: "My Tasks", path: "/dashboard/tasks" },
+        { icon: CheckSquare, label: "Tasks", path: "/dashboard/tasks" },
         { icon: Clock, label: "Timesheet", path: "/dashboard/timesheet" },
         { icon: User, label: "My Profile", path: "/dashboard/profile" },
+        { icon: FileText, label: "Policies", path: "/dashboard/policies" },
+
     ];
+
+    if (user?.managed_projects?.length > 0) {
+        menuItems.unshift({ icon: Briefcase, label: "Manager Hub", path: "/dashboard/manager" });
+    }
 
     return (
         <div className="min-h-screen bg-gray-50 flex font-sans">

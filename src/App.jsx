@@ -24,6 +24,11 @@ import TasksPage from "./pages/dashboard/TasksPage";
 import TimesheetPage from "./pages/dashboard/TimesheetPage";
 import ProfilePage from "./pages/dashboard/ProfilePage";
 
+import VolunteerDashboard from "./pages/dashboard/VolunteerDashboard";
+import ManagerHub from "./pages/dashboard/ManagerHub";
+
+import PoliciesPage from "./pages/dashboard/PoliciesPage";
+
 // Helper components for routing structure
 import { useAuth } from "./context/AuthContext";
 import { Navigate } from "react-router-dom";
@@ -71,8 +76,10 @@ function App() {
 
             {/* Volunteer Dashboard Routes */}
             <Route path="/dashboard" element={<Navigate to="/dashboard/events" replace />} />
+            <Route path="/dashboard/manager" element={<ProtectedRoute><DashboardLayout><ManagerHub /></DashboardLayout></ProtectedRoute>} />
             <Route path="/dashboard/events" element={<ProtectedRoute><DashboardLayout><EventsPage /></DashboardLayout></ProtectedRoute>} />
             <Route path="/dashboard/tasks" element={<ProtectedRoute><DashboardLayout><TasksPage /></DashboardLayout></ProtectedRoute>} />
+            <Route path="/dashboard/policies" element={<ProtectedRoute><DashboardLayout><PoliciesPage /></DashboardLayout></ProtectedRoute>} />
             <Route path="/dashboard/timesheet" element={<ProtectedRoute><DashboardLayout><TimesheetPage /></DashboardLayout></ProtectedRoute>} />
             <Route path="/dashboard/profile" element={<ProtectedRoute><DashboardLayout><ProfilePage /></DashboardLayout></ProtectedRoute>} />
 

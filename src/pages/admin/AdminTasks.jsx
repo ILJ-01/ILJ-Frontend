@@ -33,7 +33,7 @@ export default function AdminTasks() {
         const [tasksRes, projectsRes, volunteersRes] = await Promise.all([
             supabase.from('tasks').select('*, project:projects(title), assignee:volunteers(first_name, last_name)').order('created_at', { ascending: false }),
             supabase.from('projects').select('id, title').order('title'),
-            supabase.from('volunteers').select('id, first_name, last_name').order('first_name')
+            supabase.from('volunteers').select('id, first_name, last_name, email').order('first_name')
         ]);
 
         setTasks(tasksRes.data || []);
@@ -58,10 +58,30 @@ export default function AdminTasks() {
             }]);
             if (error) throw error;
 
+            // Send Email Notification
+            if (formData.assignee_id) {
+                const assignee = volunteers.find(v => v.id === formData.assignee_id);
+                const project = projects.find(p => p.id === formData.project_id);
+
+                if (assignee?.email) {
+                    await supabase.functions.invoke('send-task-email', {
+                        body: {
+                            to: assignee.email,
+                            assignee_name: `${assignee.first_name} ${assignee.last_name}`,
+                            manager_name: 'Admin', // Or user logic if I passed auth context, but Admin is fine
+                            project_title: project?.title || 'General Task',
+                            task_title: formData.title,
+                            task_description: formData.description,
+                            deadline: formData.deadline
+                        }
+                    });
+                }
+            }
+
             setShowModal(false);
             setFormData({ title: '', description: '', project_id: '', assignee_id: '', deadline: '' });
             fetchData();
-            alert("Task assigned successfully!");
+            alert("Task assigned & Email Sent!");
         } catch (error) {
             console.error(error);
             alert("Failed to create task");

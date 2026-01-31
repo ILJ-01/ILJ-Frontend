@@ -6,9 +6,8 @@ export default function Home() {
   return (
     <div className="home-container">
       <img src={ExhibitionBanner} className='mx-auto' alt="I ❤️ Jinshasan" />
-      {/* <HeroCarousel /> */}
-      <Projects/>
-      <Instagram/>
+      <Projects />
+      <Instagram />
     </div>
   );
 }
