@@ -90,17 +90,36 @@ export default function AdminTasks() {
                 const project = projects.find(p => p.id === formData.project_id);
 
                 if (assignee?.email) {
-                    await supabase.functions.invoke('send-task-email', {
-                        body: {
-                            to: assignee.email,
-                            assignee_name: `${assignee.first_name} ${assignee.last_name}`,
-                            manager_name: 'Admin', // Or user logic if I passed auth context, but Admin is fine
-                            project_title: project?.title || 'General Task',
-                            task_title: formData.title,
-                            task_description: formData.description,
-                            deadline: formData.deadline
+                    try {
+                        const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-task-email`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+                                'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY
+                            },
+                            body: JSON.stringify({
+                                to: assignee.email,
+                                assignee_name: `${assignee.first_name} ${assignee.last_name}`,
+                                manager_name: 'Admin',
+                                project_title: project?.title || 'General Task',
+                                task_title: formData.title,
+                                task_description: formData.description,
+                                deadline: formData.deadline
+                            })
+                        });
+
+                        const result = await response.json();
+                        if (!response.ok) {
+                            console.error("Email API failure:", result);
+                            alert(`Task created, but email failed: ${result.error || response.statusText}`);
+                        } else {
+                            console.log("Email sent successfully:", result);
                         }
-                    });
+                    } catch (fetchErr) {
+                        console.error("Email Network Error:", fetchErr);
+                        alert(`Task created, but email notification failed (Network Error).`);
+                    }
                 }
             }
 
@@ -339,8 +358,8 @@ function FeedbackModal({ task, onClose, onSubmit }) {
                                 >
                                     <Star
                                         className={`h-8 w-8 transition-colors ${star <= rating
-                                                ? "text-amber-400 fill-amber-400"
-                                                : "text-gray-200 fill-gray-200"
+                                            ? "text-amber-400 fill-amber-400"
+                                            : "text-gray-200 fill-gray-200"
                                             }`}
                                     />
                                 </button>

@@ -309,7 +309,7 @@ export default function ManagerHub() {
                 teamData.forEach(async (m) => {
                     const assignee = m.volunteer;
                     if (assignee?.email) {
-                        await supabase.functions.invoke('send-task-email', {
+                        const { error: invokeError } = await supabase.functions.invoke('send-task-email', {
                             body: {
                                 to: assignee.email,
                                 assignee_name: `${assignee.first_name} ${assignee.last_name}`,
@@ -319,7 +319,8 @@ export default function ManagerHub() {
                                 task_description: taskForm.description,
                                 deadline: taskForm.deadline
                             }
-                        }).catch(err => console.error("Email fail for " + assignee.email, err));
+                        });
+                        if (invokeError) console.error("Email fail for " + assignee.email, invokeError);
                     }
                 });
 
@@ -355,18 +356,37 @@ export default function ManagerHub() {
                 const assignee = volunteers.find(v => v.id === taskForm.assigneeId);
 
                 if (assignee?.email) {
-                    const { error: emailError } = await supabase.functions.invoke('send-task-email', {
-                        body: {
-                            to: assignee.email,
-                            assignee_name: `${assignee.first_name} ${assignee.last_name}`,
-                            manager_name: `${user.first_name} ${user.last_name}`,
-                            project_title: project?.title || 'Unknown Project',
-                            task_title: taskForm.title,
-                            task_description: taskForm.description,
-                            deadline: taskForm.deadline
+                    try {
+                        // Using manual fetch to be more robust than invoke
+                        const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-task-email`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+                                'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY
+                            },
+                            body: JSON.stringify({
+                                to: assignee.email,
+                                assignee_name: `${assignee.first_name} ${assignee.last_name}`,
+                                manager_name: `${user.first_name} ${user.last_name}`,
+                                project_title: project?.title || 'Unknown Project',
+                                task_title: taskForm.title,
+                                task_description: taskForm.description,
+                                deadline: taskForm.deadline
+                            })
+                        });
+
+                        const result = await response.json();
+                        if (!response.ok) {
+                            console.error("Email API failure:", result);
+                            alert(`Task created, but email failed: ${result.error || response.statusText}`);
+                        } else {
+                            console.log("Email sent:", result);
                         }
-                    });
-                    if (emailError) console.warn("Email sending failed:", emailError);
+                    } catch (fetchErr) {
+                        console.error("Email Network Error:", fetchErr);
+                        alert(`Task created, but email notification failed (Network Error).`);
+                    }
                 }
 
                 // Insert Notification
