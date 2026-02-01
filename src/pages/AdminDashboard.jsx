@@ -4,14 +4,13 @@ import { supabase } from '../lib/supabase';
 import {
     Search, Filter, LogOut, MapPin, Mail, Phone,
     X, User, Briefcase, Heart, BookOpen, Plus, LayoutGrid, Users,
-    Calendar, CheckSquare, Clock, Menu, Trash2, Shield
+    Calendar, CheckSquare, Clock, Menu, Trash2, Shield, Award, TrendingUp
 } from 'lucide-react';
 
 import AdminEvents from './admin/AdminEvents';
 import AdminTasks from './admin/AdminTasks';
 import AdminTimesheets from './admin/AdminTimesheets';
 import AdminAppraisals from './admin/AdminAppraisals';
-import { TrendingUp } from 'lucide-react';
 
 const AdminDashboard = () => {
     const navigate = useNavigate();

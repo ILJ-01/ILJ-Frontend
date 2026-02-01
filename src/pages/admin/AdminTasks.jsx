@@ -35,7 +35,7 @@ export default function AdminTasks() {
         const [tasksRes, projectsRes, volunteersRes] = await Promise.all([
             supabase.from('tasks').select('*, project:projects(title), assignee:volunteers(first_name, last_name)').order('created_at', { ascending: false }),
             supabase.from('projects').select('id, title').order('title'),
-            supabase.from('volunteers').select('id, first_name, last_name, email').order('first_name')
+            supabase.from('volunteers').select('id, first_name, last_name, email, ilj_id').order('first_name')
         ]);
 
         setTasks(tasksRes.data || []);
@@ -272,10 +272,14 @@ export default function AdminTasks() {
                                         {showAssigneeDropdown && (
                                             <div className="absolute z-10 w-full mt-1 bg-white border rounded-lg shadow-lg max-h-60 overflow-auto">
                                                 {volunteers.filter(v =>
-                                                    `${v.first_name} ${v.last_name}`.toLowerCase().includes(assigneeSearch.toLowerCase())
+                                                    `${v.first_name} ${v.last_name}`.toLowerCase().includes(assigneeSearch.toLowerCase()) ||
+                                                    (v.ilj_id && v.ilj_id.toLowerCase().includes(assigneeSearch.toLowerCase()))
                                                 ).length > 0 ? (
                                                     volunteers
-                                                        .filter(v => `${v.first_name} ${v.last_name}`.toLowerCase().includes(assigneeSearch.toLowerCase()))
+                                                        .filter(v =>
+                                                            `${v.first_name} ${v.last_name}`.toLowerCase().includes(assigneeSearch.toLowerCase()) ||
+                                                            (v.ilj_id && v.ilj_id.toLowerCase().includes(assigneeSearch.toLowerCase()))
+                                                        )
                                                         .map(v => (
                                                             <div
                                                                 key={v.id}
@@ -289,7 +293,10 @@ export default function AdminTasks() {
                                                                 <div className="h-6 w-6 rounded-full bg-[#ae2b2b]/10 flex items-center justify-center text-xs text-[#ae2b2b] font-bold">
                                                                     {v.first_name[0]}
                                                                 </div>
-                                                                <span>{v.first_name} {v.last_name}</span>
+                                                                <div className="flex flex-col">
+                                                                    <span className="text-sm font-medium">{v.first_name} {v.last_name}</span>
+                                                                    <span className="text-[10px] text-gray-500 font-mono -mt-0.5">{v.ilj_id}</span>
+                                                                </div>
                                                             </div>
                                                         ))
                                                 ) : (
