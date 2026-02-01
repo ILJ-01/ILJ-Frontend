@@ -5,8 +5,16 @@ const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIU
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-// Default password for new volunteers
-export const DEFAULT_PASSWORD = 'Pass@123';
+// Helper to generate random password
+function generateRandomPassword(length = 8) {
+    const charset = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+    let password = "";
+    for (let i = 0; i < length; i++) {
+        const randomIndex = Math.floor(Math.random() * charset.length);
+        password += charset[randomIndex];
+    }
+    return password;
+}
 
 // Edge function URL for sending emails
 export const EDGE_FUNCTION_URL = `${supabaseUrl}/functions/v1/send-welcome-email`;
@@ -18,6 +26,8 @@ export const EDGE_FUNCTION_URL = `${supabaseUrl}/functions/v1/send-welcome-email
  */
 export async function registerVolunteer(formData) {
     try {
+        const generatedPassword = generateRandomPassword();
+
         // Prepare the data for insertion
         const volunteerData = {
             first_name: formData.firstName,
@@ -51,7 +61,7 @@ export async function registerVolunteer(formData) {
             time_commitment: formData.timeCommitment || null,
             participation_mode: formData.participationMode,
             additional_areas: formData.additionalAreas || null,
-            password_hash: DEFAULT_PASSWORD, // In production, use proper hashing
+            password_hash: generatedPassword, // In production, use proper hashing
         };
 
         // Insert the volunteer data
@@ -79,7 +89,7 @@ export async function registerVolunteer(formData) {
                 body: JSON.stringify({
                     to: data.email,
                     ilj_id: data.ilj_id,
-                    password: DEFAULT_PASSWORD,
+                    password: generatedPassword,
                     first_name: data.first_name,
                     last_name: data.last_name,
                 }),

@@ -190,7 +190,16 @@ export default function TeamLeaderHub() {
         }
     };
 
-    const getPreferenceLevel = (volunteer) => {
+    const getPreferenceLevel = (volunteer, contextTeam) => {
+        // If a specific team context is active, return the preference level for THAT team
+        if (contextTeam && contextTeam !== "All") {
+            if (volunteer.volunteering_preference1 === contextTeam) return 1;
+            if (volunteer.volunteering_preference2 === contextTeam) return 2;
+            if (volunteer.volunteering_preference3 === contextTeam) return 3;
+            return 0;
+        }
+
+        // If "All" teams are active, show the highest preference level that matches ANY of the leader's teams
         const leaderTeams = user.team_leader_for.split('|').map(t => t.trim());
         const prefs = [volunteer.volunteering_preference1, volunteer.volunteering_preference2, volunteer.volunteering_preference3];
 
@@ -321,7 +330,7 @@ export default function TeamLeaderHub() {
                     ) : (
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                             {filteredVolunteers.map(volunteer => {
-                                const level = getPreferenceLevel(volunteer);
+                                const level = getPreferenceLevel(volunteer, activeTeam);
                                 return (
                                     <motion.div
                                         key={volunteer.id}
@@ -543,10 +552,10 @@ export default function TeamLeaderHub() {
                                                         <Heart className="h-4 w-4" />
                                                     </div>
                                                     <div>
-                                                        <p className="text-xs text-gray-500 font-bold uppercase">Preference for {targetTeam !== "All" ? targetTeam : "Your Teams"}</p>
+                                                        <p className="text-xs text-gray-500 font-bold uppercase">Preference for {activeTeam !== "All" ? activeTeam : "Your Teams"}</p>
                                                         <p className="text-lg font-bold text-[#ae2b2b]">
-                                                            {getPreferenceLevel(selectedVolunteer) === 1 ? 'Primary (1st)' :
-                                                                getPreferenceLevel(selectedVolunteer) === 2 ? 'Secondary (2nd)' : 'Tertiary (3rd)'} Choice
+                                                            {getPreferenceLevel(selectedVolunteer, activeTeam) === 1 ? 'Primary (1st)' :
+                                                                getPreferenceLevel(selectedVolunteer, activeTeam) === 2 ? 'Secondary (2nd)' : 'Tertiary (3rd)'} Choice
                                                         </p>
                                                     </div>
                                                 </div>

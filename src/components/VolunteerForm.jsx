@@ -1046,10 +1046,10 @@ export default function VolunteerForm() {
                                     An email has been sent to your registered email address with your login credentials.
                                 </p>
                                 <p className="text-sm text-gray-500">
-                                    Default Password: <span className="font-mono font-semibold">Pass@123</span>
+                                    Please check your email for your ILJ ID and Password.
                                 </p>
                                 <p className="text-xs text-[#ae2b2b] bg-[#ae2b2b]/5 p-2 rounded">
-                                    ⚠️ Please change your password in loagin page by clicking on change password button.
+                                    ⚠️ Please change your password after your first login.
                                 </p>
                             </div>
                         ) : (
