@@ -23,7 +23,7 @@ export async function registerVolunteer(formData) {
             first_name: formData.firstName,
             middle_name: formData.middleName || null,
             last_name: formData.lastName,
-            dob: formData.dob.toISOString().split('T')[0], // Format as YYYY-MM-DD
+            dob: `${formData.dob.getFullYear()}-${String(formData.dob.getMonth() + 1).padStart(2, '0')}-${String(formData.dob.getDate()).padStart(2, '0')}`, // Format as YYYY-MM-DD (Local Time)
             age: formData.age || null,
             gender: formData.gender,
             mobile_number: formData.mobileNumber,

@@ -143,6 +143,7 @@ export default function ProfilePage() {
 
     const [saving, setSaving] = useState(false);
     const [stats, setStats] = useState({ totalHours: 0, eventsCount: 0 });
+    const [kalyamMitraDetails, setKalyamMitraDetails] = useState(null);
 
     // Form State
     const [formData, setFormData] = useState({});
@@ -170,9 +171,62 @@ export default function ProfilePage() {
         refreshUser();
     }, []);
 
+    // Fetch Kalyan Mitra Details
+    const fetchKalyanMitraDetails = async (kalyanMitraName) => {
+        if (!kalyanMitraName) {
+            setKalyamMitraDetails(null);
+            return;
+        }
+
+        try {
+            // Clean and split the name
+            const nameParts = kalyanMitraName.trim().split(/\s+/);
+
+            if (nameParts.length === 0) {
+                setKalyamMitraDetails(null);
+                return;
+            }
+
+            let query = supabase
+                .from('volunteers')
+                .select('ilj_id, first_name, last_name, mobile_number, email');
+
+            // If we have both first and last name
+            if (nameParts.length >= 2) {
+                const firstName = nameParts[0];
+                const lastName = nameParts.slice(1).join(' ');
+
+                query = query
+                    .ilike('first_name', `%${firstName}%`)
+                    .ilike('last_name', `%${lastName}%`);
+            } else {
+                // Search in both first and last name
+                query = query.or(`first_name.ilike.%${nameParts[0]}%,last_name.ilike.%${nameParts[0]}%`);
+            }
+
+            const { data, error } = await query.limit(1);
+
+            if (error) {
+                console.error('Error fetching Kalyan Mitra:', error);
+                setKalyamMitraDetails(null);
+                return;
+            }
+
+            if (data && data.length > 0) {
+                setKalyamMitraDetails(data[0]);
+            } else {
+                setKalyamMitraDetails(null);
+            }
+        } catch (err) {
+            console.error('Kalyan Mitra fetch error:', err);
+            setKalyamMitraDetails(null);
+        }
+    };
+
     useEffect(() => {
         if (user) {
             fetchStats();
+            fetchKalyanMitraDetails(user.kalyan_mitra);
             setFormData({
                 // Personal
                 first_name: user.first_name || "",
@@ -475,6 +529,43 @@ export default function ProfilePage() {
                                 </div>
                             </div>
                         </motion.div>
+
+                        {/* Kalyan Mitra Details Section */}
+                        {kalyamMitraDetails && (
+                            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.68, duration: 0.5 }}>
+                                <div className="h-full bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+                                    <div className="p-4 border-b border-gray-100 bg-gray-50/50 flex items-center gap-2">
+                                        <h3 className="font-bold text-gray-800">Kalyan Mitra Details</h3>
+                                    </div>
+                                    <div className="p-4 space-y-3">
+                                        <InfoItem
+                                            icon={Shield}
+                                            label="ILJ ID"
+                                            value={kalyamMitraDetails.ilj_id}
+                                            delay={0.1}
+                                        />
+                                        <InfoItem
+                                            icon={User}
+                                            label="Name"
+                                            value={`${kalyamMitraDetails.first_name} ${kalyamMitraDetails.last_name}`}
+                                            delay={0.15}
+                                        />
+                                        <InfoItem
+                                            icon={Phone}
+                                            label="Phone Number"
+                                            value={kalyamMitraDetails.mobile_number}
+                                            delay={0.2}
+                                        />
+                                        <InfoItem
+                                            icon={Mail}
+                                            label="Email"
+                                            value={kalyamMitraDetails.email}
+                                            delay={0.25}
+                                        />
+                                    </div>
+                                </div>
+                            </motion.div>
+                        )}
 
                         {/* Skills & Hobbies */}
                         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.7 }} className="md:col-span-2">

@@ -652,7 +652,7 @@ export default function VolunteerForm() {
                                 target="_blank"
                                 className="flex items-center gap-1.5 text-xs font-bold text-[#ae2b2b] hover:underline bg-white px-3 py-1.5 rounded-full border border-[#ae2b2b]/20 shadow-sm transition-all hover:shadow-md"
                             >
-                                <Info className="h-3.5 w-3.5" /> Know about each task
+                                <Info className="h-3.5 w-3.5" /> Know about each area of interest
                             </a>
                         </div>
                     </CardHeader>
@@ -941,7 +941,7 @@ export default function VolunteerForm() {
                                 name="timeCommitment"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel>Time Commitment (Approx)</FormLabel>
+                                        <FormLabel>Weekly Time Commitment (Approx)</FormLabel>
                                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                                             <FormControl>
                                                 <SelectTrigger>

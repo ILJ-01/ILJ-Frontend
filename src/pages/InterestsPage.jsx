@@ -143,7 +143,7 @@ export default function InterestsPage() {
                             <h3 className="text-xl font-bold text-gray-900 mb-2">{item.title}</h3>
                             <div className="flex items-center gap-2 mb-4 text-sm font-semibold text-[#ae2b2b] bg-[#ae2b2b]/5 px-3 py-1 rounded-full w-fit">
                                 <Users className="w-3.5 h-3.5" />
-                                Project Manager: {item.manager}
+                                Team Leader: {item.manager}
                             </div>
 
                             <p className="text-gray-600 text-sm leading-relaxed mb-6 flex-1">
