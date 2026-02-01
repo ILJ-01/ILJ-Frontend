@@ -53,20 +53,40 @@ function Navbar() {
               <span className="online-indicator"></span>
             </button>
           ) : (
-            <div className="nav-auth-buttons">
+            <>
+              {/* Profile Icon for Mobile (Guest View) */}
               <button
-                className="nav-btn nav-btn-outline"
+                className="profile-icon-btn mobile-guest-icon"
                 onClick={() => setShowLoginModal(true)}
+                aria-label="Login"
               >
-                LOGIN
+                <svg
+                  className="profile-icon-svg"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <circle cx="12" cy="8" r="4" stroke="currentColor" strokeWidth="2" />
+                  <path d="M5 20C5 17.2386 8.13401 15 12 15C15.866 15 19 17.2386 19 20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                </svg>
               </button>
-              <button
-                className="nav-btn nav-btn-solid"
-                onClick={handleRegisterClick}
-              >
-                JOIN AS VOLUNTEER
-              </button>
-            </div>
+
+              {/* Desktop Auth Buttons */}
+              <div className="nav-auth-buttons">
+                <button
+                  className="nav-btn nav-btn-outline"
+                  onClick={() => setShowLoginModal(true)}
+                >
+                  LOGIN
+                </button>
+                <button
+                  className="nav-btn nav-btn-solid"
+                  onClick={handleRegisterClick}
+                >
+                  JOIN AS VOLUNTEER
+                </button>
+              </div>
+            </>
           )}
         </div>
 

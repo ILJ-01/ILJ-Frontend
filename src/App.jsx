@@ -29,6 +29,7 @@ import VolunteerDashboard from "./pages/dashboard/VolunteerDashboard";
 import ManagerHub from "./pages/dashboard/ManagerHub";
 
 import PoliciesPage from "./pages/dashboard/PoliciesPage";
+import TeamLeaderHub from "./pages/dashboard/TeamLeaderHub";
 
 // Helper components for routing structure
 import { useAuth } from "./context/AuthContext";
@@ -85,6 +86,7 @@ function App() {
             <Route path="/dashboard/policies" element={<ProtectedRoute><DashboardLayout><PoliciesPage /></DashboardLayout></ProtectedRoute>} />
             <Route path="/dashboard/timesheet" element={<ProtectedRoute><DashboardLayout><TimesheetPage /></DashboardLayout></ProtectedRoute>} />
             <Route path="/dashboard/profile" element={<ProtectedRoute><DashboardLayout><ProfilePage /></DashboardLayout></ProtectedRoute>} />
+            <Route path="/dashboard/team-leader" element={<ProtectedRoute><DashboardLayout><TeamLeaderHub /></DashboardLayout></ProtectedRoute>} />
 
           </Routes>
         </div>

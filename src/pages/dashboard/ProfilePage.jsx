@@ -6,7 +6,7 @@ import { format } from 'date-fns';
 import {
     User, Mail, Phone, MapPin, Briefcase,
     GraduationCap, Heart, Shield, Award, Sparkles, Layers,
-    Calendar, CheckCircle2, RotateCw, Edit2, Save
+    Calendar, CheckCircle2, RotateCw, Edit2, Save, Clock
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -73,9 +73,12 @@ const Badge3D = ({ user }) => {
 
                                 <div className="relative z-10 flex items-center gap-4 sm:gap-5 mt-2">
                                     <div className="h-14 w-14 sm:h-16 sm:w-16 rounded-xl bg-gradient-to-br from-white to-gray-200 shadow-lg flex items-center justify-center text-[#ae2b2b] font-serif font-bold text-xl sm:text-2xl border-2 border-white/30 truncate">{initials}</div>
-                                    <div>
-                                        <h2 className="text-lg sm:text-xl font-bold leading-tight drop-shadow-sm truncate max-w-[150px] sm:max-w-none">{user.first_name} {user.last_name}</h2>
-                                        <p className="text-[10px] sm:text-xs text-red-100 mt-0.5 flex items-center gap-1">{user.occupation || 'Volunteer'}</p>
+                                    <div className="min-w-0 flex-1">
+                                        <h2 className="text-lg sm:text-xl font-bold leading-tight drop-shadow-sm truncate">{user.first_name} {user.last_name}</h2>
+                                        <p className="text-[10px] sm:text-xs text-red-50 mt-1 font-bold uppercase tracking-wider flex items-center gap-2">
+                                            <Briefcase className="h-3 w-3" />
+                                            {user.designation || 'Volunteer'}
+                                        </p>
                                     </div>
                                 </div>
 
@@ -109,7 +112,7 @@ const Badge3D = ({ user }) => {
                 </motion.div>
             </motion.div>
             <p className="text-xs text-gray-400 flex items-center gap-1 animate-pulse"><RotateCw size={12} /> Click card to flip</p>
-        </div>
+        </div >
     );
 };
 
@@ -215,6 +218,8 @@ export default function ProfilePage() {
                 availability_days: user.availability_days || "",
                 participation_mode: user.participation_mode || "",
                 kalyan_mitra: user.kalyan_mitra || "",
+                time_commitment: user.time_commitment || "",
+                rank: user.rank || "Intern",
             });
         }
     }, [user]);
@@ -244,18 +249,25 @@ export default function ProfilePage() {
         try {
             // Calculate age if DOB exists
             let age = null;
-            if (formData.dob) {
+            if (formData.dob && formData.dob !== "") {
                 const birthDate = new Date(formData.dob);
-                const today = new Date();
-                age = today.getFullYear() - birthDate.getFullYear();
-                const m = today.getMonth() - birthDate.getMonth();
-                if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
-                    age--;
+                if (!isNaN(birthDate.getTime())) {
+                    const today = new Date();
+                    age = today.getFullYear() - birthDate.getFullYear();
+                    const m = today.getMonth() - birthDate.getMonth();
+                    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+                        age--;
+                    }
                 }
             }
 
             // Omit fields that shouldn't be updated directly via this form
-            const { email, ilj_id, id, created_at, ...updateData } = { ...formData, age };
+            // Clean the data: convert empty strings to null for better DB compatibility
+            const { email, ilj_id, id, created_at, managed_projects, ...rawUpdateData } = { ...formData, age };
+
+            const updateData = Object.fromEntries(
+                Object.entries(rawUpdateData).map(([key, value]) => [key, value === "" ? null : value])
+            );
 
             const { error } = await supabase
                 .from('volunteers')
@@ -304,6 +316,7 @@ export default function ProfilePage() {
                 { icon: CheckCircle2, label: "1st Preference", value: formData.volunteering_preference1, isEditing: isEditing, field: 'volunteering_preference1', onChange: handleUpdate, type: "select", options: preferenceOptions },
                 { icon: CheckCircle2, label: "2nd Preference", value: formData.volunteering_preference2, isEditing: isEditing, field: 'volunteering_preference2', onChange: handleUpdate, type: "select", options: preferenceOptions },
                 { icon: CheckCircle2, label: "3rd Preference", value: formData.volunteering_preference3, isEditing: isEditing, field: 'volunteering_preference3', onChange: handleUpdate, type: "select", options: preferenceOptions },
+                { icon: Clock, label: "Time Commitment", value: formData.time_commitment, isEditing: isEditing, field: 'time_commitment', onChange: handleUpdate },
                 { icon: Calendar, label: "Availability", value: formData.availability_days, isEditing: isEditing, field: 'availability_days', onChange: handleUpdate, type: "select", options: availabilityOptions },
                 { icon: Layers, label: "Participation Mode", value: formData.participation_mode, isEditing: isEditing, field: 'participation_mode', onChange: handleUpdate, type: "select", options: participationModeOptions },
             ]
@@ -339,9 +352,30 @@ export default function ProfilePage() {
                 <div className="lg:col-span-8 space-y-6">
                     <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2, duration: 0.6 }}>
-                            <h1 className="text-3xl md:text-4xl font-serif font-bold text-gray-900">
-                                <span className="text-[#ae2b2b]">Hello,</span> {user.first_name}
-                            </h1>
+                            <div className="flex items-center gap-3">
+                                <h1 className="text-3xl md:text-4xl font-serif font-bold text-gray-900">
+                                    <span className="text-[#ae2b2b]">Hello,</span> {user.first_name}
+                                </h1>
+                                <motion.div
+                                    initial={{ scale: 0 }}
+                                    animate={{ scale: 1 }}
+                                    className="bg-amber-50 text-amber-700 px-3 py-1 rounded-full border border-amber-200 text-xs font-bold uppercase tracking-widest flex items-center gap-1 shadow-sm mt-1"
+                                >
+                                    <Award className="h-3.5 w-3.5 text-amber-600" />
+                                    {user.rank || 'Intern'}
+                                </motion.div>
+                                {user.designation && (
+                                    <motion.div
+                                        initial={{ scale: 0 }}
+                                        animate={{ scale: 1 }}
+                                        transition={{ delay: 0.1 }}
+                                        className="bg-blue-50 text-blue-700 px-3 py-1 rounded-full border border-blue-200 text-xs font-bold uppercase tracking-widest flex items-center gap-1 shadow-sm mt-1"
+                                    >
+                                        <Briefcase className="h-3.5 w-3.5 text-blue-600" />
+                                        {user.designation}
+                                    </motion.div>
+                                )}
+                            </div>
                             <p className="text-gray-500 text-lg">Manage your complete profile details below.</p>
                         </motion.div>
                         <button
@@ -421,6 +455,22 @@ export default function ProfilePage() {
                                 <div className="p-4 space-y-3">
                                     <InfoItem icon={Award} label="Dharmik Studies" value={formData.dharmik_studies} isEditing={isEditing} field="dharmik_studies" onChange={handleUpdate} />
                                     <InfoItem icon={User} label="Sangh Name" value={formData.sangh_name} isEditing={isEditing} field="sangh_name" onChange={handleUpdate} />
+                                    <InfoItem icon={User} label="Kalyan Mitra" value={formData.kalyan_mitra} isEditing={isEditing} field="kalyan_mitra" onChange={handleUpdate} />
+                                    {formData.team_leader_for && (
+                                        <div className="p-3 bg-blue-50 rounded-lg border border-blue-100 space-y-2">
+                                            <div className="flex items-center gap-2">
+                                                <Shield className="h-4 w-4 text-blue-600" />
+                                                <p className="text-[10px] text-blue-600 font-bold uppercase">Assigned Team Leader</p>
+                                            </div>
+                                            <div className="flex flex-wrap gap-1.5">
+                                                {formData.team_leader_for.split('|').map(team => (
+                                                    <span key={team} className="px-2 py-0.5 bg-white text-blue-900 text-xs font-bold rounded-md border border-blue-200">
+                                                        {team.trim()}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
                                     <InfoItem icon={Sparkles} label="Referred By" value={formData.referred_by} isEditing={isEditing} field="referred_by" onChange={handleUpdate} />
                                 </div>
                             </div>
@@ -510,7 +560,7 @@ export default function ProfilePage() {
                         </motion.div>
                     </div>
                 </div>
-            </div>
-        </div>
+            </div >
+        </div >
     );
 }

@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
     Home, Calendar, CheckSquare, Clock, User, LogOut,
-    Menu, X, Bell, Briefcase, FileText
+    Menu, X, Bell, Briefcase, FileText, Shield
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/lib/supabase";
@@ -70,6 +70,10 @@ export default function DashboardLayout({ children }) {
 
     if (user?.managed_projects?.length > 0) {
         menuItems.unshift({ icon: Briefcase, label: "Manager Hub", path: "/dashboard/manager" });
+    }
+
+    if (user?.team_leader_for) {
+        menuItems.unshift({ icon: Shield, label: "Team Leader Hub", path: "/dashboard/team-leader" });
     }
 
     return (

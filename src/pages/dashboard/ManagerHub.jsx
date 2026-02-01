@@ -3,7 +3,7 @@ import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/lib/supabase";
 import {
     Briefcase, CheckSquare, Clock, Users, Award,
-    Plus, Check, X, Search, ChevronRight, Trash2, Archive
+    Plus, Check, X, Search, ChevronRight, Trash2, Archive, Star, MessageSquare
 } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -14,6 +14,7 @@ export default function ManagerHub() {
     const [pendingTimesheets, setPendingTimesheets] = useState([]);
     const [volunteers, setVolunteers] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [selectedTaskForFeedback, setSelectedTaskForFeedback] = useState(null);
 
     const [editingProject, setEditingProject] = useState(null);
 
@@ -78,7 +79,7 @@ export default function ManagerHub() {
                 .select(`
                     id,
                     project_id,
-                    volunteer:volunteers(id, first_name, last_name, ilj_id, email)
+                    volunteer:volunteers(id, first_name, last_name, ilj_id, email, designation)
                 `)
                 .eq('project_id', projId);
 
@@ -99,7 +100,9 @@ export default function ManagerHub() {
                     title,
                     status,
                     deadline,
-                    assignee:volunteers(first_name, last_name, ilj_id)
+                    rating,
+                    feedback_comments,
+                    assignee:volunteers(first_name, last_name, ilj_id, designation)
                 `)
                 .eq('project_id', projId)
                 .order('created_at', { ascending: false });
@@ -158,6 +161,23 @@ export default function ManagerHub() {
         } catch (error) {
             console.error("Remove Team Error:", error);
             alert("Failed to remove member.");
+        }
+    };
+
+    const handleFeedbackSubmit = async (taskId, rating, comments) => {
+        try {
+            const { error } = await supabase
+                .from('tasks')
+                .update({ rating: parseInt(rating), feedback_comments: comments })
+                .eq('id', taskId);
+
+            if (error) throw error;
+
+            setTeamTasks(prev => prev.map(t => t.id === taskId ? { ...t, rating, feedback_comments: comments } : t));
+            setSelectedTaskForFeedback(null);
+            alert("Feedback saved!");
+        } catch (err) {
+            alert("Error saving feedback: " + err.message);
         }
     };
 
@@ -618,7 +638,14 @@ export default function ManagerHub() {
                                     </div>
                                     <div>
                                         <h4 className="font-bold text-gray-900 text-sm">{member.first_name} {member.last_name}</h4>
-                                        <p className="text-xs text-gray-500">{member.ilj_id}</p>
+                                        <div className="flex items-center gap-2">
+                                            <p className="text-xs text-gray-500">{member.ilj_id}</p>
+                                            {member.designation && (
+                                                <span className="text-[9px] bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded font-bold uppercase border border-blue-100/50">
+                                                    {member.designation}
+                                                </span>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
                                 <button
@@ -687,8 +714,17 @@ export default function ManagerHub() {
                                             .map(task => (
                                                 <tr key={task.id} className="hover:bg-gray-50 transition-colors">
                                                     <td className="py-3">
-                                                        <p className="font-medium text-gray-900">{task.assignee?.first_name} {task.assignee?.last_name}</p>
-                                                        <p className="text-[10px] text-gray-400 font-mono">{task.assignee?.ilj_id}</p>
+                                                        <div className="flex flex-col">
+                                                            <p className="font-medium text-gray-900">{task.assignee?.first_name} {task.assignee?.last_name}</p>
+                                                            <div className="flex items-center gap-2">
+                                                                <p className="text-[10px] text-gray-400 font-mono">{task.assignee?.ilj_id}</p>
+                                                                {task.assignee?.designation && (
+                                                                    <span className="text-[9px] text-[#ae2b2b] bg-red-50 px-1 rounded font-bold border border-red-100/50">
+                                                                        {task.assignee?.designation}
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                        </div>
                                                     </td>
                                                     <td className="py-3 font-medium text-gray-700">{task.title}</td>
                                                     <td className="py-3">
@@ -736,6 +772,19 @@ export default function ManagerHub() {
                                                             >
                                                                 <Trash2 className="h-4 w-4" />
                                                             </button>
+                                                            {task.status === 'completed' && (
+                                                                <button
+                                                                    onClick={() => setSelectedTaskForFeedback(task)}
+                                                                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all shadow-sm
+                                                                        ${task.rating
+                                                                            ? 'bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100'
+                                                                            : 'bg-blue-600 text-white hover:bg-blue-700 font-bold'
+                                                                        }`}
+                                                                >
+                                                                    <Star className={`h-3 w-3 ${task.rating ? 'fill-amber-500' : ''}`} />
+                                                                    {task.rating ? task.rating : 'Rate'}
+                                                                </button>
+                                                            )}
                                                         </div>
                                                     </td>
                                                 </tr>
@@ -1026,6 +1075,54 @@ export default function ManagerHub() {
                         </div>
                     </div>
                 </motion.div>
+            )}
+
+            {selectedTaskForFeedback && (
+                <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+                    <div className="bg-white w-full max-w-md rounded-2xl p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+                        <div className="flex justify-between items-center mb-6">
+                            <div>
+                                <h3 className="text-xl font-bold text-gray-900 leading-tight">Task Feedback</h3>
+                                <p className="text-sm text-gray-500 mt-0.5">{selectedTaskForFeedback.title}</p>
+                            </div>
+                            <button onClick={() => setSelectedTaskForFeedback(null)} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
+                                <X className="h-5 w-5 text-gray-400" />
+                            </button>
+                        </div>
+
+                        <div className="space-y-6">
+                            <div>
+                                <label className="block text-sm font-bold text-gray-700 mb-3 uppercase tracking-wider">Rating</label>
+                                <div className="flex gap-2">
+                                    {[1, 2, 3, 4, 5].map((star) => (
+                                        <button
+                                            key={star}
+                                            onClick={() => setSelectedTaskForFeedback({ ...selectedTaskForFeedback, rating: star })}
+                                            className="p-1 transition-transform active:scale-90"
+                                        >
+                                            <Star className={`h-8 w-8 transition-colors ${star <= (selectedTaskForFeedback.rating || 5) ? "text-amber-400 fill-amber-400" : "text-gray-200 fill-gray-200"}`} />
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-bold text-gray-700 mb-2 uppercase tracking-wider">Comments</label>
+                                <textarea
+                                    className="w-full border border-gray-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-[#ae2b2b]/20 focus:border-[#ae2b2b] outline-none transition-all resize-none min-h-[100px]"
+                                    placeholder="Write your feedback here..."
+                                    value={selectedTaskForFeedback.feedback_comments || ''}
+                                    onChange={(e) => setSelectedTaskForFeedback({ ...selectedTaskForFeedback, feedback_comments: e.target.value })}
+                                />
+                            </div>
+                            <button
+                                onClick={() => handleFeedbackSubmit(selectedTaskForFeedback.id, selectedTaskForFeedback.rating || 5, selectedTaskForFeedback.feedback_comments)}
+                                className="w-full py-4 bg-[#ae2b2b] text-white rounded-xl font-bold shadow-lg flex items-center justify-center gap-2 hover:bg-[#8b1e1e] transition-all"
+                            >
+                                <MessageSquare className="h-4 w-4" /> Save Feedback
+                            </button>
+                        </div>
+                    </div>
+                </div>
             )}
         </div>
     );

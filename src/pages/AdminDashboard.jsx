@@ -4,12 +4,14 @@ import { supabase } from '../lib/supabase';
 import {
     Search, Filter, LogOut, MapPin, Mail, Phone,
     X, User, Briefcase, Heart, BookOpen, Plus, LayoutGrid, Users,
-    Calendar, CheckSquare, Clock, Menu
+    Calendar, CheckSquare, Clock, Menu, Trash2, Shield
 } from 'lucide-react';
 
 import AdminEvents from './admin/AdminEvents';
 import AdminTasks from './admin/AdminTasks';
 import AdminTimesheets from './admin/AdminTimesheets';
+import AdminAppraisals from './admin/AdminAppraisals';
+import { TrendingUp } from 'lucide-react';
 
 const AdminDashboard = () => {
     const navigate = useNavigate();
@@ -174,6 +176,7 @@ const AdminDashboard = () => {
                                 { id: 'events', label: 'Events', icon: Calendar },
                                 { id: 'tasks', label: 'Tasks', icon: CheckSquare },
                                 { id: 'timesheets', label: 'Approvals', icon: Clock },
+                                { id: 'appraisals', label: 'Appraisals', icon: TrendingUp },
                             ].map((item) => {
                                 const Icon = item.icon;
                                 const isActive = activeTab === item.id;
@@ -235,6 +238,9 @@ const AdminDashboard = () => {
                             </button>
                             <button onClick={() => setActiveTab('timesheets')} className={`flex items-center gap-2 px-3 py-2 rounded-md font-medium text-sm whitespace-nowrap transition-all ${activeTab === 'timesheets' ? 'bg-white text-[#ae2b2b] shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}>
                                 <Clock className="h-4 w-4" /> Approvals
+                            </button>
+                            <button onClick={() => setActiveTab('appraisals')} className={`flex items-center gap-2 px-3 py-2 rounded-md font-medium text-sm whitespace-nowrap transition-all ${activeTab === 'appraisals' ? 'bg-white text-[#ae2b2b] shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}>
+                                <TrendingUp className="h-4 w-4" /> Appraisals
                             </button>
                         </div>
 
@@ -339,6 +345,16 @@ const AdminDashboard = () => {
                                                         </h3>
                                                         <div className="flex flex-wrap gap-2 mt-1">
                                                             <span className="text-xs font-medium bg-blue-50 text-blue-700 px-2 py-0.5 rounded border border-blue-100">{volunteer.ilj_id || 'No ID'}</span>
+                                                            <span className="text-xs font-bold bg-amber-50 text-amber-700 px-2 py-0.5 rounded border border-amber-100 flex items-center gap-1 uppercase tracking-tight">
+                                                                <Award className="h-3 w-3" />
+                                                                {volunteer.rank || 'Intern'}
+                                                            </span>
+                                                            {volunteer.designation && (
+                                                                <span className="text-xs font-bold bg-blue-50 text-blue-700 px-2 py-0.5 rounded border border-blue-100 flex items-center gap-1 uppercase tracking-tight">
+                                                                    <Briefcase className="h-3 w-3" />
+                                                                    {volunteer.designation}
+                                                                </span>
+                                                            )}
                                                             {volunteer.district && <span className="text-xs font-medium bg-purple-50 text-purple-700 px-2 py-0.5 rounded border border-purple-100">{volunteer.district}</span>}
                                                         </div>
                                                     </div>
@@ -467,6 +483,11 @@ const AdminDashboard = () => {
                         <AdminTimesheets />
                     </div>
                 )}
+                {activeTab === 'appraisals' && (
+                    <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
+                        <AdminAppraisals />
+                    </div>
+                )}
             </main>
 
             {/* Volunteer Modal (Same as before) */}
@@ -482,7 +503,14 @@ const AdminDashboard = () => {
                                     <h2 className="text-2xl font-bold text-gray-900">
                                         {selectedVolunteer.first_name} {selectedVolunteer.middle_name} {selectedVolunteer.last_name}
                                     </h2>
-                                    <p className="text-[#ae2b2b] font-medium">{selectedVolunteer.ilj_id}</p>
+                                    <div className="flex items-center gap-2 mt-1">
+                                        <p className="text-[#ae2b2b] font-medium">{selectedVolunteer.ilj_id}</p>
+                                        <span className="h-4 w-px bg-gray-300"></span>
+                                        <div className="flex items-center gap-1 text-amber-600 font-bold text-xs uppercase tracking-wider">
+                                            <Award className="h-4 w-4" />
+                                            {selectedVolunteer.rank || 'Intern'}
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                             <button onClick={() => setSelectedVolunteer(null)} className="p-2 hover:bg-gray-100 rounded-full transition-colors"><X className="h-6 w-6 text-gray-500" /></button>
@@ -531,98 +559,229 @@ const AdminDashboard = () => {
                             </section>
 
                             <section className="md:col-span-2 bg-gray-50 p-4 rounded-xl border border-gray-200">
-                                <h3 className="flex items-center gap-2 text-lg font-semibold text-gray-900 mb-4"><Users className="h-5 w-5 text-[#ae2b2b]" /> Assign Kalyan Mitra</h3>
-                                <div className="space-y-4">
-                                    <div className="flex items-center justify-between bg-white p-3 rounded-lg border border-gray-200">
-                                        <div>
-                                            <p className="text-xs font-medium text-gray-500 uppercase">Current Kalyan Mitra</p>
-                                            <p className="text-base font-semibold text-[#ae2b2b]">{selectedVolunteer.kalyan_mitra || "Not Assigned"}</p>
+                                <h3 className="flex items-center gap-2 text-lg font-semibold text-gray-900 mb-4"><Users className="h-5 w-5 text-[#ae2b2b]" /> Assign Roles</h3>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    {/* Kalyan Mitra Section */}
+                                    <div className="space-y-4">
+                                        <div className="flex items-center justify-between bg-white p-3 rounded-lg border border-gray-200">
+                                            <div>
+                                                <p className="text-xs font-medium text-gray-500 uppercase">Current Kalyan Mitra</p>
+                                                <p className="text-base font-semibold text-[#ae2b2b]">{selectedVolunteer.kalyan_mitra || "Not Assigned"}</p>
+                                            </div>
+                                        </div>
+
+                                        <div className="relative">
+                                            <label className="text-sm font-medium text-gray-700 mb-1 block">Search & Assign New Mitra</label>
+                                            <div className="relative">
+                                                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                                                <input
+                                                    type="text"
+                                                    placeholder="Search volunteer name..."
+                                                    className="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#ae2b2b] focus:border-transparent outline-none text-sm"
+                                                    onChange={(e) => {
+                                                        const term = e.target.value.toLowerCase();
+                                                        const dropdown = document.getElementById('mitra-dropdown');
+                                                        if (dropdown) {
+                                                            dropdown.style.display = term ? 'block' : 'none';
+                                                            const items = dropdown.querySelectorAll('.mitra-item');
+                                                            items.forEach(item => {
+                                                                const name = item.dataset.name.toLowerCase();
+                                                                item.style.display = name.includes(term) ? 'flex' : 'none';
+                                                            });
+                                                        }
+                                                    }}
+                                                />
+                                            </div>
+
+                                            <div id="mitra-dropdown" className="hidden absolute z-20 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                                                {volunteers.filter(v => v.id !== selectedVolunteer.id).map(v => (
+                                                    <div
+                                                        key={v.id}
+                                                        data-name={`${v.first_name} ${v.last_name}`}
+                                                        className="mitra-item flex items-center justify-between p-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-0"
+                                                        onClick={async () => {
+                                                            const confirmAssign = window.confirm(`Assign ${v.first_name} ${v.last_name} as Kalyan Mitra for ${selectedVolunteer.first_name}?`);
+                                                            if (confirmAssign) {
+                                                                try {
+                                                                    const mitraName = `${v.first_name} ${v.last_name}`;
+                                                                    const response = await fetch(`https://pdcgcqsgzupoyzklvoju.supabase.co/functions/v1/assign-kalyan-mitra`, {
+                                                                        method: 'POST',
+                                                                        headers: { 'Content-Type': 'application/json' },
+                                                                        body: JSON.stringify({
+                                                                            volunteer_id: selectedVolunteer.id,
+                                                                            kalyan_mitra: mitraName
+                                                                        })
+                                                                    });
+                                                                    const result = await response.json();
+                                                                    if (!response.ok || result.error) throw new Error(result.error);
+                                                                    const updated = { ...selectedVolunteer, kalyan_mitra: mitraName };
+                                                                    setSelectedVolunteer(updated);
+                                                                    setVolunteers(prev => prev.map(vol => vol.id === updated.id ? updated : vol));
+                                                                    document.getElementById('mitra-dropdown').style.display = 'none';
+                                                                } catch (err) { alert(`Error: ${err.message}`); }
+                                                            }
+                                                        }}
+                                                    >
+                                                        <div className="flex items-center gap-3">
+                                                            <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-xs font-bold text-gray-600">
+                                                                {v.first_name?.[0]}{v.last_name?.[0]}
+                                                            </div>
+                                                            <div>
+                                                                <p className="text-sm font-medium text-gray-900">{v.first_name} {v.last_name}</p>
+                                                                <p className="text-xs text-gray-500">{v.ilj_id}</p>
+                                                            </div>
+                                                        </div>
+                                                        <Plus className="h-4 w-4 text-[#ae2b2b]" />
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+
+                                        {/* Designation Field */}
+                                        <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+                                            <label className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2 block">Set Designation</label>
+                                            <div className="flex gap-2">
+                                                <input
+                                                    type="text"
+                                                    id="designation-input"
+                                                    placeholder="er.g. Lead Designer"
+                                                    className="flex-1 p-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#ae2b2b] outline-none"
+                                                    defaultValue={selectedVolunteer.designation || ""}
+                                                />
+                                                <button
+                                                    onClick={async () => {
+                                                        const newVal = document.getElementById('designation-input').value;
+                                                        try {
+                                                            const { error } = await supabase
+                                                                .from('volunteers')
+                                                                .update({ designation: newVal || null })
+                                                                .eq('id', selectedVolunteer.id);
+
+                                                            if (error) throw error;
+                                                            const updated = { ...selectedVolunteer, designation: newVal || null };
+                                                            setSelectedVolunteer(updated);
+                                                            setVolunteers(prev => prev.map(vol => vol.id === updated.id ? updated : vol));
+                                                            alert("Designation updated!");
+                                                        } catch (err) { alert(`Error: ${err.message}`); }
+                                                    }}
+                                                    className="bg-[#ae2b2b] text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-[#8b1e1e] transition-colors shadow-sm"
+                                                >
+                                                    Update
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
 
-                                    <div className="relative">
-                                        <label className="text-sm font-medium text-gray-700 mb-1 block">Search & Assign New Mitra</label>
-                                        <div className="relative">
-                                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                                            <input
-                                                type="text"
-                                                placeholder="Search volunteer name..."
-                                                className="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#ae2b2b] focus:border-transparent outline-none text-sm"
-                                                onChange={(e) => {
-                                                    const term = e.target.value.toLowerCase();
-                                                    // Simple local search logic attached to the input for now
-                                                    // Ideally this would be managed by state but we are injecting this block
-                                                    // We'll use a data attribute to store the container ID for the dropdown
-                                                    const dropdown = document.getElementById('mitra-dropdown');
-                                                    if (dropdown) {
-                                                        dropdown.style.display = term ? 'block' : 'none';
-                                                        const items = dropdown.querySelectorAll('.mitra-item');
-                                                        items.forEach(item => {
-                                                            const name = item.dataset.name.toLowerCase();
-                                                            item.style.display = name.includes(term) ? 'flex' : 'none';
-                                                        });
-                                                    }
-                                                }}
-                                            />
+                                    {/* Team Leader Section */}
+                                    <div className="space-y-6">
+                                        <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+                                            <div className="flex items-center justify-between mb-4">
+                                                <h4 className="text-sm font-bold text-gray-700 uppercase tracking-wider flex items-center gap-2">
+                                                    <Shield className="h-4 w-4 text-blue-600" />
+                                                    Current Leadership Roles
+                                                </h4>
+                                                <span className="bg-blue-100 text-blue-700 text-[10px] font-bold px-2 py-0.5 rounded-full">
+                                                    {selectedVolunteer.team_leader_for ? selectedVolunteer.team_leader_for.split(',').filter(Boolean).length : 0} Teams
+                                                </span>
+                                            </div>
+
+                                            <div className="space-y-2">
+                                                {selectedVolunteer.team_leader_for && selectedVolunteer.team_leader_for.split('|').filter(Boolean).map(role => (
+                                                    <div key={role} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-100 group">
+                                                        <span className="text-sm font-medium text-gray-800">{role.trim()}</span>
+                                                        <button
+                                                            onClick={async () => {
+                                                                if (window.confirm(`Remove "${role.trim()}" leadership role from ${selectedVolunteer.first_name}?`)) {
+                                                                    try {
+                                                                        const currentTeams = selectedVolunteer.team_leader_for.split('|').map(t => t.trim()).filter(Boolean);
+                                                                        const newTeams = currentTeams.filter(t => t !== role.trim());
+                                                                        const teamString = newTeams.join('|');
+
+                                                                        const { error } = await supabase
+                                                                            .from('volunteers')
+                                                                            .update({ team_leader_for: teamString || null })
+                                                                            .eq('id', selectedVolunteer.id);
+
+                                                                        if (error) throw error;
+
+                                                                        const updated = { ...selectedVolunteer, team_leader_for: teamString || null };
+                                                                        setSelectedVolunteer(updated);
+                                                                        setVolunteers(prev => prev.map(vol => vol.id === updated.id ? updated : vol));
+                                                                    } catch (err) {
+                                                                        alert(`Error: ${err.message}`);
+                                                                    }
+                                                                }
+                                                            }}
+                                                            className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors opacity-0 group-hover:opacity-100"
+                                                            title="Delete Assignment"
+                                                        >
+                                                            <Trash2 className="h-4 w-4" />
+                                                        </button>
+                                                    </div>
+                                                ))}
+                                                {!selectedVolunteer.team_leader_for && (
+                                                    <div className="text-center py-6 border-2 border-dashed border-gray-100 rounded-xl">
+                                                        <p className="text-sm text-gray-400 italic">No teams assigned to this volunteer</p>
+                                                    </div>
+                                                )}
+                                            </div>
                                         </div>
 
-                                        {/* Dropdown for search results */}
-                                        <div id="mitra-dropdown" className="hidden absolute z-20 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                                            {volunteers.filter(v => v.id !== selectedVolunteer.id).map(v => (
-                                                <div
-                                                    key={v.id}
-                                                    data-name={`${v.first_name} ${v.last_name}`}
-                                                    className="mitra-item flex items-center justify-between p-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-0"
+                                        <div className="bg-blue-50/50 p-4 rounded-xl border border-blue-100">
+                                            <label className="text-xs font-bold text-blue-700 uppercase tracking-widest mb-3 block">Assign To New Team</label>
+                                            <div className="flex gap-2">
+                                                <select
+                                                    id="team-selector"
+                                                    className="flex-1 p-2.5 bg-white border border-blue-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                                                >
+                                                    <option value="">Select a team...</option>
+                                                    {[
+                                                        "Research & Documentation",
+                                                        "Content Writing (Articles, Blogs, Scripts)",
+                                                        "Public Speaking, Acting & Stage Activities",
+                                                        "Graphic Design & Video Editing",
+                                                        "Photography & Videography",
+                                                        "Event Planning & Management",
+                                                        "Marketing & Outreach",
+                                                        "Pathshala & Educational Activities",
+                                                        "IT & Technical Support"
+                                                    ].map(team => {
+                                                        const currentTeams = selectedVolunteer.team_leader_for ? selectedVolunteer.team_leader_for.split('|').map(t => t.trim()) : [];
+                                                        if (currentTeams.includes(team)) return null;
+                                                        return <option key={team} value={team}>{team}</option>;
+                                                    })}
+                                                </select>
+                                                <button
                                                     onClick={async () => {
-                                                        const confirmAssign = window.confirm(`Assign ${v.first_name} ${v.last_name} as Kalyan Mitra for ${selectedVolunteer.first_name}?`);
-                                                        if (confirmAssign) {
-                                                            try {
-                                                                const mitraName = `${v.first_name} ${v.last_name}`;
-                                                                // Use Edge Function to bypass RLS policies
-                                                                const EDGE_FUNC_URL = `https://pdcgcqsgzupoyzklvoju.supabase.co/functions/v1/assign-kalyan-mitra`;
+                                                        const selector = document.getElementById('team-selector');
+                                                        const teamName = selector.value;
+                                                        if (!teamName) return;
 
-                                                                const response = await fetch(EDGE_FUNC_URL, {
-                                                                    method: 'POST',
-                                                                    headers: { 'Content-Type': 'application/json' },
-                                                                    body: JSON.stringify({
-                                                                        volunteer_id: selectedVolunteer.id,
-                                                                        kalyan_mitra: mitraName
-                                                                    })
-                                                                });
+                                                        try {
+                                                            const currentTeams = selectedVolunteer.team_leader_for ? selectedVolunteer.team_leader_for.split('|').map(t => t.trim()).filter(Boolean) : [];
+                                                            const newTeams = [...new Set([...currentTeams, teamName])];
+                                                            const teamString = newTeams.join('|');
 
-                                                                const result = await response.json();
+                                                            const { error } = await supabase
+                                                                .from('volunteers')
+                                                                .update({ team_leader_for: teamString })
+                                                                .eq('id', selectedVolunteer.id);
 
-                                                                if (!response.ok || result.error) {
-                                                                    throw new Error(result.error || 'Failed to update via Edge Function');
-                                                                }
+                                                            if (error) throw error;
 
-                                                                // Update local state
-                                                                const updated = { ...selectedVolunteer, kalyan_mitra: mitraName };
-                                                                setSelectedVolunteer(updated);
-                                                                setVolunteers(prev => prev.map(vol => vol.id === updated.id ? updated : vol));
-
-                                                                // Hide dropdown and clear input
-                                                                document.getElementById('mitra-dropdown').style.display = 'none';
-                                                                // alert("Kalyan Mitra Assigned Successfully!");
-                                                            } catch (err) {
-                                                                console.error("Error assigning mitra:", err);
-                                                                alert(`Failed to assign Kalyan Mitra. Error: ${err.message}`);
-                                                            }
+                                                            const updated = { ...selectedVolunteer, team_leader_for: teamString };
+                                                            setSelectedVolunteer(updated);
+                                                            setVolunteers(prev => prev.map(vol => vol.id === updated.id ? updated : vol));
+                                                            selector.value = ""; // Reset selector
+                                                        } catch (err) {
+                                                            alert(`Error: ${err.message}`);
                                                         }
                                                     }}
+                                                    className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-blue-700 transition-colors shadow-sm flex items-center gap-2"
                                                 >
-                                                    <div className="flex items-center gap-3">
-                                                        <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-xs font-bold text-gray-600">
-                                                            {v.first_name?.[0]}{v.last_name?.[0]}
-                                                        </div>
-                                                        <div>
-                                                            <p className="text-sm font-medium text-gray-900">{v.first_name} {v.last_name}</p>
-                                                            <p className="text-xs text-gray-500">{v.ilj_id}</p>
-                                                        </div>
-                                                    </div>
-                                                    <Plus className="h-4 w-4 text-[#ae2b2b]" />
-                                                </div>
-                                            ))}
+                                                    <Plus className="h-4 w-4" /> Add
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -631,9 +790,9 @@ const AdminDashboard = () => {
                         </div>
                         <div className="bg-gray-50 px-6 py-4 border-t border-gray-200 flex justify-end"><button onClick={() => setSelectedVolunteer(null)} className="px-6 py-2 bg-white border rounded hover:bg-gray-50">Close</button></div>
                     </div>
-                </div>
+                </div >
             )}
-        </div>
+        </div >
     );
 };
 

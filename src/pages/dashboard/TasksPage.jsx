@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/lib/supabase";
-import { CheckCircle, Clock, AlertCircle, Briefcase } from "lucide-react";
+import { CheckCircle, Clock, AlertCircle, Briefcase, Star, MessageSquare } from "lucide-react";
 
 export default function TasksPage() {
     const { user } = useAuth();
@@ -226,6 +226,33 @@ export default function TasksPage() {
                                                 </span>
                                             )}
                                         </div>
+
+                                        {task.status === 'completed' && (task.rating || task.feedback_comments) && (
+                                            <div className="mt-4 p-5 bg-gradient-to-br from-white to-gray-50 rounded-2xl border border-gray-100 relative shadow-sm">
+                                               
+
+                                                {task.rating && (
+                                                    <div className="flex flex-col gap-1.5 mb-3 pt-1">
+                                                        <div className="flex gap-1">
+                                                            {[1, 2, 3, 4, 5].map(s => (
+                                                                <Star key={s} className={`h-4.5 w-4.5 transition-all ${s <= task.rating ? 'fill-amber-400 text-amber-400' : 'text-gray-200'}`} />
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                )}
+
+                                                {task.feedback_comments && (
+                                                    <div className="flex gap-3">
+                                                        <div className="shrink-0 mt-1">
+                                                            <MessageSquare className="h-4 w-4 text-gray-400" />
+                                                        </div>
+                                                        <p className="text-sm text-gray-700 italic leading-relaxed font-serif">
+                                                            "{task.feedback_comments}"
+                                                        </p>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
                                     </div>
                                 ))}
                             </div>

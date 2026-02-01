@@ -239,6 +239,10 @@ body {
   .hamburger {
     display: none;
   }
+
+  .mobile-guest-icon {
+    display: none;
+  }
 }
 
 /* Auth Buttons */
@@ -310,5 +314,9 @@ body {
 @media (max-width: 768px) {
   .nav-auth-buttons {
     display: none;
+  }
+
+  .mobile-guest-icon {
+    display: flex;
   }
 }

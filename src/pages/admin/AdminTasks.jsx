@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
-import { CheckCircle, Plus, Trash2, X, Loader2, User, Clock, Search, Archive } from 'lucide-react';
+import { CheckCircle, Plus, Trash2, X, Loader2, User, Clock, Search, Archive, Star, MessageSquare } from 'lucide-react';
 
 export default function AdminTasks() {
     const [tasks, setTasks] = useState([]);
@@ -13,6 +13,7 @@ export default function AdminTasks() {
     // Search State
     const [assigneeSearch, setAssigneeSearch] = useState('');
     const [showAssigneeDropdown, setShowAssigneeDropdown] = useState(false);
+    const [selectedTaskForFeedback, setSelectedTaskForFeedback] = useState(null);
 
     const [formData, setFormData] = useState({
         title: '', description: '', project_id: '', assignee_id: '', deadline: ''
@@ -54,6 +55,23 @@ export default function AdminTasks() {
         const { error } = await supabase.from('tasks').update({ status: newStatus }).eq('id', id);
         if (error) alert("Failed to update task");
         else fetchData();
+    };
+
+    const handleFeedbackSubmit = async (taskId, rating, comments) => {
+        try {
+            const { error } = await supabase
+                .from('tasks')
+                .update({ rating: parseInt(rating), feedback_comments: comments })
+                .eq('id', taskId);
+
+            if (error) throw error;
+
+            setTasks(prev => prev.map(t => t.id === taskId ? { ...t, rating, feedback_comments: comments } : t));
+            setSelectedTaskForFeedback(null);
+            alert("Feedback saved!");
+        } catch (err) {
+            alert("Error saving feedback: " + err.message);
+        }
     };
 
     const handleSubmit = async (e) => {
@@ -160,6 +178,19 @@ export default function AdminTasks() {
                                     <button onClick={() => handleDelete(task.id)} className="text-gray-400 hover:text-red-500 p-2 opacity-0 group-hover:opacity-100 transition-opacity">
                                         <Trash2 className="h-5 w-5" />
                                     </button>
+                                    {task.status === 'completed' && (
+                                        <button
+                                            onClick={() => setSelectedTaskForFeedback(task)}
+                                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all shadow-sm
+                                                ${task.rating
+                                                    ? 'bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100'
+                                                    : 'bg-blue-600 text-white hover:bg-blue-700'
+                                                }`}
+                                        >
+                                            <Star className={`h-3.5 w-3.5 ${task.rating ? 'fill-amber-500' : ''}`} />
+                                            {task.rating ? `${task.rating} Stars` : 'Add Feedback'}
+                                        </button>
+                                    )}
                                 </div>
                             </div>
                         ))}
@@ -267,6 +298,84 @@ export default function AdminTasks() {
                     </div>
                 </div>
             )}
+
+            {selectedTaskForFeedback && (
+                <FeedbackModal
+                    task={selectedTaskForFeedback}
+                    onClose={() => setSelectedTaskForFeedback(null)}
+                    onSubmit={handleFeedbackSubmit}
+                />
+            )}
+        </div>
+    );
+}
+
+function FeedbackModal({ task, onClose, onSubmit }) {
+    const [rating, setRating] = useState(task.rating || 5);
+    const [comments, setComments] = useState(task.feedback_comments || '');
+
+    return (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+            <div className="bg-white w-full max-w-md rounded-2xl p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+                <div className="flex justify-between items-center mb-6">
+                    <div>
+                        <h3 className="text-xl font-bold text-gray-900 leading-tight">Task Feedback</h3>
+                        <p className="text-sm text-gray-500 mt-0.5">{task.title}</p>
+                    </div>
+                    <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
+                        <X className="h-5 w-5 text-gray-400" />
+                    </button>
+                </div>
+
+                <div className="space-y-6">
+                    <div>
+                        <label className="block text-sm font-bold text-gray-700 mb-3 uppercase tracking-wider">Rating</label>
+                        <div className="flex gap-2">
+                            {[1, 2, 3, 4, 5].map((star) => (
+                                <button
+                                    key={star}
+                                    onClick={() => setRating(star)}
+                                    className="p-1 transition-transform active:scale-90"
+                                >
+                                    <Star
+                                        className={`h-8 w-8 transition-colors ${star <= rating
+                                                ? "text-amber-400 fill-amber-400"
+                                                : "text-gray-200 fill-gray-200"
+                                            }`}
+                                    />
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-bold text-gray-700 mb-2 uppercase tracking-wider">Comments</label>
+                        <textarea
+                            rows="4"
+                            className="w-full border border-gray-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-[#ae2b2b]/20 focus:border-[#ae2b2b] outline-none transition-all resize-none"
+                            placeholder="Write your feedback here..."
+                            value={comments}
+                            onChange={(e) => setComments(e.target.value)}
+                        />
+                    </div>
+
+                    <div className="flex gap-3 pt-2">
+                        <button
+                            onClick={onClose}
+                            className="flex-1 py-3 px-4 rounded-xl text-sm font-bold text-gray-600 bg-gray-50 hover:bg-gray-100 transition-colors border border-gray-200"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            onClick={() => onSubmit(task.id, rating, comments)}
+                            className="flex-1 py-3 px-4 rounded-xl text-sm font-bold text-white bg-[#ae2b2b] hover:bg-[#8b1e1e] transition-all shadow-md flex items-center justify-center gap-2"
+                        >
+                            <MessageSquare className="h-4 w-4" />
+                            Save Feedback
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
     );
 }

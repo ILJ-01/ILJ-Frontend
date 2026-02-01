@@ -1,72 +1,71 @@
 import {
-    Search, PenTool, BookOpen, Camera, Film, Calendar,
-    BarChart3, Code, GraduationCap, ShieldCheck, Users,
-    ArrowRight, Info, CheckCircle2
+    FileText, Mic, Palette, Camera, Calendar, Megaphone, School, Code,
+    Search, ArrowRight, Info, CheckCircle2, ShieldCheck, Users
 } from "lucide-react";
 import { motion } from "framer-motion";
 
 const interests = [
     {
-        title: "Research",
+        title: "Research & Documentation",
         manager: "Jainam Sheth",
         description: "Research on various scriptures, philosophies, history, social issues, or contemporary topics and presenting structured insights or references.",
-        icon: Search,
+        icon: FileText,
         color: "bg-blue-50 text-blue-600 border-blue-100"
     },
     {
-        title: "Content Writing",
+        title: "Content Writing (Articles, Blogs, Scripts)",
         manager: "Jainam Mehta",
         description: "Creating meaningful written content such as articles, captions, scripts, blogs, or educational material aligned with Jain values.",
-        icon: PenTool,
+        icon: FileText,
         color: "bg-emerald-50 text-emerald-600 border-emerald-100"
     },
     {
-        title: "Public Speaking",
+        title: "Public Speaking, Acting & Stage Activities",
         manager: "Aayushi Sanghavi",
         description: "Delivering talks, anchoring sessions, moderating discussions, or representing ILJ Foundation at events, Pathshalas, or public forums.",
-        icon: BookOpen,
+        icon: Mic,
         color: "bg-purple-50 text-purple-600 border-purple-100"
     },
     {
-        title: "Graphics and Editing",
+        title: "Graphic Design & Video Editing",
         manager: "Aayushi Sanghavi",
         description: "Designing posters, reels, presentations, banners, or editing visuals/videos for events, social media, and awareness campaigns.",
-        icon: Film,
+        icon: Palette,
         color: "bg-orange-50 text-orange-600 border-orange-100"
     },
     {
-        title: "Photography and Shooting",
+        title: "Photography & Videography",
         manager: "Aayushi Sanghavi",
         description: "Capturing photos and videos during events, sessions, exhibitions, and activities for documentation and promotion.",
         icon: Camera,
         color: "bg-rose-50 text-rose-600 border-rose-100"
     },
     {
-        title: "Event Management",
+        title: "Event Planning & Management",
         manager: "Smit Mehta",
         description: "Planning, coordinating, and executing events including logistics, volunteer coordination, registrations, and on-ground support.",
         icon: Calendar,
         color: "bg-amber-50 text-amber-600 border-amber-100"
     },
     {
-        title: "Marketing",
+        title: "Marketing & Outreach",
         manager: "Charmi Dedhia",
         description: "Promoting ILJ initiatives through online/offline marketing such as social media campaigns, outreach, branding, or collaborations.",
-        icon: BarChart3,
+        icon: Megaphone,
         color: "bg-indigo-50 text-indigo-600 border-indigo-100"
     },
     {
-        title: "I.T. and Tech",
+        title: "IT & Technical Support",
         manager: "Smit Mehta and Meet Mehta",
         description: "Handling websites, forms, databases, automation tools, or providing technical support for digital initiatives.",
         icon: Code,
         color: "bg-cyan-50 text-cyan-600 border-cyan-100"
     },
     {
-        title: "Pathshala Activities",
+        title: "Pathshala & Educational Activities",
         manager: "Jeel Doshi",
         description: "Supporting initiatives related to Pathshala such as sanskaar library, teaching assistance, activity planning, or student engagement.",
-        icon: GraduationCap,
+        icon: School,
         color: "bg-teal-50 text-teal-600 border-teal-100"
     }
 ];
