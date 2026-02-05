@@ -15,24 +15,28 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install PostgreSQL Client
+      - name: Install PostgreSQL 17 Client
         run: |
-          sudo apt-get update
-          sudo apt-get install -y postgresql-client
+          sudo apt-get install -y postgresql-common
+          # Yes, automatically enable the PG repo script
+          sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y
+          sudo apt-get install -y postgresql-client-17
 
       - name: Create Backup
         env:
-          # You must add this secret in GitHub Repo Settings > Secrets and variables > Actions
-          # Format: postgres://postgres.[ref]:[password]@aws-0-[region].pooler.supabase.com:6543/postgres
-          DATABASE_URL: ${{ secrets.SUPABASE_DB_URL }}
+          DATABASE_URL_SECRET: ${{ secrets.SUPABASE_DB_URL }}
         run: |
-          if [ -z "$DATABASE_URL" ]; then
-            echo "Error: SUPABASE_DB_URL secret is not set."
+          if [ -z "$DATABASE_URL_SECRET" ]; then
+            echo "❌ ERROR: SUPABASE_DB_URL secret is EMPTY or NOT FOUND."
+            echo "Please go to Settings > Secrets and variables > Actions and add 'SUPABASE_DB_URL'."
             exit 1
+          else
+            echo "✅ Secret found (length: ${#DATABASE_URL_SECRET} chars). Proceeding..."
           fi
+          
           mkdir -p backups
-          # Flags: --clean (drop objects before creating), --if-exists, --no-owner (improves compatibility)
-          pg_dump "$DATABASE_URL" --clean --if-exists --no-owner --no-privileges > backups/backup_$(date +%Y-%m-%d).sql
+          # Pass the secret directly to pg_dump to avoid variable expansion issues
+          pg_dump "$DATABASE_URL_SECRET" --clean --if-exists --no-owner --no-privileges > backups/backup_$(date +%Y-%m-%d).sql
 
       - name: Commit and Push Backup
         run: |
