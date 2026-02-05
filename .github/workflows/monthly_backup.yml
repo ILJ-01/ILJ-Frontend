@@ -34,9 +34,11 @@ jobs:
             echo "✅ Secret found (length: ${#DATABASE_URL_SECRET} chars). Proceeding..."
           fi
           
+          
           mkdir -p backups
           # Pass the secret directly to pg_dump to avoid variable expansion issues
-          pg_dump "$DATABASE_URL_SECRET" --clean --if-exists --no-owner --no-privileges > backups/backup_$(date +%Y-%m-%d).sql
+          # Use explicit path to ensure we use version 17
+          /usr/lib/postgresql/17/bin/pg_dump "$DATABASE_URL_SECRET" --clean --if-exists --no-owner --no-privileges > backups/backup_$(date +%Y-%m-%d).sql
 
       - name: Commit and Push Backup
         run: |
