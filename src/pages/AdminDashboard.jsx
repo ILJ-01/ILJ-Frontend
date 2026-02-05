@@ -31,13 +31,16 @@ const AdminDashboard = () => {
     const [showArchivedProjects, setShowArchivedProjects] = useState(false);
 
     useEffect(() => {
-        const checkAuth = () => {
-            const isAuth = sessionStorage.getItem('adminAuth');
-            if (!isAuth) navigate('/admin');
+        const checkAuth = async () => {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) {
+                navigate('/admin');
+            } else {
+                fetchVolunteers();
+                fetchProjects();
+            }
         };
         checkAuth();
-        fetchVolunteers();
-        fetchProjects();
     }, [navigate]);
 
     const fetchVolunteers = async () => {
@@ -86,8 +89,9 @@ const AdminDashboard = () => {
         }
     };
 
-    const handleLogout = () => {
-        sessionStorage.removeItem('adminAuth');
+    const handleLogout = async () => {
+        await supabase.auth.signOut();
+        sessionStorage.removeItem('adminAuth'); // Clean up old residue just in case
         navigate('/admin');
     };
 

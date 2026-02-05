@@ -22,26 +22,22 @@ export function AuthProvider({ children }) {
 
     const login = async (iljId, password) => {
         try {
-            // Query volunteer by ILJ ID and password
-            const { data, error } = await supabase
-                .from('volunteers')
-                .select('*')
-                .eq('ilj_id', iljId.toUpperCase())
-                .eq('password_hash', password)
-                .single();
+            // Remote Procedure Call for secure login
+            const { data, error } = await supabase.rpc('login_volunteer', {
+                p_ilj_id: iljId.toUpperCase(),
+                p_password: password
+            });
 
-            if (error || !data) {
-                return { success: false, error: 'Invalid ILJ ID or password' };
+            if (error || !data || !data.success) {
+                return { success: false, error: (data?.error) || 'Invalid ILJ ID or password' };
             }
 
-            // Store user in state and localStorage
-            // Fetch managed projects
-            const { data: projects } = await supabase
-                .from('projects')
-                .select('*')
-                .eq('manager_id', data.id);
+            const userData = data.user;
 
-            const userWithProjects = { ...data, managed_projects: projects || [] };
+            // Note: managed_projects is already included in the RPC response
+            const userWithProjects = { ...userData, managed_projects: userData.managed_projects || [] };
+
+
 
             setUser(userWithProjects);
             localStorage.setItem('ilj_user', JSON.stringify(userWithProjects));
@@ -86,6 +82,10 @@ export function AuthProvider({ children }) {
     const refreshUser = async () => {
         if (!user?.ilj_id) return;
 
+
+        // RLS prevents reading volunteers table directly without password/login.
+        // For now, we rely on the session data. 
+        /*
         const { data, error } = await supabase
             .from('volunteers')
             .select('*')
@@ -93,15 +93,16 @@ export function AuthProvider({ children }) {
             .single();
 
         if (!error && data) {
-            const { data: projects } = await supabase
-                .from('projects')
-                .select('*')
-                .eq('manager_id', data.id);
+             const { data: projects } = await supabase
+                 .from('projects')
+                 .select('*')
+                 .eq('manager_id', data.id);
 
             const userWithProjects = { ...data, managed_projects: projects || [] };
             setUser(userWithProjects);
             localStorage.setItem('ilj_user', JSON.stringify(userWithProjects));
         }
+        */
     };
 
     return (

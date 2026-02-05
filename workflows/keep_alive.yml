@@ -1,0 +1,33 @@
+name: Prevent Supabase Pause
+
+on:
+  schedule:
+    - cron: '30 6 * * 1,4' # Runs at 06:30 UTC on Monday and Thursday
+  workflow_dispatch:
+
+jobs:
+  keep-alive:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Supabase Database
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        run: |
+          # Simple GET request to a table (e.g., 'projects' or just check health/version if publicly available, OR query a table)
+          # We'll use the REST API to fetch a single row from a public table to ensure the DB wakes up.
+          # Note: 'projects' table must have Public Read access or use a table that does.
+          # If no public table, use a simple RPC or just the project root URL which might not wake the DB fully.
+          # Best practice: Query a table.
+          
+          echo "Pinging Supabase REST API..."
+          response=$(curl -s -o /dev/null -w "%{http_code}" -X GET "$SUPABASE_URL/rest/v1/projects?select=count" \
+            -H "apikey: $SUPABASE_ANON_KEY" \
+            -H "Authorization: Bearer $SUPABASE_ANON_KEY")
+            
+          if [ "$response" -eq 200 ] || [ "$response" -eq 206 ]; then
+            echo "Success! Supabase is active. HTTP Status: $response"
+          else
+            echo "Warning: Received HTTP Status $response. Check your URL/Key or RLS policies."
+            # We don't fail the build strictly if it's just a 401 (auth), because even a failed auth request hits the DB.
+          fi

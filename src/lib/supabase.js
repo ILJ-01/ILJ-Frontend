@@ -28,82 +28,57 @@ export async function registerVolunteer(formData) {
     try {
         const generatedPassword = generateRandomPassword();
 
-        // Prepare the data for insertion
-        const volunteerData = {
-            first_name: formData.firstName,
-            middle_name: formData.middleName || null,
-            last_name: formData.lastName,
-            dob: `${formData.dob.getFullYear()}-${String(formData.dob.getMonth() + 1).padStart(2, '0')}-${String(formData.dob.getDate()).padStart(2, '0')}`, // Format as YYYY-MM-DD (Local Time)
-            age: formData.age || null,
-            gender: formData.gender,
-            mobile_number: formData.mobileNumber,
-            email: formData.email,
-            address_line1: formData.addressLine1,
-            address_line2: formData.addressLine2 || null,
-            district: formData.district,
-            city: formData.city,
-            state: formData.state,
-            country: formData.country,
-            pincode: formData.pincode,
-            sangh_name: formData.sanghName || null,
-            dharmik_studies: formData.dharmikStudies || null,
-            qualification: formData.qualification,
-            specialization: formData.specialization,
-            occupation: formData.occupation,
-            occupation_other: formData.occupationOther || null,
-            hobbies: formData.hobbies || null,
-            skills: formData.skills || null,
-            referred_by: formData.referredBy || null,
-            volunteering_preference1: formData.volunteeringPreference1,
-            volunteering_preference2: formData.volunteeringPreference2 || null,
-            volunteering_preference3: formData.volunteeringPreference3 || null,
-            availability_days: formData.availabilityDays,
-            time_commitment: formData.timeCommitment || null,
-            participation_mode: formData.participationMode,
-            additional_areas: formData.additionalAreas || null,
-            password_hash: generatedPassword, // In production, use proper hashing
+        // Prepare the data for RPC
+        const rpcParams = {
+            p_first_name: formData.firstName,
+            p_middle_name: formData.middleName || null,
+            p_last_name: formData.lastName,
+            p_dob: `${formData.dob.getFullYear()}-${String(formData.dob.getMonth() + 1).padStart(2, '0')}-${String(formData.dob.getDate()).padStart(2, '0')}`,
+            p_age: formData.age || null,
+            p_gender: formData.gender,
+            p_mobile_number: formData.mobileNumber,
+            p_email: formData.email,
+            p_address_line1: formData.addressLine1,
+            p_address_line2: formData.addressLine2 || null,
+            p_district: formData.district,
+            p_city: formData.city,
+            p_state: formData.state,
+            p_country: formData.country,
+            p_pincode: formData.pincode,
+            p_sangh_name: formData.sanghName || null,
+            p_dharmik_studies: formData.dharmikStudies || null,
+            p_qualification: formData.qualification,
+            p_specialization: formData.specialization,
+            p_occupation: formData.occupation,
+            p_occupation_other: formData.occupationOther || null,
+            p_hobbies: formData.hobbies || null,
+            p_skills: formData.skills || null,
+            p_referred_by: formData.referredBy || null,
+            p_volunteering_preference1: formData.volunteeringPreference1,
+            p_volunteering_preference2: formData.volunteeringPreference2 || null,
+            p_volunteering_preference3: formData.volunteeringPreference3 || null,
+            p_availability_days: formData.availabilityDays,
+            p_time_commitment: formData.timeCommitment || null,
+            p_participation_mode: formData.participationMode,
+            p_additional_areas: formData.additionalAreas || null,
+            p_password_hash: generatedPassword,
         };
 
-        // Insert the volunteer data
-        const { data, error } = await supabase
-            .from('volunteers')
-            .insert(volunteerData)
-            .select('ilj_id, first_name, last_name, email')
-            .single();
+        const { data, error } = await supabase.rpc('register_volunteer_secure', rpcParams);
 
         if (error) {
-            console.error('Supabase insert error:', error);
+            console.error('Registration RPC error:', error);
             return {
                 success: false,
                 error: error.message || 'Failed to register volunteer'
             };
         }
 
-        // Send welcome email with credentials
-        try {
-            const emailResponse = await fetch(EDGE_FUNCTION_URL, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    to: data.email,
-                    ilj_id: data.ilj_id,
-                    password: generatedPassword,
-                    first_name: data.first_name,
-                    last_name: data.last_name,
-                }),
-            });
-
-            const emailResult = await emailResponse.json();
-
-            if (!emailResponse.ok) {
-                console.warn('Email sending failed:', emailResult);
-                // Don't fail the registration if email fails
-            }
-        } catch (emailError) {
-            console.warn('Email sending error:', emailError);
-            // Don't fail the registration if email fails
+        if (!data.success) {
+            return {
+                success: false,
+                error: data.error
+            };
         }
 
         return {
