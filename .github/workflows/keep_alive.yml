@@ -14,6 +14,14 @@ jobs:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
         run: |
+          if [ -z "$SUPABASE_URL" ]; then
+            echo "Error: SUPABASE_URL secret is not set."
+            exit 1
+          fi
+          if [ -z "$SUPABASE_ANON_KEY" ]; then
+            echo "Error: SUPABASE_ANON_KEY secret is not set."
+            exit 1
+          fi
           # Simple GET request to a table (e.g., 'projects' or just check health/version if publicly available, OR query a table)
           # We'll use the REST API to fetch a single row from a public table to ensure the DB wakes up.
           # Note: 'projects' table must have Public Read access or use a table that does.

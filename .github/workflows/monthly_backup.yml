@@ -26,6 +26,10 @@ jobs:
           # Format: postgres://postgres.[ref]:[password]@aws-0-[region].pooler.supabase.com:6543/postgres
           DATABASE_URL: ${{ secrets.SUPABASE_DB_URL }}
         run: |
+          if [ -z "$DATABASE_URL" ]; then
+            echo "Error: SUPABASE_DB_URL secret is not set."
+            exit 1
+          fi
           mkdir -p backups
           # Flags: --clean (drop objects before creating), --if-exists, --no-owner (improves compatibility)
           pg_dump "$DATABASE_URL" --clean --if-exists --no-owner --no-privileges > backups/backup_$(date +%Y-%m-%d).sql
