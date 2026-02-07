@@ -31,8 +31,7 @@ export default function Home() {
         </h2>
 
         <p className="max-w-3xl mx-auto text-lg md:text-xl text-gray-700 leading-relaxed mb-16">
-          We are a mission-driven organization that transforms how the world perceives and practices Jainism.
-          At ILJ, we focus on three core transitions:
+          We are a mission driven organization that transforms how the world perceives and practices Jainism. We focus on three core transitions:
         </p>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
@@ -92,7 +91,7 @@ export default function Home() {
               Why Join Us
             </h2>
             <p className="text-lg text-gray-700 leading-relaxed mb-6">
-              Joining us means turning your time and talents into meaningful service for Jinshasan. Our volunteering is purposeful—guided by respect, responsibility, and teamwork—while helping you grow along the way. You’ll gain hands-on experience, build leadership and communication skills, deepen your spiritual connection, and connect with like-minded youth. We value sincere service and recognize commitment through certificates, acknowledgments, and growth opportunities—because here, service leads to transformation.
+              Joining us means turning your time and talents into meaningful service for Jinshasan. Our volunteering is purposeful - guided by respect, responsibility, and teamwork - while helping you grow along the way. You gain hands-on experience, build leadership and communication skills, deepen your spiritual connection, and connect with like-minded youth. We value sincere service and recognize commitment through certificates, acknowledgments, and growth opportunities because here, service leads to transformation.
             </p>
             <Link
               to="/volunteer-registration"

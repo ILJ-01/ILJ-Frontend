@@ -4,7 +4,7 @@ import { supabase } from '../lib/supabase';
 import {
     Search, Filter, LogOut, MapPin, Mail, Phone,
     X, User, Briefcase, Heart, BookOpen, Plus, LayoutGrid, Users,
-    Calendar, CheckSquare, Clock, Menu, Trash2, Shield, Award, TrendingUp
+    Calendar, CheckSquare, Clock, Menu, Trash2, Shield, Award, TrendingUp, Download
 } from 'lucide-react';
 
 import AdminEvents from './admin/AdminEvents';
@@ -93,6 +93,44 @@ const AdminDashboard = () => {
         await supabase.auth.signOut();
         sessionStorage.removeItem('adminAuth'); // Clean up old residue just in case
         navigate('/admin');
+    };
+
+    const handleExport = async () => {
+        try {
+            const XLSX = await import("xlsx");
+            const workbook = XLSX.utils.book_new();
+
+            // 1. Volunteers
+            const { data: volData } = await supabase.from('volunteers').select('*').order('created_at');
+            const volSheet = XLSX.utils.json_to_sheet(volData || []);
+            XLSX.utils.book_append_sheet(workbook, volSheet, "Volunteers");
+
+            // 2. Projects
+            const { data: projData } = await supabase.from('projects').select('*').order('created_at');
+            const projSheet = XLSX.utils.json_to_sheet(projData || []);
+            XLSX.utils.book_append_sheet(workbook, projSheet, "Projects");
+
+            // 3. Events
+            const { data: eventData } = await supabase.from('events').select('*').order('created_at');
+            const eventSheet = XLSX.utils.json_to_sheet(eventData || []);
+            XLSX.utils.book_append_sheet(workbook, eventSheet, "Events");
+
+            // 4. Tasks
+            const { data: taskData } = await supabase.from('tasks').select('*').order('created_at');
+            const taskSheet = XLSX.utils.json_to_sheet(taskData || []);
+            XLSX.utils.book_append_sheet(workbook, taskSheet, "Tasks");
+
+            // 5. Timesheets
+            const { data: tsData } = await supabase.from('timesheets').select('*').order('created_at');
+            const tsSheet = XLSX.utils.json_to_sheet(tsData || []);
+            XLSX.utils.book_append_sheet(workbook, tsSheet, "Timesheets");
+
+
+            XLSX.writeFile(workbook, "ILJ_Admin_Data.xlsx");
+        } catch (error) {
+            console.error("Export failed:", error);
+            alert("Failed to export data. See console for details.");
+        }
     };
 
     // --- Search & Filter Logic (Volunteers) ---
@@ -225,6 +263,14 @@ const AdminDashboard = () => {
                     </div>
 
                     <div className="flex flex-wrap items-center gap-2">
+                        {/* Export Button */}
+                        <button
+                            onClick={handleExport}
+                            className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-all shadow-md font-semibold text-sm whitespace-nowrap"
+                        >
+                            <Download className="h-4 w-4" /> Export Excel
+                        </button>
+
                         {/* Tab Switcher (Desktop Only) */}
                         <div className="hidden md:flex bg-gray-200 p-1 rounded-lg items-center overflow-x-auto max-w-full">
                             <button onClick={() => setActiveTab('volunteers')} className={`flex items-center gap-2 px-3 py-2 rounded-md font-medium text-sm whitespace-nowrap transition-all ${activeTab === 'volunteers' ? 'bg-white text-[#ae2b2b] shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}>

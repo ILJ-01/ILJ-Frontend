@@ -8,12 +8,18 @@ const InstagramReels = () => {
 
   // 1. Fallback Static Links (Used if API & DB fail)
   const fallbackReelLinks = [
-    "https://www.instagram.com/reel/DRChmRwDAUA/",
-    "https://www.instagram.com/reel/DQwpP6uDNmZ/",
-    "https://www.instagram.com/reel/DQWpQozDO0x/",
-    "https://www.instagram.com/reel/DP85PjnDPn-/",
-    "https://www.instagram.com/reel/DQrRS-_DHdp/",
-  ];
+    "https://www.instagram.com/ilovejinshasan/reel/DUYPm0yjkQx/",
+    "https://www.instagram.com/reel/DSKisFAjDe1/",
+    "https://www.instagram.com/reel/DTNhc7UjAm9/",
+    "https://www.instagram.com/reel/DSfJEvXDNQo/",
+    "https://www.instagram.com/reel/DTkw94_DPv5/",
+    "https://www.instagram.com/reel/DR7F-TTDEYz/",
+  "https://www.instagram.com/reel/DR4hHQ6DEfO/",
+  "https://www.instagram.com/reel/DUMnlARDB5q/",
+  "https://www.instagram.com/reel/DSNHcy3jOq8/",
+  "https://www.instagram.com/reel/DRpCqdMDI92/"
+];
+
 
   useEffect(() => {
     const fetchReels = async () => {

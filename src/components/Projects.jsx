@@ -32,15 +32,45 @@ const Projects = () => {
       try {
         const { data, error } = await supabase
           .from("projects")
-          .select("*")
-          .order("created_at", { ascending: false });
+          .select("*");
 
         if (error) {
           console.error("Error fetching projects:", error);
           // Fallback
           setProjectsData(fallbackProjects);
         } else if (data && data.length > 0) {
-          setProjectsData(data);
+          // Define the custom order
+          const customOrder = [
+            "Veer Vanshaj: Self Defence Workshop",
+            "Sanskaar Library",
+            "Jainific",
+            "Digital Jainism",
+            "Blogs",
+            "Website Development"
+          ];
+
+          // Sort the data based on the custom order
+          const sortedData = data.sort((a, b) => {
+            const indexA = customOrder.indexOf(a.title);
+            const indexB = customOrder.indexOf(b.title);
+
+            // If both are in the list, sort by their index
+            if (indexA !== -1 && indexB !== -1) {
+              return indexA - indexB;
+            }
+
+            // If only A is in the list, it comes first
+            if (indexA !== -1) return -1;
+
+            // If only B is in the list, it comes first
+            if (indexB !== -1) return 1;
+
+            // If neither is in the list, keep original order (or sort by created_at if needed, 
+            // but currently we just returned via select("*"))
+            return 0;
+          });
+
+          setProjectsData(sortedData);
         } else {
           // Empty data from DB
           setProjectsData(fallbackProjects);
@@ -78,7 +108,7 @@ const Projects = () => {
         className="font-serif text-[28px] font-bold text-left"
         style={{ color: "#ae2b2b", margin: "0px 0px 20px 10px" }}
       >
-        Projects Grid
+        Our Projects
       </h1>
 
       <div className="relative group no-scrollbar">
