@@ -2,8 +2,8 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import {
-    ArrowLeft, Save, Search, User,
-    Check, X, Briefcase, Image, Hash, Upload, Cloud
+    ArrowLeft, Search, User,
+    Check, X, Briefcase, Hash, Upload, Cloud, Eye
 } from 'lucide-react';
 
 const AdminAddProject = () => {
@@ -16,7 +16,8 @@ const AdminAddProject = () => {
         project_code: 'PRJ-',
         title: '',
         description: '',
-        status: 'upcoming'
+        status: 'upcoming',
+        visibility: 'public' // public or private
     });
 
     const [bannerFile, setBannerFile] = useState(null);
@@ -30,9 +31,11 @@ const AdminAddProject = () => {
     const [selectedManager, setSelectedManager] = useState(null); // Single object or ID
 
     useEffect(() => {
-        const checkAuth = () => {
-            const isAuth = sessionStorage.getItem('adminAuth');
-            if (!isAuth) navigate('/admin');
+        const checkAuth = async () => {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) {
+                navigate('/admin');
+            }
         };
         checkAuth();
         fetchVolunteers();
@@ -72,10 +75,6 @@ const AdminAddProject = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        if (!bannerFile) {
-            alert("Please upload a banner image.");
-            return;
-        }
         if (!selectedManager) {
             alert("Please select a project manager.");
             return;
@@ -84,20 +83,26 @@ const AdminAddProject = () => {
         setLoading(true);
 
         try {
-            // 1. Upload Image
-            const fileExt = bannerFile.name.split('.').pop();
-            const fileName = `${Math.random()}.${fileExt}`;
-            const filePath = `${fileName}`;
+            let publicUrl = null;
 
-            const { error: uploadError } = await supabase.storage
-                .from('project-banners')
-                .upload(filePath, bannerFile);
+            // 1. Upload Image (Only if selected)
+            if (bannerFile) {
+                const fileExt = bannerFile.name.split('.').pop();
+                const fileName = `${Math.random()}.${fileExt}`;
+                const filePath = `${fileName}`;
 
-            if (uploadError) throw uploadError;
+                const { error: uploadError } = await supabase.storage
+                    .from('project-banners')
+                    .upload(filePath, bannerFile);
 
-            const { data: { publicUrl } } = supabase.storage
-                .from('project-banners')
-                .getPublicUrl(filePath);
+                if (uploadError) throw uploadError;
+
+                const { data } = supabase.storage
+                    .from('project-banners')
+                    .getPublicUrl(filePath);
+
+                publicUrl = data.publicUrl;
+            }
 
             // 2. Create Project
             const { data: projectData, error: projectError } = await supabase
@@ -107,6 +112,7 @@ const AdminAddProject = () => {
                     title: formData.title,
                     description: formData.description,
                     status: formData.status,
+                    visibility: formData.visibility,
                     banner_url: publicUrl,
                     manager_id: selectedManager.id
                 }])
@@ -210,6 +216,21 @@ const AdminAddProject = () => {
                                             <option value="completed">Completed</option>
                                         </select>
                                     </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Visibility</label>
+                                        <div className="relative">
+                                            <Eye className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                                            <select
+                                                name="visibility"
+                                                value={formData.visibility}
+                                                onChange={handleInputChange}
+                                                className="w-full pl-9 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:outline-none bg-white"
+                                            >
+                                                <option value="public">Public (Visible to All)</option>
+                                                <option value="private">Private (Logged-in Only)</option>
+                                            </select>
+                                        </div>
+                                    </div>
                                 </div>
 
                                 <div>
@@ -239,7 +260,7 @@ const AdminAddProject = () => {
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Banner Image</label>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Banner Image (Optional)</label>
                                     <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-lg hover:bg-gray-50 transition-colors cursor-pointer relative">
                                         <div className="space-y-1 text-center">
                                             {bannerPreview ? (

@@ -39,6 +39,9 @@ const Projects = () => {
           // Fallback
           setProjectsData(fallbackProjects);
         } else if (data && data.length > 0) {
+          // Filter out private projects for homepage
+          let visibleProjects = data.filter(p => p.visibility !== 'private');
+
           // Define the custom order
           const customOrder = [
             "Veer Vanshaj: Self Defence Workshop",
@@ -50,7 +53,7 @@ const Projects = () => {
           ];
 
           // Sort the data based on the custom order
-          const sortedData = data.sort((a, b) => {
+          const sortedData = visibleProjects.sort((a, b) => {
             const indexA = customOrder.indexOf(a.title);
             const indexB = customOrder.indexOf(b.title);
 

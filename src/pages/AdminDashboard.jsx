@@ -12,6 +12,16 @@ import AdminTasks from './admin/AdminTasks';
 import AdminTimesheets from './admin/AdminTimesheets';
 import AdminAppraisals from './admin/AdminAppraisals';
 
+const RANKS = [
+    { title: "Intern", minHours: 0, order: 0 },
+    { title: "Associate", minHours: 10, order: 1 },
+    { title: "Assistant Manager", minHours: 100, order: 2 },
+    { title: "Manager", minHours: 500, order: 3 },
+    { title: "Senior Manager", minHours: 1000, order: 4 },
+    { title: "Associate Director", minHours: 2000, order: 5 },
+    { title: "Director", minHours: 4000, order: 6 }
+];
+
 const AdminDashboard = () => {
     const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState('volunteers'); // volunteers, projects, events, tasks, timesheets
@@ -686,37 +696,82 @@ const AdminDashboard = () => {
                                             </div>
                                         </div>
 
-                                        {/* Designation Field */}
-                                        <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
-                                            <label className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2 block">Set Designation</label>
-                                            <div className="flex gap-2">
-                                                <input
-                                                    type="text"
-                                                    id="designation-input"
-                                                    placeholder="er.g. Lead Designer"
-                                                    className="flex-1 p-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#ae2b2b] outline-none"
-                                                    defaultValue={selectedVolunteer.designation || ""}
-                                                />
-                                                <button
-                                                    onClick={async () => {
-                                                        const newVal = document.getElementById('designation-input').value;
-                                                        try {
-                                                            const { error } = await supabase
-                                                                .from('volunteers')
-                                                                .update({ designation: newVal || null })
-                                                                .eq('id', selectedVolunteer.id);
 
-                                                            if (error) throw error;
-                                                            const updated = { ...selectedVolunteer, designation: newVal || null };
-                                                            setSelectedVolunteer(updated);
-                                                            setVolunteers(prev => prev.map(vol => vol.id === updated.id ? updated : vol));
-                                                            alert("Designation updated!");
-                                                        } catch (err) { alert(`Error: ${err.message}`); }
-                                                    }}
-                                                    className="bg-[#ae2b2b] text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-[#8b1e1e] transition-colors shadow-sm"
-                                                >
-                                                    Update
-                                                </button>
+
+                                        {/* Rank & Designation Field */}
+                                        <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm space-y-4">
+                                            {/* Rank Selector */}
+                                            <div>
+                                                <label className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2 block">Set Rank Override</label>
+                                                <div className="flex gap-2">
+                                                    <select
+                                                        id="rank-selector"
+                                                        value={selectedVolunteer.rank || 'Intern'}
+                                                        onChange={async (e) => {
+                                                            const newRank = e.target.value;
+                                                            if (!newRank) return;
+
+                                                            if (window.confirm(`Are you sure you want to change the rank to ${newRank}?`)) {
+                                                                try {
+                                                                    const { error } = await supabase
+                                                                        .from('volunteers')
+                                                                        .update({ rank: newRank })
+                                                                        .eq('id', selectedVolunteer.id);
+
+                                                                    if (error) throw error;
+
+                                                                    const updated = { ...selectedVolunteer, rank: newRank };
+                                                                    setSelectedVolunteer(updated);
+                                                                    setVolunteers(prev => prev.map(vol => vol.id === updated.id ? updated : vol));
+                                                                    // alert("Rank updated successfully!");
+                                                                } catch (err) {
+                                                                    alert(`Error updating rank: ${err.message}`);
+                                                                }
+                                                            }
+                                                        }}
+                                                        className="flex-1 p-2.5 bg-white border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#ae2b2b] outline-none"
+                                                    >
+                                                        {RANKS.map(r => (
+                                                            <option key={r.title} value={r.title}>
+                                                                {r.title} (min {r.minHours}h)
+                                                            </option>
+                                                        ))}
+                                                    </select>
+                                                </div>
+                                            </div>
+
+                                            {/* Designation Input */}
+                                            <div>
+                                                <label className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2 block">Set Designation</label>
+                                                <div className="flex gap-2">
+                                                    <input
+                                                        type="text"
+                                                        id="designation-input"
+                                                        placeholder="e.g. Lead Designer"
+                                                        className="flex-1 p-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#ae2b2b] outline-none"
+                                                        defaultValue={selectedVolunteer.designation || ""}
+                                                    />
+                                                    <button
+                                                        onClick={async () => {
+                                                            const newVal = document.getElementById('designation-input').value;
+                                                            try {
+                                                                const { error } = await supabase
+                                                                    .from('volunteers')
+                                                                    .update({ designation: newVal || null })
+                                                                    .eq('id', selectedVolunteer.id);
+
+                                                                if (error) throw error;
+                                                                const updated = { ...selectedVolunteer, designation: newVal || null };
+                                                                setSelectedVolunteer(updated);
+                                                                setVolunteers(prev => prev.map(vol => vol.id === updated.id ? updated : vol));
+                                                                alert("Designation updated!");
+                                                            } catch (err) { alert(`Error: ${err.message}`); }
+                                                        }}
+                                                        className="bg-[#ae2b2b] text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-[#8b1e1e] transition-colors shadow-sm"
+                                                    >
+                                                        Update
+                                                    </button>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>

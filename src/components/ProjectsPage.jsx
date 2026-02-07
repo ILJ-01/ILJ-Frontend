@@ -46,7 +46,14 @@ const ProjectsPage = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setDbProjects(data || []);
+
+      // Filter: Show private projects only if logged in
+      const visibleData = (data || []).filter(p => {
+        if (p.visibility === 'private' && !user) return false;
+        return true;
+      });
+
+      setDbProjects(visibleData);
     } catch (err) {
       console.error("Error fetching projects:", err);
     } finally {
