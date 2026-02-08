@@ -47,13 +47,19 @@ export default function EventsPage() {
 
     const handleVolunteer = async (eventId) => {
         try {
-            const { error } = await supabase.from('event_interests').insert({
-                event_id: eventId,
-                volunteer_id: user.id
+            const { data, error } = await supabase.rpc('register_event_interest', {
+                p_event_id: eventId,
+                p_volunteer_id: user.id
             });
-            if (error) {
-                if (error.code === '23505') alert("You have already marked your interest for this event.");
-                else throw error;
+
+            if (error) throw error;
+
+            if (!data.success) {
+                if (data.message === 'Already interested') {
+                    alert("You have already marked your interest for this event.");
+                } else {
+                    throw new Error(data.error || 'Unknown error');
+                }
             } else {
                 alert("You're marked as interested");
                 setInterestedEventIds(prev => new Set(prev).add(eventId));
@@ -67,13 +73,16 @@ export default function EventsPage() {
     const handleRevokeInterest = async (eventId) => {
         if (!confirm("Are you sure you want to revoke your interest for this event?")) return;
         try {
-            const { error } = await supabase
-                .from('event_interests')
-                .delete()
-                .eq('event_id', eventId)
-                .eq('volunteer_id', user.id);
+            const { data, error } = await supabase.rpc('revoke_event_interest', {
+                p_event_id: eventId,
+                p_volunteer_id: user.id
+            });
 
             if (error) throw error;
+
+            if (!data.success) {
+                throw new Error(data.error || 'Unknown error');
+            }
 
             alert("Interest revoked.");
             setInterestedEventIds(prev => {

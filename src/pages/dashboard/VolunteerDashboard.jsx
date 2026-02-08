@@ -102,14 +102,22 @@ export default function VolunteerDashboard() {
 
     const handleInterest = async (eventId) => {
         try {
-            await supabase
-                .from('event_interests')
-                .insert({ event_id: eventId, volunteer_id: user.id });
+            const { data, error } = await supabase.rpc('register_event_interest', {
+                p_event_id: eventId,
+                p_volunteer_id: user.id
+            });
 
-            // Optimistic update
-            setUpcomingEvents(prev => prev.map(e => e.id === eventId ? { ...e, interested: true } : e));
+            if (error) throw error;
 
-            alert("Marked as interested!");
+            if (!data.success) {
+                if (data.message === 'Already interested') {
+                    alert("You have already marked your interest for this event.");
+                } else throw new Error(data.error || 'Unknown error');
+            } else {
+                // Optimistic update
+                setUpcomingEvents(prev => prev.map(e => e.id === eventId ? { ...e, interested: true } : e));
+                alert("Marked as interested!");
+            }
         } catch (e) {
             console.error("Interest Error:", e);
         }
@@ -119,11 +127,20 @@ export default function VolunteerDashboard() {
         try {
             const announcement = opportunities.find(o => o.id === announcementId);
 
-            const { error } = await supabase
-                .from('announcement_interests')
-                .insert({ announcement_id: announcementId, volunteer_id: user.id });
+            const { data, error } = await supabase.rpc('register_announcement_interest', {
+                p_announcement_id: announcementId,
+                p_volunteer_id: user.id
+            });
 
             if (error) throw error;
+
+            if (!data.success) {
+                if (data.message === 'Already interested') {
+                    alert("You have already expressed interest in this opportunity.");
+                    return;
+                }
+                throw new Error(data.error || 'Unknown error');
+            }
 
             // Notify Manager
             if (announcement?.created_by) {
@@ -138,7 +155,7 @@ export default function VolunteerDashboard() {
             alert("Thanks! The project manager has been notified of your interest.");
         } catch (e) {
             console.error("Interest Error:", e);
-            alert("Could not mark interest. You might have already expressed interest.");
+            alert("Could not mark interest. Please try again.");
         }
     };
 
