@@ -34,9 +34,11 @@ const AdminEditProject = () => {
     const [selectedManager, setSelectedManager] = useState(null); // Single object
 
     useEffect(() => {
-        const checkAuth = () => {
-            const isAuth = sessionStorage.getItem('adminAuth');
-            if (!isAuth) navigate('/admin');
+        const checkAuth = async () => {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) {
+                navigate('/admin');
+            }
         };
         checkAuth();
 

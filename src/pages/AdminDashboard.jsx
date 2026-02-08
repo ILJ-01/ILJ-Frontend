@@ -34,6 +34,7 @@ const AdminDashboard = () => {
     const [selectedVolunteer, setSelectedVolunteer] = useState(null);
     const [filters, setFilters] = useState({ district: '', skills: '', volunteering_preference1: '' });
     const [options, setOptions] = useState({ districts: [], preferences: [], skills: [] });
+    const [authLoading, setAuthLoading] = useState(true);
 
     // Projects State
     const [projects, setProjects] = useState([]);
@@ -45,10 +46,12 @@ const AdminDashboard = () => {
             const { data: { session } } = await supabase.auth.getSession();
             if (!session) {
                 navigate('/admin');
-            } else {
-                fetchVolunteers();
-                fetchProjects();
+                return;
             }
+            // Only fetch data after auth is confirmed
+            setAuthLoading(false);
+            fetchVolunteers();
+            fetchProjects();
         };
         checkAuth();
     }, [navigate]);
@@ -101,7 +104,6 @@ const AdminDashboard = () => {
 
     const handleLogout = async () => {
         await supabase.auth.signOut();
-        sessionStorage.removeItem('adminAuth'); // Clean up old residue just in case
         navigate('/admin');
     };
 
@@ -168,6 +170,14 @@ const AdminDashboard = () => {
     };
 
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+    if (authLoading) {
+        return (
+            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#ae2b2b]"></div>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-gray-50 font-sans pb-12">

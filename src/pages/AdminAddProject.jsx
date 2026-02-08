@@ -9,6 +9,7 @@ import {
 const AdminAddProject = () => {
     const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
+    const [authLoading, setAuthLoading] = useState(true);
     const [volunteers, setVolunteers] = useState([]);
 
     // Form State
@@ -31,14 +32,16 @@ const AdminAddProject = () => {
     const [selectedManager, setSelectedManager] = useState(null); // Single object or ID
 
     useEffect(() => {
-        const checkAuth = async () => {
+        const init = async () => {
             const { data: { session } } = await supabase.auth.getSession();
             if (!session) {
                 navigate('/admin');
+                return;
             }
+            setAuthLoading(false);
+            fetchVolunteers();
         };
-        checkAuth();
-        fetchVolunteers();
+        init();
     }, [navigate]);
 
     const fetchVolunteers = async () => {
@@ -156,6 +159,14 @@ const AdminAddProject = () => {
         (v.first_name + ' ' + v.last_name).toLowerCase().includes(managerSearchQuery.toLowerCase()) ||
         v.ilj_id?.toLowerCase().includes(managerSearchQuery.toLowerCase())
     );
+
+    if (authLoading) {
+        return (
+            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#ae2b2b]"></div>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-gray-50 pb-12 font-sans">
