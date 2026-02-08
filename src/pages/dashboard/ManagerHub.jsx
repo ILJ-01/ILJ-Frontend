@@ -17,6 +17,7 @@ export default function ManagerHub() {
     const [selectedTaskForFeedback, setSelectedTaskForFeedback] = useState(null);
 
     const [editingProject, setEditingProject] = useState(null);
+    const [creatingTask, setCreatingTask] = useState(false);
 
     const [taskForm, setTaskForm] = useState({
         title: "",
@@ -260,6 +261,9 @@ export default function ManagerHub() {
 
     const handleCreateTask = async (e) => {
         e.preventDefault();
+        if (creatingTask) return;
+        setCreatingTask(true);
+
         try {
             const project = projects.find(p => p.id === taskForm.projectId);
 
@@ -405,6 +409,8 @@ export default function ManagerHub() {
         } catch (error) {
             console.error("Task Creation Error:", error);
             alert("Failed to assign task.");
+        } finally {
+            setCreatingTask(false);
         }
     };
 
@@ -1017,9 +1023,19 @@ export default function ManagerHub() {
 
                             <button
                                 type="submit"
-                                className="w-full bg-[#ae2b2b] text-white py-3 rounded-lg font-bold hover:bg-[#8b1e1e] transition-all shadow-md mt-4"
+                                disabled={creatingTask}
+                                className={`w-full py-3 rounded-lg font-bold transition-all shadow-md mt-4 flex items-center justify-center gap-2
+                                    ${creatingTask ? 'bg-gray-400 cursor-not-allowed text-gray-100' : 'bg-[#ae2b2b] text-white hover:bg-[#8b1e1e]'}
+                                `}
                             >
-                                {assignmentType === 'general' ? 'Post Opportunity' : 'Assign Task'}
+                                {creatingTask ? (
+                                    <>
+                                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                                        {assignmentType === 'general' ? 'Posting...' : 'Assigning...'}
+                                    </>
+                                ) : (
+                                    assignmentType === 'general' ? 'Post Opportunity' : 'Assign Task'
+                                )}
                             </button>
                         </form>
                     </div>

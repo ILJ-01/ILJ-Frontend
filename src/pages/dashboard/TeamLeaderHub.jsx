@@ -4,7 +4,7 @@ import { supabase } from "@/lib/supabase";
 import {
     Users, Search, ChevronRight, X, Mail, Phone, MapPin,
     Briefcase, GraduationCap, Heart, Award, Sparkles, User, Clock,
-    FileText, Mic, Palette, Camera, Calendar, Megaphone, School, Code, Shield, LayoutGrid, CheckSquare
+    FileText, Mic, Palette, Camera, Calendar, Megaphone, School, Code, Shield, LayoutGrid, CheckSquare, Loader2
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -22,6 +22,7 @@ export default function TeamLeaderHub() {
     const [activeTab, setActiveTab] = useState("overview");
     const [assignmentType, setAssignmentType] = useState('volunteer'); // 'volunteer' or 'team'
     const [targetTeam, setTargetTeam] = useState("All");
+    const [creating, setCreating] = useState(false);
 
     const [taskForm, setTaskForm] = useState({
         title: "",
@@ -39,6 +40,8 @@ export default function TeamLeaderHub() {
 
     const handleAssignTask = async (e) => {
         e.preventDefault();
+        if (creating) return;
+        setCreating(true);
 
         // 1. Assignment from Modal (selectedVolunteer is already set)
         if (selectedVolunteer) {
@@ -50,9 +53,12 @@ export default function TeamLeaderHub() {
             } catch (error) {
                 console.error("Task Error:", error);
                 alert("Failed to assign task.");
+            } finally {
+                setCreating(false);
             }
             return;
         }
+
 
         // 2. Assignment from Main Tab (Bulk or Selected Dropdown)
         try {
@@ -92,6 +98,8 @@ export default function TeamLeaderHub() {
         } catch (error) {
             console.error("Bulk Assignment Error:", error);
             alert("Failed to assign tasks.");
+        } finally {
+            setCreating(false);
         }
     };
 
@@ -449,8 +457,19 @@ export default function TeamLeaderHub() {
                                 <input type="date" className="w-full p-4 bg-white border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-[#ae2b2b]" value={taskForm.deadline} onChange={e => setTaskForm({ ...taskForm, deadline: e.target.value })} />
                             </div>
 
-                            <button type="submit" className="w-full py-4 bg-[#ae2b2b] text-white rounded-xl font-bold text-lg shadow-xl shadow-red-900/10 hover:shadow-red-900/20 transition-all hover:-translate-y-1">
-                                {assignmentType === 'team' ? `Assign to All ${targetTeam} Members` : 'Assign Task to Volunteer'}
+                            <button
+                                type="submit"
+                                disabled={creating}
+                                className={`w-full py-4 bg-[#ae2b2b] text-white rounded-xl font-bold text-lg shadow-xl shadow-red-900/10 hover:shadow-red-900/20 transition-all hover:-translate-y-1 flex items-center justify-center gap-2 ${creating ? 'opacity-70 cursor-not-allowed hover:translate-y-0' : ''}`}
+                            >
+                                {creating ? (
+                                    <>
+                                        <Loader2 className="h-5 w-5 animate-spin" />
+                                        {assignmentType === 'team' ? 'Assigning to Team...' : 'Assigning Task...'}
+                                    </>
+                                ) : (
+                                    assignmentType === 'team' ? `Assign to All ${targetTeam} Members` : 'Assign Task to Volunteer'
+                                )}
                             </button>
                         </form>
                     </div>
@@ -663,9 +682,17 @@ export default function TeamLeaderHub() {
                                 </button>
                                 <button
                                     type="submit"
-                                    className="flex-1 py-2.5 bg-[#ae2b2b] text-white rounded-lg font-bold shadow-md hover:bg-[#902424] transition-colors"
+                                    disabled={creating}
+                                    className={`flex-1 py-2.5 bg-[#ae2b2b] text-white rounded-lg font-bold shadow-md hover:bg-[#902424] transition-colors flex items-center justify-center gap-2 ${creating ? 'opacity-70 cursor-not-allowed' : ''}`}
                                 >
-                                    Assign Task
+                                    {creating ? (
+                                        <>
+                                            <Loader2 className="h-4 w-4 animate-spin" />
+                                            Assigning...
+                                        </>
+                                    ) : (
+                                        'Assign Task'
+                                    )}
                                 </button>
                             </div>
                         </form>

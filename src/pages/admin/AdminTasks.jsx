@@ -14,6 +14,7 @@ export default function AdminTasks() {
     const [assigneeSearch, setAssigneeSearch] = useState('');
     const [showAssigneeDropdown, setShowAssigneeDropdown] = useState(false);
     const [selectedTaskForFeedback, setSelectedTaskForFeedback] = useState(null);
+    const [creating, setCreating] = useState(false);
 
     const [formData, setFormData] = useState({
         title: '', description: '', project_id: '', assignee_id: '', deadline: ''
@@ -76,6 +77,8 @@ export default function AdminTasks() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        if (creating) return;
+        setCreating(true);
         try {
             const { error } = await supabase.from('tasks').insert([{
                 ...formData,
@@ -130,6 +133,8 @@ export default function AdminTasks() {
         } catch (error) {
             console.error(error);
             alert("Failed to create task");
+        } finally {
+            setCreating(false);
         }
     };
 
@@ -319,7 +324,20 @@ export default function AdminTasks() {
                                 <label className="block text-sm font-medium mb-1">Description</label>
                                 <textarea rows="3" className="w-full border rounded-lg p-2" value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })}></textarea>
                             </div>
-                            <button type="submit" className="w-full bg-[#ae2b2b] text-white font-bold py-2.5 rounded-lg hover:bg-[#8b1e1e]">Create Task</button>
+                            <button
+                                type="submit"
+                                disabled={creating}
+                                className={`w-full bg-[#ae2b2b] text-white font-bold py-2.5 rounded-lg hover:bg-[#8b1e1e] flex items-center justify-center gap-2 ${creating ? 'opacity-70 cursor-not-allowed' : ''}`}
+                            >
+                                {creating ? (
+                                    <>
+                                        <Loader2 className="h-4 w-4 animate-spin" />
+                                        Creating...
+                                    </>
+                                ) : (
+                                    'Create Task'
+                                )}
+                            </button>
                         </form>
                     </div>
                 </div>
