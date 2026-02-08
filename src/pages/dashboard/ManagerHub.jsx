@@ -55,6 +55,7 @@ export default function ManagerHub() {
     useEffect(() => {
         if (!user) return;
 
+        // Continue to set up project-specific state if available
         if (user.managed_projects && Array.isArray(user.managed_projects) && user.managed_projects.length > 0) {
             setProjects(user.managed_projects);
             // Default select first project
@@ -62,14 +63,16 @@ export default function ManagerHub() {
             setTaskForm(prev => ({ ...prev, projectId: firstProjId }));
             setTeamProjectId(firstProjId);
 
-            fetchManagerData();
             fetchTeamMembers(firstProjId);
             fetchTeamTasks(firstProjId);
         } else {
             // User loaded but no projects
             setProjects([]);
-            setLoading(false);
         }
+
+        // ALWAYS fetch general manager data (like volunteers list, opportunities)
+        fetchManagerData();
+        setLoading(false);
     }, [user]);
 
     const fetchTeamMembers = async (projId) => {
@@ -85,7 +88,8 @@ export default function ManagerHub() {
                 .eq('project_id', projId);
 
             if (error) throw error;
-            setTeamMembers(data?.map(d => d.volunteer) || []);
+            // Filter out any entries where volunteer relation returned null (e.g. deleted/RLS hidden)
+            setTeamMembers(data?.map(d => d.volunteer).filter(Boolean) || []);
         } catch (error) {
             console.error("Fetch Team Error:", error);
         }
@@ -158,7 +162,7 @@ export default function ManagerHub() {
 
             if (error) throw error;
 
-            setTeamMembers(prev => prev.filter(m => m.id !== volunteerId));
+            setTeamMembers(prev => prev.filter(m => m && m.id !== volunteerId));
         } catch (error) {
             console.error("Remove Team Error:", error);
             alert("Failed to remove member.");
@@ -188,10 +192,11 @@ export default function ManagerHub() {
     const [assignmentType, setAssignmentType] = useState('volunteer');
 
     const fetchManagerData = async () => {
-        if (!user.managed_projects || user.managed_projects.length === 0) return;
+        // Allow fetching if user exists, even if managed_projects is empty (in case we need to fetch other things or if projects are loaded differently)
+        if (!user) return;
         setLoading(true);
         try {
-            const projectIds = user.managed_projects.map(p => p.id);
+            const projectIds = (user.managed_projects || []).map(p => p.id);
 
             // 1. Fetch Pending Timesheets for these projects
             const { data: timesheets, error: tsError } = await supabase
@@ -656,34 +661,37 @@ export default function ManagerHub() {
 
                     {/* Team List */}
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {teamMembers.map(member => (
-                            <div key={member.id} className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex items-center justify-between group">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-[#ae2b2b] font-bold">
-                                        {member.first_name?.[0]}{member.last_name?.[0]}
-                                    </div>
-                                    <div>
-                                        <h4 className="font-bold text-gray-900 text-sm">{member.first_name} {member.last_name}</h4>
-                                        <div className="flex items-center gap-2">
-                                            <p className="text-xs text-gray-500">{member.ilj_id}</p>
-                                            {member.designation && (
-                                                <span className="text-[9px] bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded font-bold uppercase border border-blue-100/50">
-                                                    {member.designation}
-                                                </span>
-                                            )}
+                        {teamMembers.map(member => {
+                            if (!member) return null; // Safe guard
+                            return (
+                                <div key={member.id} className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex items-center justify-between group">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-[#ae2b2b] font-bold">
+                                            {member.first_name?.[0]}{member.last_name?.[0]}
+                                        </div>
+                                        <div>
+                                            <h4 className="font-bold text-gray-900 text-sm">{member.first_name} {member.last_name}</h4>
+                                            <div className="flex items-center gap-2">
+                                                <p className="text-xs text-gray-500">{member.ilj_id}</p>
+                                                {member.designation && (
+                                                    <span className="text-[9px] bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded font-bold uppercase border border-blue-100/50">
+                                                        {member.designation}
+                                                    </span>
+                                                )}
+                                            </div>
                                         </div>
                                     </div>
+                                    <button
+                                        onClick={() => handleRemoveFromTeam(member.id)}
+                                        className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors md:opacity-0 md:group-hover:opacity-100"
+                                        title="Remove from team"
+                                    >
+                                        <Trash2 className="h-4 w-4 block md:hidden" />
+                                        <X className="h-4 w-4 hidden md:block" />
+                                    </button>
                                 </div>
-                                <button
-                                    onClick={() => handleRemoveFromTeam(member.id)}
-                                    className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors md:opacity-0 md:group-hover:opacity-100"
-                                    title="Remove from team"
-                                >
-                                    <Trash2 className="h-4 w-4 block md:hidden" />
-                                    <X className="h-4 w-4 hidden md:block" />
-                                </button>
-                            </div>
-                        ))}
+                            )
+                        })}
                         {teamMembers.length === 0 && (
                             <div className="col-span-full text-center py-12 text-gray-500 bg-gray-50 rounded-xl border border-dashed border-gray-200">
                                 <Users className="h-12 w-12 mx-auto mb-3 opacity-20" />
@@ -945,10 +953,12 @@ export default function ManagerHub() {
                                         {showVolList && volunteerSearch && (
                                             <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
                                                 {volunteers
-                                                    .filter(v =>
-                                                        `${v.first_name} ${v.last_name}`.toLowerCase().includes(volunteerSearch.toLowerCase()) ||
-                                                        v.ilj_id.toLowerCase().includes(volunteerSearch.toLowerCase())
-                                                    )
+                                                    .filter(v => {
+                                                        const fullName = `${v.first_name || ''} ${v.last_name || ''}`.toLowerCase();
+                                                        const iljId = (v.ilj_id || '').toLowerCase();
+                                                        const query = volunteerSearch.toLowerCase();
+                                                        return fullName.includes(query) || iljId.includes(query);
+                                                    })
                                                     .map(v => (
                                                         <div
                                                             key={v.id}

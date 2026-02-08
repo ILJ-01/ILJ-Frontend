@@ -9,6 +9,7 @@ import {
   FaWhatsapp,
   FaMapMarkerAlt,
 } from "react-icons/fa";
+import { FaXTwitter } from "react-icons/fa6";
 import "./Footer.css";
 
 export default function Footer() {
@@ -55,20 +56,23 @@ export default function Footer() {
             <a href="https://chat.whatsapp.com/Hq32AgfdZ5tBRqFenGzrzj" target="_blank" rel="noopener noreferrer" className="bg-white p-2 rounded-full text-[#ae2b2b] hover:bg-gray-200 transition">
               <FaWhatsapp />
             </a>
+            <a href="https://x.com/ilovejinshasan" target="_blank" rel="noopener noreferrer" className="bg-white p-2 rounded-full text-[#ae2b2b] hover:bg-gray-200 transition">
+              <FaXTwitter />
+            </a>
           </div>
         </div>
 
         {/* Resources */}
         <div>
           <h3 className="text-xl font-bold mb-4 text-white uppercase tracking-wider">Resources</h3>
-          {/* <a
-            href="/References.pdf"
+          <a
+            href="/Non CSR Brochure Scanned.pdf"
             target="_blank"
             rel="noopener noreferrer"
             className="inline-block bg-white text-[#ae2b2b] px-4 py-2 rounded-full font-bold text-sm hover:bg-gray-200 transition"
           >
-            Download Information Brochure
-          </a> */}
+            Download Brochure
+          </a>
         </div>
 
         {/* Quick Links */}

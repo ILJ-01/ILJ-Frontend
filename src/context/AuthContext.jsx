@@ -22,7 +22,7 @@ export function AuthProvider({ children }) {
 
     const login = async (iljId, password) => {
         try {
-            // Remote Procedure Call for secure login
+            // Verify credentials against volunteers table via RPC
             const { data, error } = await supabase.rpc('login_volunteer', {
                 p_ilj_id: iljId.toUpperCase(),
                 p_password: password
@@ -34,10 +34,17 @@ export function AuthProvider({ children }) {
 
             const userData = data.user;
 
-            // Note: managed_projects is already included in the RPC response
-            const userWithProjects = { ...userData, managed_projects: userData.managed_projects || [] };
+            // Check if user is a manager or team leader and add admin flag
+            const isManager = userData.managed_projects && userData.managed_projects.length > 0;
+            const isTeamLeader = userData.team_leader_for && userData.team_leader_for.trim() !== '';
 
-
+            const userWithProjects = {
+                ...userData,
+                managed_projects: userData.managed_projects || [],
+                isAdmin: isManager || isTeamLeader,
+                isManager,
+                isTeamLeader
+            };
 
             setUser(userWithProjects);
             localStorage.setItem('ilj_user', JSON.stringify(userWithProjects));
@@ -79,31 +86,53 @@ export function AuthProvider({ children }) {
         }
     };
 
+    // Function to refresh user data (especially managed projects)
     const refreshUser = async () => {
-        if (!user?.ilj_id) return;
+        const currentUser = user || JSON.parse(localStorage.getItem('ilj_user'));
+        if (!currentUser?.id) return;
 
+        try {
+            // Re-login silently using stored credentials is not possible without password
+            // Instead, just re-fetch the user data via a simple RPC or direct query
+            // For now, we'll call login_volunteer_by_id if available, or skip refresh
 
-        // RLS prevents reading volunteers table directly without password/login.
-        // For now, we rely on the session data. 
-        /*
-        const { data, error } = await supabase
-            .from('volunteers')
-            .select('*')
-            .eq('ilj_id', user.ilj_id)
-            .single();
+            // Fetch Projects Managed by User (public data, no auth needed)
+            const { data: projects, error: projectError } = await supabase
+                .from('projects')
+                .select('*')
+                .eq('manager_id', currentUser.id);
 
-        if (!error && data) {
-             const { data: projects } = await supabase
-                 .from('projects')
-                 .select('*')
-                 .eq('manager_id', data.id);
+            if (projectError) {
+                console.error("Error fetching managed projects:", projectError);
+            }
 
-            const userWithProjects = { ...data, managed_projects: projects || [] };
-            setUser(userWithProjects);
-            localStorage.setItem('ilj_user', JSON.stringify(userWithProjects));
+            // Check admin status
+            const isManager = projects && projects.length > 0;
+            const isTeamLeader = currentUser.team_leader_for && currentUser.team_leader_for.trim() !== '';
+
+            // Merge: Current details + Managed Projects + Admin flags
+            const updatedUser = {
+                ...currentUser,
+                managed_projects: projects || currentUser.managed_projects || [],
+                isAdmin: isManager || isTeamLeader,
+                isManager,
+                isTeamLeader
+            };
+
+            setUser(updatedUser);
+            localStorage.setItem('ilj_user', JSON.stringify(updatedUser));
+
+        } catch (error) {
+            console.error("Error refreshing user context:", error);
         }
-        */
     };
+
+    // Refresh on mount to ensure permissions are up to date
+    useEffect(() => {
+        if (user) {
+            refreshUser();
+        }
+    }, [user?.id]);
 
     return (
         <AuthContext.Provider value={{
@@ -113,7 +142,10 @@ export function AuthProvider({ children }) {
             logout,
             updatePassword,
             refreshUser,
-            isLoggedIn: !!user
+            isLoggedIn: !!user,
+            isAdmin: user?.isAdmin || false,
+            isManager: user?.isManager || false,
+            isTeamLeader: user?.isTeamLeader || false
         }}>
             {children}
         </AuthContext.Provider>

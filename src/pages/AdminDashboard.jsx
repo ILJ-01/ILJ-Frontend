@@ -24,7 +24,10 @@ const RANKS = [
 
 const AdminDashboard = () => {
     const navigate = useNavigate();
-    const [activeTab, setActiveTab] = useState('volunteers'); // volunteers, projects, events, tasks, timesheets
+    // Persist active tab in sessionStorage so it survives navigation to sub-pages
+    const [activeTab, setActiveTab] = useState(() => {
+        return sessionStorage.getItem('adminActiveTab') || 'volunteers';
+    });
 
     // Volunteers State
     const [volunteers, setVolunteers] = useState([]);
@@ -40,6 +43,11 @@ const AdminDashboard = () => {
     const [projects, setProjects] = useState([]);
     const [loadingProjects, setLoadingProjects] = useState(true);
     const [showArchivedProjects, setShowArchivedProjects] = useState(false);
+
+    // Persist activeTab to sessionStorage whenever it changes
+    useEffect(() => {
+        sessionStorage.setItem('adminActiveTab', activeTab);
+    }, [activeTab]);
 
     useEffect(() => {
         const checkAuth = async () => {
@@ -327,6 +335,11 @@ const AdminDashboard = () => {
                                 </button>
                             </div>
                         )}
+                        {activeTab === 'volunteers' && (
+                            <div className="flex items-center gap-2">
+
+                            </div>
+                        )}
                     </div>
                 </div>
 
@@ -424,7 +437,6 @@ const AdminDashboard = () => {
                                                                     {volunteer.designation}
                                                                 </span>
                                                             )}
-                                                            {volunteer.district && <span className="text-xs font-medium bg-purple-50 text-purple-700 px-2 py-0.5 rounded border border-purple-100">{volunteer.district}</span>}
                                                         </div>
                                                     </div>
                                                 </div>
@@ -614,7 +626,9 @@ const AdminDashboard = () => {
                             <section>
                                 <h3 className="flex items-center gap-2 text-lg font-semibold text-gray-900 mb-4 border-b pb-2"><Heart className="h-5 w-5 text-[#ae2b2b]" /> Volunteering</h3>
                                 <div className="space-y-4">
-                                    <DetailItem label="Preference" value={selectedVolunteer.volunteering_preference1} highlight />
+                                    <DetailItem label="Preference 1" value={selectedVolunteer.volunteering_preference1} highlight />
+                                    <DetailItem label="Preference 2" value={selectedVolunteer.volunteering_preference2} />
+                                    <DetailItem label="Preference 3" value={selectedVolunteer.volunteering_preference3} />
                                     <DetailItem label="Availability" value={selectedVolunteer.availability_days} />
                                     <DetailItem label="Mode" value={selectedVolunteer.participation_mode} />
                                 </div>

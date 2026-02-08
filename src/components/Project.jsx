@@ -263,7 +263,7 @@ export default function Project() {
               <div className="text-center py-4 bg-gray-50 rounded-xl border border-dashed border-gray-300">
                 <Shield className="w-10 h-10 text-gray-400 mx-auto mb-2" />
                 <p className="text-gray-600 mb-3">Please login to apply for this project.</p>
-                <Link to="/admin">
+                <Link to="/dashboard">
                   {/* Assuming user might look for login, but usually navbar handles it. 
                             We can just show a message or direct to login if we had a dedicated login page route easily accessible */}
                   <Button variant="outline">Login to Apply</Button>
