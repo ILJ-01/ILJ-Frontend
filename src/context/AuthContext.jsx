@@ -38,12 +38,22 @@ export function AuthProvider({ children }) {
             const isManager = userData.managed_projects && userData.managed_projects.length > 0;
             const isTeamLeader = userData.team_leader_for && userData.team_leader_for.trim() !== '';
 
+            // Check if user is a Kalyan Mitra
+            const fullName = `${userData.first_name} ${userData.last_name}`.trim();
+            const { count: kmCount } = await supabase
+                .from('volunteers')
+                .select('*', { count: 'exact', head: true })
+                .ilike('kalyan_mitra', `%${fullName}%`);
+
+            const isKalyanMitra = kmCount > 0;
+
             const userWithProjects = {
                 ...userData,
                 managed_projects: userData.managed_projects || [],
                 isAdmin: isManager || isTeamLeader,
                 isManager,
-                isTeamLeader
+                isTeamLeader,
+                isKalyanMitra
             };
 
             setUser(userWithProjects);
@@ -110,13 +120,24 @@ export function AuthProvider({ children }) {
             const isManager = projects && projects.length > 0;
             const isTeamLeader = currentUser.team_leader_for && currentUser.team_leader_for.trim() !== '';
 
+
+            // Count if user is kalyan mitra
+            const fullName = `${currentUser.first_name} ${currentUser.last_name}`.trim();
+            const { count: kmCount } = await supabase
+                .from('volunteers')
+                .select('*', { count: 'exact', head: true })
+                .ilike('kalyan_mitra', `%${fullName}%`);
+
+            const isKalyanMitra = kmCount > 0;
+
             // Merge: Current details + Managed Projects + Admin flags
             const updatedUser = {
                 ...currentUser,
                 managed_projects: projects || currentUser.managed_projects || [],
                 isAdmin: isManager || isTeamLeader,
                 isManager,
-                isTeamLeader
+                isTeamLeader,
+                isKalyanMitra
             };
 
             setUser(updatedUser);
@@ -145,7 +166,8 @@ export function AuthProvider({ children }) {
             isLoggedIn: !!user,
             isAdmin: user?.isAdmin || false,
             isManager: user?.isManager || false,
-            isTeamLeader: user?.isTeamLeader || false
+            isTeamLeader: user?.isTeamLeader || false,
+            isKalyanMitra: user?.isKalyanMitra || false
         }}>
             {children}
         </AuthContext.Provider>

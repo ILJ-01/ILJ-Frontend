@@ -117,7 +117,7 @@ export default function PoliciesPage() {
                         headers: ["Title", "Required contribution (cumulative hours)"],
                         rows: [
                             ["Intern", "Entry level"],
-                            ["Associate", "10 hours"],
+                            ["Associate", "20 hours"],
                             ["Assistant Manager", "100 hours"],
                             ["Manager", "500 hours"],
                             ["Senior Manager", "1000 hours"],

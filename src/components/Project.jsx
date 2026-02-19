@@ -5,7 +5,7 @@ import projects from "../data/projects-full.json";
 import LoadingSpinner from "./LoadingSpinner.jsx";
 import { supabase } from "../lib/supabase";
 import { useAuth } from "../context/AuthContext";
-import { User, Phone, Mail, CheckCircle, Clock, Calendar, Shield, ArrowLeft } from "lucide-react";
+import { User, Phone, Mail, CheckCircle, Clock, Calendar, Shield, ArrowLeft, MessageSquare, MapPin, Star, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const projectThumbs = import.meta.glob(
@@ -40,6 +40,13 @@ export default function Project() {
   const [loading, setLoading] = useState(true);
   const [applicationStatus, setApplicationStatus] = useState(null); // 'pending', 'approved', or null
   const [isApplying, setIsApplying] = useState(false);
+
+  // Inquiry & Feedback State
+  const [isInquiryOpen, setIsInquiryOpen] = useState(false);
+  const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [inquiryForm, setInquiryForm] = useState({ name: '', email: '', mobile: '', message: '' });
+  const [feedbackForm, setFeedbackForm] = useState({ rating: 5, comments: '', is_anonymous: false });
 
   // Check if params is a UUID (Database Project) or a Title (Static JSON)
   const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(title);
@@ -123,6 +130,46 @@ export default function Project() {
       alert("Failed to apply. You may have already applied.");
     } finally {
       setIsApplying(false);
+    }
+  };
+
+  const handleInquirySubmit = async (e) => {
+    e.preventDefault();
+    setSubmitting(true);
+    try {
+      const { error } = await supabase.from('project_inquiries').insert({
+        project_id: project.id,
+        ...inquiryForm
+      });
+      if (error) throw error;
+      alert("Inquiry sent successfully! We will contact you soon.");
+      setIsInquiryOpen(false);
+      setInquiryForm({ name: '', email: '', mobile: '', message: '' });
+    } catch (error) {
+      console.error("Inquiry Error:", error);
+      alert("Failed to send inquiry.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleFeedbackSubmit = async (e) => {
+    e.preventDefault();
+    setSubmitting(true);
+    try {
+      const { error } = await supabase.from('project_feedback').insert({
+        project_id: project.id,
+        ...feedbackForm
+      });
+      if (error) throw error;
+      alert("Thank you for your feedback!");
+      setIsFeedbackOpen(false);
+      setFeedbackForm({ rating: 5, comments: '', is_anonymous: false });
+    } catch (error) {
+      console.error("Feedback Error:", error);
+      alert("Failed to submit feedback.");
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -262,10 +309,8 @@ export default function Project() {
             {!isLoggedIn ? (
               <div className="text-center py-4 bg-gray-50 rounded-xl border border-dashed border-gray-300">
                 <Shield className="w-10 h-10 text-gray-400 mx-auto mb-2" />
-                <p className="text-gray-600 mb-3">Please login to apply for this project.</p>
-                <Link to="/dashboard">
-                  {/* Assuming user might look for login, but usually navbar handles it. 
-                            We can just show a message or direct to login if we had a dedicated login page route easily accessible */}
+                <Link to="/?login=true" className="block group">
+                  <p className="text-gray-600 mb-3 group-hover:text-[#ae2b2b] transition-colors font-medium">Please login to apply for this project.</p>
                   <Button variant="outline">Login to Apply</Button>
                 </Link>
               </div>
@@ -306,8 +351,124 @@ export default function Project() {
 
 
           </div>
+
+          {/* Organize & Feedback Actions */}
+          <div className="bg-white rounded-2xl p-6 shadow-md border border-gray-100 space-y-4">
+            <h3 className="text-lg font-bold text-gray-900 mb-2 font-serif">More Actions</h3>
+
+            <Button
+              variant="outline"
+              onClick={() => setIsInquiryOpen(true)}
+              className="w-full justify-start text-gray-700 hover:text-[#ae2b2b] hover:border-[#ae2b2b]"
+            >
+              <MapPin className="mr-2 h-4 w-4" /> Organize in your area
+            </Button>
+
+            <Button
+              variant="outline"
+              onClick={() => setIsFeedbackOpen(true)}
+              className="w-full justify-start text-gray-700 hover:text-[#ae2b2b] hover:border-[#ae2b2b]"
+            >
+              <MessageSquare className="mr-2 h-4 w-4" /> Share Feedback
+            </Button>
+          </div>
         </div>
       </div>
-    </div>
+
+      {/* Inquiry Modal */}
+      {
+        isInquiryOpen && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 backdrop-blur-sm">
+            <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl relative">
+              <button onClick={() => setIsInquiryOpen(false)} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
+                <X className="h-5 w-5" />
+              </button>
+              <h3 className="text-xl font-bold text-gray-900 mb-1">Organize Project</h3>
+              <p className="text-sm text-gray-500 mb-4">Interested in bringing this project to your area? Let us know!</p>
+
+              <form onSubmit={handleInquirySubmit} className="space-y-4">
+                <input
+                  type="text" placeholder="Your Name" required
+                  className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-[#ae2b2b]/20 outline-none"
+                  value={inquiryForm.name} onChange={e => setInquiryForm({ ...inquiryForm, name: e.target.value })}
+                />
+                <input
+                  type="email" placeholder="Email Address" required
+                  className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-[#ae2b2b]/20 outline-none"
+                  value={inquiryForm.email} onChange={e => setInquiryForm({ ...inquiryForm, email: e.target.value })}
+                />
+                <input
+                  type="tel" placeholder="Mobile Number" required
+                  className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-[#ae2b2b]/20 outline-none"
+                  value={inquiryForm.mobile} onChange={e => setInquiryForm({ ...inquiryForm, mobile: e.target.value })}
+                />
+                <textarea
+                  placeholder="Message (Location, estimated participants, etc.)" required rows="3"
+                  className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-[#ae2b2b]/20 outline-none"
+                  value={inquiryForm.message} onChange={e => setInquiryForm({ ...inquiryForm, message: e.target.value })}
+                ></textarea>
+
+                <Button type="submit" disabled={submitting} className="w-full bg-[#ae2b2b] hover:bg-[#912323]">
+                  {submitting ? "Sending..." : "Send Inquiry"}
+                </Button>
+              </form>
+            </div>
+          </div>
+        )
+      }
+
+      {/* Feedback Modal */}
+      {
+        isFeedbackOpen && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 backdrop-blur-sm">
+            <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl relative">
+              <button onClick={() => setIsFeedbackOpen(false)} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
+                <X className="h-5 w-5" />
+              </button>
+              <h3 className="text-xl font-bold text-gray-900 mb-1">Share Feedback</h3>
+              <p className="text-sm text-gray-500 mb-4">Help us improve this project.</p>
+
+              <form onSubmit={handleFeedbackSubmit} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Rating</label>
+                  <div className="flex gap-2">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <button
+                        key={star} type="button"
+                        onClick={() => setFeedbackForm({ ...feedbackForm, rating: star })}
+                        className={`p-1 rounded-full transition-colors ${feedbackForm.rating >= star ? 'text-yellow-400' : 'text-gray-300'}`}
+                      >
+                        <Star className="h-6 w-6 fill-current" />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <textarea
+                  placeholder="Your comments or suggestions..." required rows="4"
+                  className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-[#ae2b2b]/20 outline-none"
+                  value={feedbackForm.comments} onChange={e => setFeedbackForm({ ...feedbackForm, comments: e.target.value })}
+                ></textarea>
+
+                <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={feedbackForm.is_anonymous}
+                    onChange={e => setFeedbackForm({ ...feedbackForm, is_anonymous: e.target.checked })}
+                    className="rounded border-gray-300 text-[#ae2b2b] focus:ring-[#ae2b2b]"
+                  />
+                  Submit Anonymously
+                </label>
+
+                <Button type="submit" disabled={submitting} className="w-full bg-[#ae2b2b] hover:bg-[#912323]">
+                  {submitting ? "Submitting..." : "Submit Feedback"}
+                </Button>
+              </form>
+            </div>
+          </div>
+        )
+      }
+
+    </div >
   );
 }

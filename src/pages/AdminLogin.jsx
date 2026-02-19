@@ -80,7 +80,7 @@ const AdminLogin = () => {
                                 value={credentials.password}
                                 onChange={handleChange}
                                 className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent transition-all"
-                                placeholder="••••••••"
+                                placeholder=""
                                 required
                             />
                         </div>

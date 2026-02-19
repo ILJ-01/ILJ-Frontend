@@ -65,14 +65,7 @@ export default function Footer() {
         {/* Resources */}
         <div>
           <h3 className="text-xl font-bold mb-4 text-white uppercase tracking-wider">Resources</h3>
-          <a
-            href="/Non CSR Brochure Scanned.pdf"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-block bg-white text-[#ae2b2b] px-4 py-2 rounded-full font-bold text-sm hover:bg-gray-200 transition"
-          >
-            Download Brochure
-          </a>
+
         </div>
 
         {/* Quick Links */}

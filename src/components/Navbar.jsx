@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import LoginModal from "./LoginModal";
 import "./Navbar.css";
@@ -9,6 +9,7 @@ function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
   const { isLoggedIn, user } = useAuth();
 
   // Get user initials for the profile icon
@@ -21,6 +22,22 @@ function Navbar() {
       navigate('/dashboard');
     }
   };
+
+  /* 
+    Added logic to check for ?login=true query param 
+    and open the login modal automatically.
+    This supports the "Login to Apply" redirection flow.
+  */
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (params.get('login') === 'true') {
+      setShowLoginModal(true);
+
+      // Remove the query param to strict mode doesn't loop or keep it dirty
+      // We use navigate with replace to update URL without adding history entry
+      navigate(location.pathname, { replace: true });
+    }
+  }, [location.search, navigate]);
 
   const handleRegisterClick = () => {
     navigate('/volunteer-registration');

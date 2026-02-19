@@ -14,6 +14,7 @@ import AdminLogin from "./pages/AdminLogin";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminAddProject from "./pages/AdminAddProject";
 import AdminEditProject from "./pages/AdminEditProject";
+import AdminInquiries from "./pages/admin/AdminInquiries";
 import InterestsPage from "./pages/InterestsPage";
 import "./styles/global.css";
 
@@ -30,6 +31,7 @@ import ManagerHub from "./pages/dashboard/ManagerHub";
 
 import PoliciesPage from "./pages/dashboard/PoliciesPage";
 import TeamLeaderHub from "./pages/dashboard/TeamLeaderHub";
+import KalyanMitraHub from "./pages/dashboard/KalyanMitraHub";
 
 // Helper components for routing structure
 import { useAuth } from "./context/AuthContext";
@@ -77,6 +79,7 @@ function App() {
             <Route path="/admin/dashboard" element={<AdminDashboard />} />
             <Route path="/admin/add-project" element={<AdminAddProject />} />
             <Route path="/admin/edit-project/:id" element={<AdminEditProject />} />
+            <Route path="/admin/inquiries" element={<AdminInquiries />} />
 
             {/* Volunteer Dashboard Routes */}
             <Route path="/dashboard" element={<Navigate to="/dashboard/events" replace />} />
@@ -87,6 +90,7 @@ function App() {
             <Route path="/dashboard/timesheet" element={<ProtectedRoute><DashboardLayout><TimesheetPage /></DashboardLayout></ProtectedRoute>} />
             <Route path="/dashboard/profile" element={<ProtectedRoute><DashboardLayout><ProfilePage /></DashboardLayout></ProtectedRoute>} />
             <Route path="/dashboard/team-leader" element={<ProtectedRoute><DashboardLayout><TeamLeaderHub /></DashboardLayout></ProtectedRoute>} />
+            <Route path="/dashboard/kalyan-mitra" element={<ProtectedRoute><DashboardLayout><KalyanMitraHub /></DashboardLayout></ProtectedRoute>} />
 
           </Routes>
         </div>

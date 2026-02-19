@@ -3,10 +3,12 @@ import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/lib/supabase";
 import {
     Users, Search, ChevronRight, X, Mail, Phone, MapPin,
-    Briefcase, GraduationCap, Heart, Award, Sparkles, User, Clock,
-    FileText, Mic, Palette, Camera, Calendar, Megaphone, School, Code, Shield, LayoutGrid, CheckSquare, Loader2
+    GraduationCap, Heart, Award, User,
+    FileText, Mic, Palette, Camera, Calendar, Megaphone, School, Code, Shield, LayoutGrid, CheckSquare, Loader2,
+    FileSpreadsheet
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import * as XLSX from 'xlsx';
 
 export default function TeamLeaderHub() {
     const { user } = useAuth();
@@ -217,6 +219,29 @@ export default function TeamLeaderHub() {
         return 0;
     };
 
+    const handleExportVolunteers = () => {
+        const dataToExport = filteredVolunteers.map(v => {
+            const level = getPreferenceLevel(v, activeTeam);
+            return {
+                First_Name: v.first_name,
+                Last_Name: v.last_name,
+                ILJ_ID: v.ilj_id,
+                Email: v.email,
+                Mobile: v.mobile_number,
+                City: v.city,
+                District: v.district,
+                Preference_Ranking: level,
+                Context_Team: activeTeam,
+                Joined_At: new Date(v.created_at).toLocaleDateString(),
+            };
+        });
+
+        const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Team_Volunteers");
+        XLSX.writeFile(workbook, `Team_Volunteers_${activeTeam.replace(/ /g, '_')}_${new Date().toLocaleDateString().replace(/\//g, '-')}.xlsx`);
+    };
+
     const filteredVolunteers = volunteers.filter(v => {
         const matchesSearch = `${v.first_name} ${v.last_name} ${v.ilj_id}`.toLowerCase().includes(searchTerm.toLowerCase());
         const matchesTeam = activeTeam === "All" ||
@@ -317,7 +342,9 @@ export default function TeamLeaderHub() {
                                 );
                             })}
                         </div>
-                        <div className="relative w-full md:w-80">
+                    </div>
+                    <div className="flex gap-2 w-full md:w-auto">
+                        <div className="relative flex-1 md:w-64">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                             <input
                                 type="text"
@@ -327,7 +354,15 @@ export default function TeamLeaderHub() {
                                 onChange={(e) => setSearchTerm(e.target.value)}
                             />
                         </div>
+                        <button
+                            onClick={handleExportVolunteers}
+                            className="px-4 py-2 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-colors shadow-sm flex items-center justify-center gap-2"
+                            title="Export List to Excel"
+                        >
+                            <FileSpreadsheet className="h-4 w-4" />
+                        </button>
                     </div>
+
 
                     {loading ? (
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -389,92 +424,94 @@ export default function TeamLeaderHub() {
                 </motion.div>
             )}
 
-            {/* Tab Content: Assign Tasks */}
-            {activeTab === "tasks" && (
-                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="bg-white rounded-2xl shadow-lg border border-gray-100 p-8">
-                    <div className="max-w-2xl mx-auto space-y-8">
-                        <div className="text-center">
-                            <h2 className="text-2xl font-serif font-bold text-gray-900">Task Assignment Desk</h2>
-                            <p className="text-gray-500 mt-2">Delegate responsibilities to your team efficiently.</p>
-                        </div>
 
-                        {/* Toggle Switches */}
-                        <div className="flex bg-gray-100 p-1 rounded-xl">
-                            <button onClick={() => setAssignmentType('volunteer')} className={`flex-1 py-3 rounded-lg text-sm font-bold transition-all flex items-center justify-center gap-2 ${assignmentType === 'volunteer' ? 'bg-white shadow text-[#ae2b2b]' : 'text-gray-500 hover:text-gray-700'}`}>
-                                <User className="h-4 w-4" /> Specific Volunteer
-                            </button>
-                            <button onClick={() => setAssignmentType('team')} className={`flex-1 py-3 rounded-lg text-sm font-bold transition-all flex items-center justify-center gap-2 ${assignmentType === 'team' ? 'bg-white shadow text-[#ae2b2b]' : 'text-gray-500 hover:text-gray-700'}`}>
-                                <Users className="h-4 w-4" /> Entire Team Group
-                            </button>
-                        </div>
-
-                        <form onSubmit={handleAssignTask} className="space-y-6">
-                            {/* Team Context Selector */}
-                            <div className="bg-gray-50 p-6 rounded-2xl border border-gray-200 space-y-4">
-                                <label className="block text-sm font-bold text-gray-700">1. Select Team Context</label>
-                                <div className="grid grid-cols-2 gap-3">
-                                    {teams.map(t => (
-                                        <button key={t} type="button" onClick={() => setTargetTeam(t)} className={`px-4 py-3 rounded-xl border text-left text-sm font-medium transition-all ${targetTeam === t ? 'border-[#ae2b2b] bg-red-50 text-[#ae2b2b] shadow-sm' : 'border-gray-200 hover:border-gray-300 bg-white'}`}>
-                                            {t}
-                                        </button>
-                                    ))}
-                                </div>
+            {
+                activeTab === "tasks" && (
+                    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="bg-white rounded-2xl shadow-lg border border-gray-100 p-8">
+                        <div className="max-w-2xl mx-auto space-y-8">
+                            <div className="text-center">
+                                <h2 className="text-2xl font-serif font-bold text-gray-900">Task Assignment Desk</h2>
+                                <p className="text-gray-500 mt-2">Delegate responsibilities to your team efficiently.</p>
                             </div>
 
-                            {assignmentType === 'volunteer' && (
-                                <div>
-                                    <label className="block text-sm font-bold text-gray-700 mb-2">2. Select Volunteer</label>
-                                    <div className="relative">
-                                        <select
-                                            className="w-full p-4 bg-white border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-[#ae2b2b] appearance-none"
-                                            value={taskForm.assigneeId || ""}
-                                            onChange={e => setTaskForm({ ...taskForm, assigneeId: e.target.value })}
-                                            required
-                                        >
-                                            <option value="">-- Choose Volunteer --</option>
-                                            {volunteers
-                                                .filter(v => [v.volunteering_preference1, v.volunteering_preference2, v.volunteering_preference3].includes(targetTeam))
-                                                .map(v => (
-                                                    <option key={v.id} value={v.id}>{v.first_name} {v.last_name} ({v.ilj_id})</option>
-                                                ))}
-                                        </select>
-                                        <ChevronRight className="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 rotate-90" />
+                            {/* Toggle Switches */}
+                            <div className="flex bg-gray-100 p-1 rounded-xl">
+                                <button onClick={() => setAssignmentType('volunteer')} className={`flex-1 py-3 rounded-lg text-sm font-bold transition-all flex items-center justify-center gap-2 ${assignmentType === 'volunteer' ? 'bg-white shadow text-[#ae2b2b]' : 'text-gray-500 hover:text-gray-700'}`}>
+                                    <User className="h-4 w-4" /> Specific Volunteer
+                                </button>
+                                <button onClick={() => setAssignmentType('team')} className={`flex-1 py-3 rounded-lg text-sm font-bold transition-all flex items-center justify-center gap-2 ${assignmentType === 'team' ? 'bg-white shadow text-[#ae2b2b]' : 'text-gray-500 hover:text-gray-700'}`}>
+                                    <Users className="h-4 w-4" /> Entire Team Group
+                                </button>
+                            </div>
+
+                            <form onSubmit={handleAssignTask} className="space-y-6">
+                                {/* Team Context Selector */}
+                                <div className="bg-gray-50 p-6 rounded-2xl border border-gray-200 space-y-4">
+                                    <label className="block text-sm font-bold text-gray-700">1. Select Team Context</label>
+                                    <div className="grid grid-cols-2 gap-3">
+                                        {teams.map(t => (
+                                            <button key={t} type="button" onClick={() => setTargetTeam(t)} className={`px-4 py-3 rounded-xl border text-left text-sm font-medium transition-all ${targetTeam === t ? 'border-[#ae2b2b] bg-red-50 text-[#ae2b2b] shadow-sm' : 'border-gray-200 hover:border-gray-300 bg-white'}`}>
+                                                {t}
+                                            </button>
+                                        ))}
                                     </div>
-                                    <p className="text-xs text-gray-500 mt-2 px-1">Only showing volunteers interested in {targetTeam}.</p>
                                 </div>
-                            )}
 
-                            <div>
-                                <label className="block text-sm font-bold text-gray-700 mb-2">{assignmentType === 'volunteer' ? '3' : '2'}. Task Details</label>
-                                <div className="space-y-4">
-                                    <input type="text" required className="w-full p-4 bg-white border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-[#ae2b2b]" placeholder="Task Title (e.g. Prepare Graphics)" value={taskForm.title} onChange={e => setTaskForm({ ...taskForm, title: e.target.value })} />
-                                    <textarea required rows="4" className="w-full p-4 bg-white border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-[#ae2b2b]" placeholder="Detailed instructions..." value={taskForm.description} onChange={e => setTaskForm({ ...taskForm, description: e.target.value })}></textarea>
-                                </div>
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-bold text-gray-700 mb-2">Deadline</label>
-                                <input type="date" className="w-full p-4 bg-white border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-[#ae2b2b]" value={taskForm.deadline} onChange={e => setTaskForm({ ...taskForm, deadline: e.target.value })} />
-                            </div>
-
-                            <button
-                                type="submit"
-                                disabled={creating}
-                                className={`w-full py-4 bg-[#ae2b2b] text-white rounded-xl font-bold text-lg shadow-xl shadow-red-900/10 hover:shadow-red-900/20 transition-all hover:-translate-y-1 flex items-center justify-center gap-2 ${creating ? 'opacity-70 cursor-not-allowed hover:translate-y-0' : ''}`}
-                            >
-                                {creating ? (
-                                    <>
-                                        <Loader2 className="h-5 w-5 animate-spin" />
-                                        {assignmentType === 'team' ? 'Assigning to Team...' : 'Assigning Task...'}
-                                    </>
-                                ) : (
-                                    assignmentType === 'team' ? `Assign to All ${targetTeam} Members` : 'Assign Task to Volunteer'
+                                {assignmentType === 'volunteer' && (
+                                    <div>
+                                        <label className="block text-sm font-bold text-gray-700 mb-2">2. Select Volunteer</label>
+                                        <div className="relative">
+                                            <select
+                                                className="w-full p-4 bg-white border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-[#ae2b2b] appearance-none"
+                                                value={taskForm.assigneeId || ""}
+                                                onChange={e => setTaskForm({ ...taskForm, assigneeId: e.target.value })}
+                                                required
+                                            >
+                                                <option value="">-- Choose Volunteer --</option>
+                                                {volunteers
+                                                    .filter(v => [v.volunteering_preference1, v.volunteering_preference2, v.volunteering_preference3].includes(targetTeam))
+                                                    .map(v => (
+                                                        <option key={v.id} value={v.id}>{v.first_name} {v.last_name} ({v.ilj_id})</option>
+                                                    ))}
+                                            </select>
+                                            <ChevronRight className="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 rotate-90" />
+                                        </div>
+                                        <p className="text-xs text-gray-500 mt-2 px-1">Only showing volunteers interested in {targetTeam}.</p>
+                                    </div>
                                 )}
-                            </button>
-                        </form>
-                    </div>
-                </motion.div>
-            )}
+
+                                <div>
+                                    <label className="block text-sm font-bold text-gray-700 mb-2">{assignmentType === 'volunteer' ? '3' : '2'}. Task Details</label>
+                                    <div className="space-y-4">
+                                        <input type="text" required className="w-full p-4 bg-white border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-[#ae2b2b]" placeholder="Task Title (e.g. Prepare Graphics)" value={taskForm.title} onChange={e => setTaskForm({ ...taskForm, title: e.target.value })} />
+                                        <textarea required rows="4" className="w-full p-4 bg-white border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-[#ae2b2b]" placeholder="Detailed instructions..." value={taskForm.description} onChange={e => setTaskForm({ ...taskForm, description: e.target.value })}></textarea>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-bold text-gray-700 mb-2">Deadline</label>
+                                    <input type="date" className="w-full p-4 bg-white border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-[#ae2b2b]" value={taskForm.deadline} onChange={e => setTaskForm({ ...taskForm, deadline: e.target.value })} />
+                                </div>
+
+                                <button
+                                    type="submit"
+                                    disabled={creating}
+                                    className={`w-full py-4 bg-[#ae2b2b] text-white rounded-xl font-bold text-lg shadow-xl shadow-red-900/10 hover:shadow-red-900/20 transition-all hover:-translate-y-1 flex items-center justify-center gap-2 ${creating ? 'opacity-70 cursor-not-allowed hover:translate-y-0' : ''}`}
+                                >
+                                    {creating ? (
+                                        <>
+                                            <Loader2 className="h-5 w-5 animate-spin" />
+                                            {assignmentType === 'team' ? 'Assigning to Team...' : 'Assigning Task...'}
+                                        </>
+                                    ) : (
+                                        assignmentType === 'team' ? `Assign to All ${targetTeam} Members` : 'Assign Task to Volunteer'
+                                    )}
+                                </button>
+                            </form>
+                        </div>
+                    </motion.div>
+                )
+            }
 
             {/* Details Modal (Fixed UI Placement) */}
             <AnimatePresence>
@@ -627,78 +664,82 @@ export default function TeamLeaderHub() {
             </AnimatePresence>
 
             {/* Modal for Quick Task (Reused) */}
-            {isTaskModalOpen && selectedVolunteer && (
-                <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-                    <motion.div
-                        initial={{ scale: 0.9, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        className="bg-white rounded-2xl shadow-xl max-w-lg w-full overflow-hidden"
-                    >
-                        <div className="p-6 border-b border-gray-100 flex justify-between items-center">
-                            <h3 className="text-lg font-bold text-gray-900">Assign Task to {selectedVolunteer.first_name}</h3>
-                            <button onClick={() => setIsTaskModalOpen(false)} className="text-gray-400 hover:text-gray-600">
-                                <X size={24} />
-                            </button>
-                        </div>
-                        <form onSubmit={handleAssignTask} className="p-6 space-y-4">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Task Title</label>
-                                <input
-                                    type="text"
-                                    className="w-full border-gray-300 rounded-lg shadow-sm focus:ring-[#ae2b2b] focus:border-[#ae2b2b] p-2.5 border"
-                                    value={taskForm.title}
-                                    onChange={e => setTaskForm({ ...taskForm, title: e.target.value })}
-                                    required
-                                    placeholder="e.g. Prepare research report"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-                                <textarea
-                                    className="w-full border-gray-300 rounded-lg shadow-sm focus:ring-[#ae2b2b] focus:border-[#ae2b2b] p-2.5 border"
-                                    rows="4"
-                                    value={taskForm.description}
-                                    onChange={e => setTaskForm({ ...taskForm, description: e.target.value })}
-                                    required
-                                    placeholder="Detailed instructions..."
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Deadline</label>
-                                <input
-                                    type="date"
-                                    className="w-full border-gray-300 rounded-lg shadow-sm focus:ring-[#ae2b2b] focus:border-[#ae2b2b] p-2.5 border"
-                                    value={taskForm.deadline}
-                                    onChange={e => setTaskForm({ ...taskForm, deadline: e.target.value })}
-                                />
-                            </div>
-                            <div className="pt-4 flex gap-3">
-                                <button
-                                    type="button"
-                                    onClick={() => setIsTaskModalOpen(false)}
-                                    className="flex-1 py-2.5 bg-gray-100 text-gray-700 rounded-lg font-bold hover:bg-gray-200 transition-colors"
-                                >
-                                    Cancel
-                                </button>
-                                <button
-                                    type="submit"
-                                    disabled={creating}
-                                    className={`flex-1 py-2.5 bg-[#ae2b2b] text-white rounded-lg font-bold shadow-md hover:bg-[#902424] transition-colors flex items-center justify-center gap-2 ${creating ? 'opacity-70 cursor-not-allowed' : ''}`}
-                                >
-                                    {creating ? (
-                                        <>
-                                            <Loader2 className="h-4 w-4 animate-spin" />
-                                            Assigning...
-                                        </>
-                                    ) : (
-                                        'Assign Task'
-                                    )}
+            {
+                isTaskModalOpen && selectedVolunteer && (
+                    <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+                        <motion.div
+                            initial={{ scale: 0.9, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            className="bg-white rounded-2xl shadow-xl max-w-lg w-full overflow-hidden"
+                        >
+                            <div className="p-6 border-b border-gray-100 flex justify-between items-center">
+                                <h3 className="text-lg font-bold text-gray-900">Assign Task to {selectedVolunteer.first_name}</h3>
+                                <button onClick={() => setIsTaskModalOpen(false)} className="text-gray-400 hover:text-gray-600">
+                                    <X size={24} />
                                 </button>
                             </div>
-                        </form>
-                    </motion.div>
-                </div>
-            )}
+                            <form onSubmit={handleAssignTask} className="p-6 space-y-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Task Title</label>
+                                    <input
+                                        type="text"
+                                        className="w-full border-gray-300 rounded-lg shadow-sm focus:ring-[#ae2b2b] focus:border-[#ae2b2b] p-2.5 border"
+                                        value={taskForm.title}
+                                        onChange={e => setTaskForm({ ...taskForm, title: e.target.value })}
+                                        required
+                                        placeholder="e.g. Prepare research report"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                                    <textarea
+                                        className="w-full border-gray-300 rounded-lg shadow-sm focus:ring-[#ae2b2b] focus:border-[#ae2b2b] p-2.5 border"
+                                        rows="4"
+                                        value={taskForm.description}
+                                        onChange={e => setTaskForm({ ...taskForm, description: e.target.value })}
+                                        required
+                                        placeholder="Detailed instructions..."
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Deadline</label>
+                                    <input
+                                        type="date"
+                                        className="w-full border-gray-300 rounded-lg shadow-sm focus:ring-[#ae2b2b] focus:border-[#ae2b2b] p-2.5 border"
+                                        value={taskForm.deadline}
+                                        onChange={e => setTaskForm({ ...taskForm, deadline: e.target.value })}
+                                    />
+                                </div>
+                                <div className="pt-4 flex gap-3">
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsTaskModalOpen(false)}
+                                        className="flex-1 py-2.5 bg-gray-100 text-gray-700 rounded-lg font-bold hover:bg-gray-200 transition-colors"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        disabled={creating}
+                                        className={`flex-1 py-2.5 bg-[#ae2b2b] text-white rounded-lg font-bold shadow-md hover:bg-[#902424] transition-colors flex items-center justify-center gap-2 ${creating ? 'opacity-70 cursor-not-allowed' : ''}`}
+                                    >
+                                        {creating ? (
+                                            <>
+                                                <Loader2 className="h-4 w-4 animate-spin" />
+                                                Assigning...
+                                            </>
+                                        ) : (
+                                            'Assign Task'
+                                        )}
+                                    </button>
+                                </div>
+                            </form>
+                        </motion.div>
+                    </div>
+                )
+            }
+
+
         </div>
     );
 }

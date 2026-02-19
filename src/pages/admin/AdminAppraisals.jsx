@@ -14,7 +14,7 @@ const AdminAppraisals = () => {
 
     const RANKS = [
         { title: "Intern", minHours: 0, order: 0 },
-        { title: "Associate", minHours: 10, order: 1 },
+        { title: "Associate", minHours: 20, order: 1 },
         { title: "Assistant Manager", minHours: 100, order: 2 },
         { title: "Manager", minHours: 500, order: 3 },
         { title: "Senior Manager", minHours: 1000, order: 4 },
@@ -180,8 +180,8 @@ const AdminAppraisals = () => {
                     <button
                         onClick={() => setFilterByEligible(!filterByEligible)}
                         className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all border ${filterByEligible
-                                ? 'bg-[#ae2b2b] text-white border-[#ae2b2b]'
-                                : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
+                            ? 'bg-[#ae2b2b] text-white border-[#ae2b2b]'
+                            : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
                             }`}
                     >
                         <TrendingUp className="h-4 w-4" />

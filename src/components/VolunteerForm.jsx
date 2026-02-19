@@ -75,6 +75,9 @@ const formSchema = z.object({
 
     // 10. Participation Mode
     participationMode: z.enum(["Voluntary (Seva-based)", "Paid Basis (Project or Role-based)", "Flexible / Open to Discussion"], { required_error: "Please select a mode" }),
+
+    // 11. Pathshala Specific
+    pathshalaRole: z.string().optional(),
 });
 
 const volunteeringOptions = [
@@ -85,7 +88,8 @@ const volunteeringOptions = [
     { label: "Photography & Videography", icon: Camera },
     { label: "Event Planning & Management", icon: LucideCalendar },
     { label: "Marketing & Outreach", icon: Megaphone },
-    { label: "Pathshala & Educational Activities", icon: School },
+    { label: "Marketing & Outreach", icon: Megaphone },
+    { label: "Inhouse Pathshala and Home Schooling", icon: School },
     { label: "IT & Technical Support", icon: Code },
 ];
 
@@ -134,6 +138,7 @@ export default function VolunteerForm() {
             availabilityDays: undefined,
             timeCommitment: "",
             participationMode: undefined,
+            pathshalaRole: undefined,
         },
     });
 
@@ -756,6 +761,42 @@ export default function VolunteerForm() {
                                     }}
                                 />
                             )}
+
+                            {/* Conditional Pathshala Question */}
+                            {(form.watch("volunteeringPreference1") === "Inhouse Pathshala and Home Schooling" ||
+                                form.watch("volunteeringPreference2") === "Inhouse Pathshala and Home Schooling" ||
+                                form.watch("volunteeringPreference3") === "Inhouse Pathshala and Home Schooling") && (
+                                    <FormField
+                                        control={form.control}
+                                        name="pathshalaRole"
+                                        render={({ field }) => (
+                                            <FormItem className="animate-in fade-in slide-in-from-top-4 duration-500 bg-red-50 p-4 rounded-lg border border-red-100">
+                                                <FormLabel className="text-lg font-medium text-[#ae2b2b]">
+                                                    Preferred Area for Pathshala / Home Schooling?
+                                                </FormLabel>
+                                                <FormControl>
+                                                    <RadioGroup
+                                                        onValueChange={field.onChange}
+                                                        defaultValue={field.value}
+                                                        className="flex flex-col md:flex-row gap-4 mt-2"
+                                                    >
+                                                        {["Religious teaching", "Academic teaching", "Both"].map((item) => (
+                                                            <FormItem key={item} className="flex items-center space-x-2 space-y-0">
+                                                                <FormControl>
+                                                                    <RadioGroupItem value={item} />
+                                                                </FormControl>
+                                                                <FormLabel className="font-normal cursor-pointer">
+                                                                    {item}
+                                                                </FormLabel>
+                                                            </FormItem>
+                                                        ))}
+                                                    </RadioGroup>
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                )}
 
                             {preferenceCount >= 3 && (
                                 <FormField

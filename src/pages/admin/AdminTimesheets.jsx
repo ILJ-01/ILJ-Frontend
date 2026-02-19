@@ -1,15 +1,25 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
-import { Check, X, Loader2, Clock, Filter, CheckCircle } from 'lucide-react';
+import { Check, X, Loader2, Clock, Filter, CheckCircle, FileSpreadsheet, Calendar } from 'lucide-react';
+import * as XLSX from 'xlsx';
 
 export default function AdminTimesheets() {
     const [entries, setEntries] = useState([]);
+    const [projects, setProjects] = useState([]);
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState('pending'); // pending, approved, rejected, all
+    const [dateFilter, setDateFilter] = useState('');
+    const [projectFilter, setProjectFilter] = useState('all');
 
     useEffect(() => {
         fetchData();
-    }, [filter]);
+        fetchProjects();
+    }, [filter, dateFilter, projectFilter]);
+
+    const fetchProjects = async () => {
+        const { data } = await supabase.from('projects').select('id, title').order('title');
+        setProjects(data || []);
+    };
 
     const fetchData = async () => {
         setLoading(true);
@@ -26,11 +36,40 @@ export default function AdminTimesheets() {
             query = query.eq('status', filter);
         }
 
+        if (dateFilter) {
+            query = query.eq('date_worked', dateFilter);
+        }
+
+        if (projectFilter !== 'all') {
+            query = query.eq('project_id', projectFilter);
+        }
+
         const { data, error } = await query;
         if (error) console.error(error);
 
         setEntries(data || []);
         setLoading(false);
+    };
+
+    const exportToExcel = () => {
+        const dataToExport = entries.map(t => ({
+            Date: new Date(t.date_worked).toLocaleDateString(),
+            Volunteer: `${t.volunteer?.first_name} ${t.volunteer?.last_name}`,
+            ILJ_ID: t.volunteer?.ilj_id,
+            Project: t.project?.title,
+            Role: t.role,
+            Hours: t.hours,
+            Work_Mode: t.work_mode,
+            Description: t.description,
+            Status: t.status,
+            Volunteer_ID: t.volunteer_id,
+            Project_ID: t.project_id
+        }));
+
+        const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Timesheets");
+        XLSX.writeFile(workbook, `Admin_Timesheets_${new Date().toLocaleDateString().replace(/\//g, '-')}.xlsx`);
     };
 
     const updateStatus = async (id, newStatus) => {
@@ -48,21 +87,57 @@ export default function AdminTimesheets() {
 
     return (
         <div className="space-y-6">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                <h2 className="text-xl font-bold text-gray-800">Timesheet Approvals</h2>
+            <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4 bg-white p-4 rounded-xl shadow-sm border border-gray-200">
+                <div className="flex items-center gap-4 w-full xl:w-auto">
+                    <h2 className="text-xl font-bold text-gray-800 whitespace-nowrap">Timesheet Approvals</h2>
+                    <button
+                        onClick={exportToExcel}
+                        className="flex items-center gap-2 px-3 py-1.5 bg-green-50 text-green-700 border border-green-200 rounded-lg hover:bg-green-100 text-xs font-bold transition-colors ml-auto xl:ml-0"
+                    >
+                        <FileSpreadsheet className="h-3.5 w-3.5" /> Export Excel
+                    </button>
+                </div>
 
-                <div className="flex bg-gray-100 p-1 rounded-lg">
-                    {['pending', 'approved', 'rejected', 'all'].map(f => (
-                        <button
-                            key={f}
-                            onClick={() => setFilter(f)}
-                            className={`px-3 py-1.5 text-xs font-bold rounded-md capitalize transition-colors
-                                ${filter === f ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}
-                            `}
+                <div className="flex flex-col sm:flex-row gap-3 w-full xl:w-auto overflow-x-auto">
+                    {/* Status Filter */}
+                    <div className="flex bg-gray-100 p-1 rounded-lg shrink-0">
+                        {['pending', 'approved', 'rejected', 'all'].map(f => (
+                            <button
+                                key={f}
+                                onClick={() => setFilter(f)}
+                                className={`px-3 py-1.5 text-xs font-bold rounded-md capitalize transition-colors
+                                    ${filter === f ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}
+                                `}
+                            >
+                                {f}
+                            </button>
+                        ))}
+                    </div>
+
+                    {/* Date Filter */}
+                    <div className="relative shrink-0">
+                        <Calendar className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400" />
+                        <input
+                            type="date"
+                            className="pl-8 pr-3 py-1.5 bg-white border border-gray-200 rounded-lg text-xs font-medium focus:ring-2 focus:ring-[#ae2b2b] outline-none"
+                            value={dateFilter}
+                            onChange={(e) => setDateFilter(e.target.value)}
+                        />
+                    </div>
+
+                    {/* Project Filter */}
+                    <div className="shrink-0">
+                        <select
+                            className="px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-xs font-medium focus:ring-2 focus:ring-[#ae2b2b] outline-none max-w-[200px]"
+                            value={projectFilter}
+                            onChange={(e) => setProjectFilter(e.target.value)}
                         >
-                            {f}
-                        </button>
-                    ))}
+                            <option value="all">All Projects</option>
+                            {projects.map(p => (
+                                <option key={p.id} value={p.id}>{p.title}</option>
+                            ))}
+                        </select>
+                    </div>
                 </div>
             </div>
 

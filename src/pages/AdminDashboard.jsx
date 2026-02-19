@@ -11,6 +11,7 @@ import AdminEvents from './admin/AdminEvents';
 import AdminTasks from './admin/AdminTasks';
 import AdminTimesheets from './admin/AdminTimesheets';
 import AdminAppraisals from './admin/AdminAppraisals';
+import AdminInquiries from './admin/AdminInquiries';
 
 const RANKS = [
     { title: "Intern", minHours: 0, order: 0 },
@@ -246,6 +247,7 @@ const AdminDashboard = () => {
                                 { id: 'tasks', label: 'Tasks', icon: CheckSquare },
                                 { id: 'timesheets', label: 'Approvals', icon: Clock },
                                 { id: 'appraisals', label: 'Appraisals', icon: TrendingUp },
+                                { id: 'inquiries', label: 'Inquiries', icon: Mail },
                             ].map((item) => {
                                 const Icon = item.icon;
                                 const isActive = activeTab === item.id;
@@ -318,6 +320,9 @@ const AdminDashboard = () => {
                             </button>
                             <button onClick={() => setActiveTab('appraisals')} className={`flex items-center gap-2 px-3 py-2 rounded-md font-medium text-sm whitespace-nowrap transition-all ${activeTab === 'appraisals' ? 'bg-white text-[#ae2b2b] shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}>
                                 <TrendingUp className="h-4 w-4" /> Appraisals
+                            </button>
+                            <button onClick={() => setActiveTab('inquiries')} className={`flex items-center gap-2 px-3 py-2 rounded-md font-medium text-sm whitespace-nowrap transition-all ${activeTab === 'inquiries' ? 'bg-white text-[#ae2b2b] shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}>
+                                <Mail className="h-4 w-4" /> Inquiries
                             </button>
                         </div>
 
@@ -567,6 +572,11 @@ const AdminDashboard = () => {
                 {activeTab === 'appraisals' && (
                     <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
                         <AdminAppraisals />
+                    </div>
+                )}
+                {activeTab === 'inquiries' && (
+                    <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
+                        <AdminInquiries />
                     </div>
                 )}
             </main>

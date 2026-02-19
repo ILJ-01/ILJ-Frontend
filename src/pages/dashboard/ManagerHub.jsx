@@ -2,16 +2,20 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/lib/supabase";
 import {
+    
     Briefcase, CheckSquare, Clock, Users, Award,
-    Plus, Check, X, Search, ChevronRight, Trash2, Archive, Star, MessageSquare
+    Plus, Check, X, Search, ChevronRight, Trash2, Archive, Star, MessageSquare,
+    FileSpreadsheet, RotateCcw, History
 } from "lucide-react";
 import { motion } from "framer-motion";
+import * as XLSX from 'xlsx';
 
 export default function ManagerHub() {
     const { user } = useAuth();
     const [activeTab, setActiveTab] = useState("approvals");
     const [projects, setProjects] = useState([]);
     const [pendingTimesheets, setPendingTimesheets] = useState([]);
+    const [historyTimesheets, setHistoryTimesheets] = useState([]);
     const [volunteers, setVolunteers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [selectedTaskForFeedback, setSelectedTaskForFeedback] = useState(null);
@@ -198,20 +202,30 @@ export default function ManagerHub() {
         try {
             const projectIds = (user.managed_projects || []).map(p => p.id);
 
-            // 1. Fetch Pending Timesheets for these projects
+            // 1. Fetch ALL Timesheets for these projects (Pending + History)
             const { data: timesheets, error: tsError } = await supabase
                 .from('timesheets')
                 .select(`
                     *,
-                    volunteer:volunteers(first_name, last_name, ilj_id),
+                    volunteer:volunteers(first_name, last_name, ilj_id, designation),
                     project:projects(title)
                 `)
                 .in('project_id', projectIds)
-                .eq('status', 'pending') // Only pending ones
+                .neq('volunteer_id', user.id) // PMs cannot approve their own timesheets
                 .order('date_worked', { ascending: false });
 
             if (tsError) throw tsError;
-            setPendingTimesheets(timesheets || []);
+
+            // Filter: 
+            // 1. Exclude "Project Manager" designations if any (handled by Admin)
+            // 2. Split into Pending vs History
+            const filteredTimesheets = (timesheets || []).filter(t =>
+                t.volunteer?.designation !== 'Project Manager' &&
+                t.volunteer?.designation !== 'Director' // Also exclude Director if any
+            );
+
+            setPendingTimesheets(filteredTimesheets.filter(t => t.status === 'pending'));
+            setHistoryTimesheets(filteredTimesheets.filter(t => ['approved', 'rejected'].includes(t.status)));
 
             // 2. Fetch Volunteers for Task Assignment
             const { data: volData, error: vError } = await supabase
@@ -255,13 +269,76 @@ export default function ManagerHub() {
 
             if (error) throw error;
 
-            // Remove from list locally
-            setPendingTimesheets(prev => prev.filter(t => t.id !== id));
+            // Move from pending to history locally
+            const item = pendingTimesheets.find(t => t.id === id);
+            if (item) {
+                setPendingTimesheets(prev => prev.filter(t => t.id !== id));
+                setHistoryTimesheets(prev => [{ ...item, status }, ...prev]);
+            }
             alert(`Timesheet ${status === 'approved' ? 'Approved' : 'Rejected'}`);
         } catch (error) {
             console.error("Approval Error:", error);
             alert("Action failed.");
         }
+    };
+
+    const handleRevertStatus = async (id) => {
+        if (!confirm("Are you sure you want to revert this timesheet to Pending?")) return;
+        try {
+            const { error } = await supabase
+                .from('timesheets')
+                .update({ status: 'pending' })
+                .eq('id', id);
+
+            if (error) throw error;
+
+            // Move from history to pending locally
+            const item = historyTimesheets.find(t => t.id === id);
+            if (item) {
+                setHistoryTimesheets(prev => prev.filter(t => t.id !== id));
+                setPendingTimesheets(prev => [{ ...item, status: 'pending' }, ...prev]);
+            }
+            alert("Timesheet reverted to Pending.");
+        } catch (error) {
+            console.error("Revert Error:", error);
+            alert("Action failed.");
+        }
+    };
+
+    const exportToExcel = (data, fileName) => {
+        const worksheet = XLSX.utils.json_to_sheet(data);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Sheet1");
+        XLSX.writeFile(workbook, `${fileName}.xlsx`);
+    };
+
+    const handleExportTimesheets = () => {
+        const dataToExport = [...pendingTimesheets, ...historyTimesheets].map(t => ({
+            Date: new Date(t.date_worked).toLocaleDateString(),
+            Volunteer: `${t.volunteer?.first_name} ${t.volunteer?.last_name}`,
+            ILJ_ID: t.volunteer?.ilj_id,
+            Project: t.project?.title,
+            Role: t.role,
+            Hours: t.hours,
+            Work_Mode: t.work_mode,
+            Description: t.description,
+            Status: t.status,
+            Volunteer_ID: t.volunteer_id, // Requirement: Capture IDs
+            Project_ID: t.project_id
+        }));
+        exportToExcel(dataToExport, `Timesheets_Report_${new Date().toLocaleDateString().replace(/\//g, '-')}`);
+    };
+
+    const handleExportTeam = () => {
+        const dataToExport = teamMembers.map(m => ({
+            First_Name: m.first_name,
+            Last_Name: m.last_name,
+            ILJ_ID: m.ilj_id,
+            Email: m.email,
+            Designation: m.designation,
+            ID: m.id
+        }));
+        exportToExcel(dataToExport, `Team_List_${new Date().toLocaleDateString().replace(/\//g, '-')}`);
     };
 
     const handleCreateTask = async (e) => {
@@ -456,6 +533,7 @@ export default function ManagerHub() {
                     { id: "projects", label: "My Projects", icon: Briefcase },
                     { id: "team", label: "My Team", icon: Users },
                     { id: "approvals", label: "Approvals", icon: Clock, count: pendingTimesheets.length },
+                    { id: "history", label: "History", icon: History },
                     { id: "tasks", label: "Assign Tasks", icon: CheckSquare },
                     { id: "opportunities", label: "Opportunities", icon: Award }
                 ].map((tab) => {
@@ -700,6 +778,15 @@ export default function ManagerHub() {
                         )}
                     </div>
 
+                    <div className="mt-6 flex justify-end">
+                        <button
+                            onClick={handleExportTeam}
+                            className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-bold text-sm"
+                        >
+                            <FileSpreadsheet className="h-4 w-4" /> Export Team List
+                        </button>
+                    </div>
+
                     {/* Team Tasks Status Section */}
                     <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm mt-8">
                         <div className="flex items-center justify-between mb-6">
@@ -834,6 +921,16 @@ export default function ManagerHub() {
             {/* Approvals Tab */}
             {activeTab === "approvals" && (
                 <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
+                    <div className="flex justify-between items-center mb-2">
+                        <h3 className="font-bold text-gray-800">Pending Approvals</h3>
+                        <button
+                            onClick={handleExportTimesheets}
+                            className="flex items-center gap-2 px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 text-xs font-bold"
+                        >
+                            <FileSpreadsheet className="h-3.5 w-3.5" /> Export All Timesheets
+                        </button>
+                    </div>
+
                     {pendingTimesheets.length === 0 ? (
                         <div className="bg-white p-12 rounded-xl text-center border border-gray-200 border-dashed">
                             <CheckSquare className="h-12 w-12 text-green-500 mx-auto mb-4 opacity-50" />
@@ -877,6 +974,142 @@ export default function ManagerHub() {
                                     </div>
                                 </div>
                             ))}
+                        </div>
+                    )}
+                </motion.div>
+            )}
+
+            {/* History Tab */}
+            {activeTab === "history" && (
+                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
+                    <div className="flex justify-between items-center mb-2">
+                        <h3 className="font-bold text-gray-800">Processed Timesheets</h3>
+                        <button
+                            onClick={handleExportTimesheets}
+                            className="flex items-center gap-2 px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 text-xs font-bold"
+                        >
+                            <FileSpreadsheet className="h-3.5 w-3.5" /> Export All
+                        </button>
+                    </div>
+
+                    {historyTimesheets.length === 0 ? (
+                        <div className="bg-white p-12 rounded-xl text-center border border-gray-200 border-dashed">
+                            <History className="h-12 w-12 text-gray-300 mx-auto mb-4 opacity-50" />
+                            <h3 className="text-lg font-medium text-gray-900">No History Yet</h3>
+                            <p className="text-gray-500">Processed timesheets will appear here.</p>
+                        </div>
+                    ) : (
+                        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-left text-sm">
+                                    <thead className="bg-gray-50 text-gray-500 font-medium border-b border-gray-100">
+                                        <tr>
+                                            <th className="px-6 py-4">Volunteer</th>
+                                            <th className="px-6 py-4">Date</th>
+                                            <th className="px-6 py-4">Project</th>
+                                            <th className="px-6 py-4">Hours</th>
+                                            <th className="px-6 py-4">Status</th>
+                                            <th className="px-6 py-4 text-right">Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-gray-100">
+                                        {historyTimesheets.map((ts) => (
+                                            <tr key={ts.id} className="hover:bg-gray-50">
+                                                <td className="px-6 py-4">
+                                                    <div className="font-bold text-gray-900">{ts.volunteer?.first_name} {ts.volunteer?.last_name}</div>
+                                                    <div className="text-xs text-gray-500">{ts.volunteer?.ilj_id}</div>
+                                                </td>
+                                                <td className="px-6 py-4 text-gray-600">{new Date(ts.date_worked).toLocaleDateString()}</td>
+                                                <td className="px-6 py-4 text-gray-600">{ts.project?.title}</td>
+                                                <td className="px-6 py-4 font-bold">{ts.hours}h</td>
+                                                <td className="px-6 py-4">
+                                                    <span className={`px-2 py-1 rounded-full text-xs font-bold uppercase ${ts.status === 'approved' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                                                        }`}>
+                                                        {ts.status}
+                                                    </span>
+                                                </td>
+                                                <td className="px-6 py-4 text-right">
+                                                    <button
+                                                        onClick={() => handleRevertStatus(ts.id)}
+                                                        className="text-gray-400 hover:text-blue-600 p-1 rounded hover:bg-blue-50 transition-colors"
+                                                        title="Revert to Pending"
+                                                    >
+                                                        <RotateCcw className="h-4 w-4" />
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    )}
+                </motion.div>
+            )}
+
+            {/* History Tab */}
+            {activeTab === "history" && (
+                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
+                    <div className="flex justify-between items-center mb-2">
+                        <h3 className="font-bold text-gray-800">Processed Timesheets</h3>
+                        <button
+                            onClick={handleExportTimesheets}
+                            className="flex items-center gap-2 px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 text-xs font-bold"
+                        >
+                            <FileSpreadsheet className="h-3.5 w-3.5" /> Export All
+                        </button>
+                    </div>
+
+                    {historyTimesheets.length === 0 ? (
+                        <div className="bg-white p-12 rounded-xl text-center border border-gray-200 border-dashed">
+                            <History className="h-12 w-12 text-gray-300 mx-auto mb-4 opacity-50" />
+                            <h3 className="text-lg font-medium text-gray-900">No History Yet</h3>
+                            <p className="text-gray-500">Processed timesheets will appear here.</p>
+                        </div>
+                    ) : (
+                        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-left text-sm">
+                                    <thead className="bg-gray-50 text-gray-500 font-medium border-b border-gray-100">
+                                        <tr>
+                                            <th className="px-6 py-4">Volunteer</th>
+                                            <th className="px-6 py-4">Date</th>
+                                            <th className="px-6 py-4">Project</th>
+                                            <th className="px-6 py-4">Hours</th>
+                                            <th className="px-6 py-4">Status</th>
+                                            <th className="px-6 py-4 text-right">Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-gray-100">
+                                        {historyTimesheets.map((ts) => (
+                                            <tr key={ts.id} className="hover:bg-gray-50">
+                                                <td className="px-6 py-4">
+                                                    <div className="font-bold text-gray-900">{ts.volunteer?.first_name} {ts.volunteer?.last_name}</div>
+                                                    <div className="text-xs text-gray-500">{ts.volunteer?.ilj_id}</div>
+                                                </td>
+                                                <td className="px-6 py-4 text-gray-600">{new Date(ts.date_worked).toLocaleDateString()}</td>
+                                                <td className="px-6 py-4 text-gray-600">{ts.project?.title}</td>
+                                                <td className="px-6 py-4 font-bold">{ts.hours}h</td>
+                                                <td className="px-6 py-4">
+                                                    <span className={`px-2 py-1 rounded-full text-xs font-bold uppercase ${ts.status === 'approved' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                                                        }`}>
+                                                        {ts.status}
+                                                    </span>
+                                                </td>
+                                                <td className="px-6 py-4 text-right">
+                                                    <button
+                                                        onClick={() => handleRevertStatus(ts.id)}
+                                                        className="text-gray-400 hover:text-blue-600 p-1 rounded hover:bg-blue-50 transition-colors"
+                                                        title="Revert to Pending"
+                                                    >
+                                                        <RotateCcw className="h-4 w-4" />
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     )}
                 </motion.div>

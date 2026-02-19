@@ -14,7 +14,7 @@ const interests = [
     },
     {
         title: "Content Writing (Articles, Blogs, Scripts)",
-        manager: "Jainam Mehta",
+        manager: "Aayushi Shah",
         description: "Creating meaningful written content such as articles, captions, scripts, blogs, or educational material aligned with Jain values.",
         icon: FileText,
         color: "bg-emerald-50 text-emerald-600 border-emerald-100"

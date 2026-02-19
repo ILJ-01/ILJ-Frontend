@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
     Home, Calendar, CheckSquare, Clock, User, LogOut,
-    Menu, X, Bell, Briefcase, FileText, Shield
+    Menu, X, Bell, Briefcase, FileText, Shield, Heart
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/lib/supabase";
@@ -74,6 +74,10 @@ export default function DashboardLayout({ children }) {
 
     if (user?.team_leader_for) {
         menuItems.unshift({ icon: Shield, label: "Team Leader Hub", path: "/dashboard/team-leader" });
+    }
+
+    if (user?.isKalyanMitra) {
+        menuItems.unshift({ icon: Heart, label: "Kalyan Mitra Hub", path: "/dashboard/kalyan-mitra" });
     }
 
     return (
