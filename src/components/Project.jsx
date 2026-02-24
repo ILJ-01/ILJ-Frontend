@@ -46,7 +46,16 @@ export default function Project() {
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [inquiryForm, setInquiryForm] = useState({ name: '', email: '', mobile: '', message: '' });
-  const [feedbackForm, setFeedbackForm] = useState({ rating: 5, comments: '', is_anonymous: false });
+  const [feedbackForm, setFeedbackForm] = useState({
+    rating: 5,
+    comments: '',
+    is_anonymous: false,
+    name: '',
+    email: '',
+    mobile: '',
+    age: '',
+    city: ''
+  });
 
   // Check if params is a UUID (Database Project) or a Title (Static JSON)
   const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(title);
@@ -164,7 +173,16 @@ export default function Project() {
       if (error) throw error;
       alert("Thank you for your feedback!");
       setIsFeedbackOpen(false);
-      setFeedbackForm({ rating: 5, comments: '', is_anonymous: false });
+      setFeedbackForm({
+        rating: 5,
+        comments: '',
+        is_anonymous: false,
+        name: '',
+        email: '',
+        mobile: '',
+        age: '',
+        city: ''
+      });
     } catch (error) {
       console.error("Feedback Error:", error);
       alert("Failed to submit feedback.");
@@ -444,12 +462,6 @@ export default function Project() {
                   </div>
                 </div>
 
-                <textarea
-                  placeholder="Your comments or suggestions..." required rows="4"
-                  className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-[#ae2b2b]/20 outline-none"
-                  value={feedbackForm.comments} onChange={e => setFeedbackForm({ ...feedbackForm, comments: e.target.value })}
-                ></textarea>
-
                 <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
                   <input
                     type="checkbox"
@@ -459,6 +471,46 @@ export default function Project() {
                   />
                   Submit Anonymously
                 </label>
+
+                {!feedbackForm.is_anonymous && (
+                  <div className="space-y-3 animate-in fade-in slide-in-from-top-2">
+                    <input
+                      type="text" placeholder="Full Name"
+                      className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-[#ae2b2b]/20 outline-none"
+                      value={feedbackForm.name} onChange={e => setFeedbackForm({ ...feedbackForm, name: e.target.value })}
+                    />
+                    <div className="grid grid-cols-2 gap-3">
+                      <input
+                        type="tel" placeholder="Mobile Number"
+                        className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-[#ae2b2b]/20 outline-none"
+                        value={feedbackForm.mobile} onChange={e => setFeedbackForm({ ...feedbackForm, mobile: e.target.value })}
+                      />
+                      <input
+                        type="number" placeholder="Age"
+                        className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-[#ae2b2b]/20 outline-none"
+                        value={feedbackForm.age} onChange={e => setFeedbackForm({ ...feedbackForm, age: e.target.value })}
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <input
+                        type="email" placeholder="Email Address"
+                        className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-[#ae2b2b]/20 outline-none"
+                        value={feedbackForm.email} onChange={e => setFeedbackForm({ ...feedbackForm, email: e.target.value })}
+                      />
+                      <input
+                        type="text" placeholder="City"
+                        className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-[#ae2b2b]/20 outline-none"
+                        value={feedbackForm.city} onChange={e => setFeedbackForm({ ...feedbackForm, city: e.target.value })}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                <textarea
+                  placeholder="Your comments or suggestions..." required rows="4"
+                  className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-[#ae2b2b]/20 outline-none"
+                  value={feedbackForm.comments} onChange={e => setFeedbackForm({ ...feedbackForm, comments: e.target.value })}
+                ></textarea>
 
                 <Button type="submit" disabled={submitting} className="w-full bg-[#ae2b2b] hover:bg-[#912323]">
                   {submitting ? "Submitting..." : "Submit Feedback"}
