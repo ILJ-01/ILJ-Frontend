@@ -763,16 +763,16 @@ export default function VolunteerForm() {
                             )}
 
                             {/* Conditional Pathshala Question */}
-                            {(["Inhouse Pathshala and Home Schooling", "Pathshala & Educational Activities"].includes(form.watch("volunteeringPreference1")) ||
-                                ["Inhouse Pathshala and Home Schooling", "Pathshala & Educational Activities"].includes(form.watch("volunteeringPreference2")) ||
-                                ["Inhouse Pathshala and Home Schooling", "Pathshala & Educational Activities"].includes(form.watch("volunteeringPreference3"))) && (
+                            {(form.watch("volunteeringPreference1") === "Inhouse Pathshala and Home Schooling" ||
+                                form.watch("volunteeringPreference2") === "Inhouse Pathshala and Home Schooling" ||
+                                form.watch("volunteeringPreference3") === "Inhouse Pathshala and Home Schooling") && (
                                     <FormField
                                         control={form.control}
                                         name="pathshalaRole"
                                         render={({ field }) => (
                                             <FormItem className="animate-in fade-in slide-in-from-top-4 duration-500 bg-red-50 p-4 rounded-lg border border-red-100">
                                                 <FormLabel className="text-lg font-medium text-[#ae2b2b]">
-                                                    Preferred Area for Pathshala / Home Schooling?
+                                                    Preferred Area for Inhouse Pathshala and Home Schooling?
                                                 </FormLabel>
                                                 <FormControl>
                                                     <RadioGroup

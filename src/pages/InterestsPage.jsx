@@ -67,6 +67,13 @@ const interests = [
         description: "Supporting initiatives related to Pathshala such as sanskaar library, teaching assistance, activity planning, or student engagement.",
         icon: School,
         color: "bg-teal-50 text-teal-600 border-teal-100"
+    },
+    {
+        title: "Inhouse Pathshala and Home Schooling",
+        manager: "Jainam Mehta",
+        description: "Religious and academic teaching - virtually or in person. This initiative will eventually evolve into a comprehensive home schooling model.",
+        icon: School,
+        color: "bg-pink-50 text-pink-600 border-pink-100"
     }
 ];
 
