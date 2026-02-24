@@ -15,6 +15,7 @@ export default function AdminTasks() {
     const [showAssigneeDropdown, setShowAssigneeDropdown] = useState(false);
     const [selectedTaskForFeedback, setSelectedTaskForFeedback] = useState(null);
     const [creating, setCreating] = useState(false);
+    const [expandedTaskId, setExpandedTaskId] = useState(null);
 
     const [formData, setFormData] = useState({
         title: '', description: '', project_id: '', assignee_id: '', deadline: ''
@@ -164,58 +165,73 @@ export default function AdminTasks() {
                 <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
                     <div className="divide-y divide-gray-100">
                         {tasks.filter(t => showArchived ? t.status === 'archived' : t.status !== 'archived').map(task => (
-                            <div key={task.id} className={`p-4 hover:bg-gray-50 flex items-center justify-between group ${task.status === 'archived' ? 'bg-gray-50/50' : ''}`}>
-                                <div className="flex-1 min-w-0 pr-4">
-                                    <div className="flex items-center gap-2 mb-1">
-                                        <span className={`text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded border
+                            <div key={task.id} className="border-b border-gray-100 last:border-b-0">
+                                <div
+                                    onClick={() => setExpandedTaskId(expandedTaskId === task.id ? null : task.id)}
+                                    className={`p-4 hover:bg-gray-50 flex items-center justify-between group cursor-pointer transition-colors ${task.status === 'archived' ? 'bg-gray-50/50' : ''}`}>
+                                    <div className="flex-1 min-w-0 pr-4">
+                                        <div className="flex items-center gap-2 mb-1">
+                                            <span className={`text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded border
                                             ${task.status === 'completed' ? 'bg-green-50 text-green-700 border-green-200' :
-                                                task.status === 'archived' ? 'bg-gray-100 text-gray-700 border-gray-200' :
-                                                    'bg-[#ae2b2b]/5 text-[#ae2b2b] border-[#ae2b2b]/20'}`}>
-                                            {task.status}
-                                        </span>
-                                        {task.project && <span className="text-xs text-gray-500">• {task.project.title}</span>}
-                                    </div>
-                                    <h3 className={`font-bold text-gray-900 truncate ${task.status === 'archived' ? 'text-gray-500' : ''}`}>{task.title}</h3>
-                                    <div className="flex items-center gap-4 mt-1 text-sm text-gray-500">
-                                        <div className="flex items-center gap-1">
-                                            <User className="h-3 w-3" />
-                                            <span className="truncate max-w-[150px]">
-                                                {task.assignee ? `${task.assignee.first_name} ${task.assignee.last_name}` : 'Unassigned'}
+                                                    task.status === 'archived' ? 'bg-gray-100 text-gray-700 border-gray-200' :
+                                                        'bg-[#ae2b2b]/5 text-[#ae2b2b] border-[#ae2b2b]/20'}`}>
+                                                {task.status}
                                             </span>
+                                            {task.project && <span className="text-xs text-gray-500">• {task.project.title}</span>}
                                         </div>
-                                        {task.deadline && (
-                                            <div className="flex items-center gap-1 text-red-400">
-                                                <Clock className="h-3 w-3" />
-                                                <span>{new Date(task.deadline).toLocaleDateString()}</span>
+                                        <h3 className={`font-bold text-gray-900 truncate ${task.status === 'archived' ? 'text-gray-500' : ''}`}>{task.title}</h3>
+                                        <div className="flex items-center gap-4 mt-1 text-sm text-gray-500">
+                                            <div className="flex items-center gap-1">
+                                                <User className="h-3 w-3" />
+                                                <span className="truncate max-w-[150px]">
+                                                    {task.assignee ? `${task.assignee.first_name} ${task.assignee.last_name}` : 'Unassigned'}
+                                                </span>
                                             </div>
+                                            {task.deadline && (
+                                                <div className="flex items-center gap-1 text-red-400">
+                                                    <Clock className="h-3 w-3" />
+                                                    <span>{new Date(task.deadline).toLocaleDateString()}</span>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <button
+                                            onClick={(e) => { e.stopPropagation(); handleArchive(task.id, task.status); }}
+                                            className="text-gray-400 hover:text-amber-600 p-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                                            title={task.status === 'archived' ? "Unarchive" : "Archive"}
+                                        >
+                                            <Archive className="h-5 w-5" />
+                                        </button>
+                                        <button onClick={(e) => { e.stopPropagation(); handleDelete(task.id); }} className="text-gray-400 hover:text-red-500 p-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <Trash2 className="h-5 w-5" />
+                                        </button>
+                                        {task.status === 'completed' && (
+                                            <button
+                                                onClick={(e) => { e.stopPropagation(); setSelectedTaskForFeedback(task); }}
+                                                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all shadow-sm
+                                                ${task.rating
+                                                        ? 'bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100'
+                                                        : 'bg-blue-600 text-white hover:bg-blue-700'
+                                                    }`}
+                                            >
+                                                <Star className={`h-3.5 w-3.5 ${task.rating ? 'fill-amber-500' : ''}`} />
+                                                {task.rating ? `${task.rating} Stars` : 'Add Feedback'}
+                                            </button>
                                         )}
                                     </div>
                                 </div>
-                                <div className="flex items-center gap-2">
-                                    <button
-                                        onClick={() => handleArchive(task.id, task.status)}
-                                        className="text-gray-400 hover:text-amber-600 p-2 opacity-0 group-hover:opacity-100 transition-opacity"
-                                        title={task.status === 'archived' ? "Unarchive" : "Archive"}
-                                    >
-                                        <Archive className="h-5 w-5" />
-                                    </button>
-                                    <button onClick={() => handleDelete(task.id)} className="text-gray-400 hover:text-red-500 p-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <Trash2 className="h-5 w-5" />
-                                    </button>
-                                    {task.status === 'completed' && (
-                                        <button
-                                            onClick={() => setSelectedTaskForFeedback(task)}
-                                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all shadow-sm
-                                                ${task.rating
-                                                    ? 'bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100'
-                                                    : 'bg-blue-600 text-white hover:bg-blue-700'
-                                                }`}
-                                        >
-                                            <Star className={`h-3.5 w-3.5 ${task.rating ? 'fill-amber-500' : ''}`} />
-                                            {task.rating ? `${task.rating} Stars` : 'Add Feedback'}
-                                        </button>
-                                    )}
-                                </div>
+                                {expandedTaskId === task.id && (
+                                    <div className="px-4 pb-4 animate-in slide-in-from-top-2 duration-300">
+                                        <div className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm relative overflow-hidden">
+                                            <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#ae2b2b]"></div>
+                                            <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Task Description</h4>
+                                            <p className="text-sm text-gray-700 whitespace-pre-line leading-relaxed">
+                                                {task.description || "No description provided by the assigner."}
+                                            </p>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         ))}
                         {tasks.length === 0 && <p className="text-gray-500 text-center py-8">No tasks found.</p>}

@@ -78,7 +78,8 @@ const AdminDashboard = () => {
             setVolunteers(data || []);
 
             const districts = [...new Set(data.map(v => v.district).filter(Boolean).map(d => d.trim()))].sort();
-            const preferences = [...new Set(data.map(v => v.volunteering_preference1).filter(Boolean))].sort();
+            const allPrefs = data.flatMap(v => [v.volunteering_preference1, v.volunteering_preference2, v.volunteering_preference3]).filter(Boolean);
+            const preferences = [...new Set(allPrefs)].sort();
             const allSkills = data.map(v => v.skills).filter(Boolean).flatMap(skillStr => skillStr.split(',').map(s => s.trim()));
             const uniqueSkills = [...new Set(allSkills)].sort();
 
@@ -121,29 +122,31 @@ const AdminDashboard = () => {
             const XLSX = await import("xlsx");
             const workbook = XLSX.utils.book_new();
 
+            const removeId = (data) => data?.map(({ id, ...rest }) => rest) || [];
+
             // 1. Volunteers
             const { data: volData } = await supabase.from('volunteers').select('*').order('created_at');
-            const volSheet = XLSX.utils.json_to_sheet(volData || []);
+            const volSheet = XLSX.utils.json_to_sheet(removeId(volData));
             XLSX.utils.book_append_sheet(workbook, volSheet, "Volunteers");
 
             // 2. Projects
             const { data: projData } = await supabase.from('projects').select('*').order('created_at');
-            const projSheet = XLSX.utils.json_to_sheet(projData || []);
+            const projSheet = XLSX.utils.json_to_sheet(removeId(projData));
             XLSX.utils.book_append_sheet(workbook, projSheet, "Projects");
 
             // 3. Events
             const { data: eventData } = await supabase.from('events').select('*').order('created_at');
-            const eventSheet = XLSX.utils.json_to_sheet(eventData || []);
+            const eventSheet = XLSX.utils.json_to_sheet(removeId(eventData));
             XLSX.utils.book_append_sheet(workbook, eventSheet, "Events");
 
             // 4. Tasks
             const { data: taskData } = await supabase.from('tasks').select('*').order('created_at');
-            const taskSheet = XLSX.utils.json_to_sheet(taskData || []);
+            const taskSheet = XLSX.utils.json_to_sheet(removeId(taskData));
             XLSX.utils.book_append_sheet(workbook, taskSheet, "Tasks");
 
             // 5. Timesheets
             const { data: tsData } = await supabase.from('timesheets').select('*').order('created_at');
-            const tsSheet = XLSX.utils.json_to_sheet(tsData || []);
+            const tsSheet = XLSX.utils.json_to_sheet(removeId(tsData));
             XLSX.utils.book_append_sheet(workbook, tsSheet, "Timesheets");
 
 
@@ -162,7 +165,8 @@ const AdminDashboard = () => {
                 String(val || '').toLowerCase().includes(searchLower)
             );
             const matchesDistrict = !filters.district || (volunteer.district || '').includes(filters.district);
-            const matchesPreference = !filters.volunteering_preference1 || volunteer.volunteering_preference1 === filters.volunteering_preference1;
+            const matchesPreference = !filters.volunteering_preference1 ||
+                [volunteer.volunteering_preference1, volunteer.volunteering_preference2, volunteer.volunteering_preference3].includes(filters.volunteering_preference1);
             const matchesSkill = !filters.skills || (volunteer.skills || '').toLowerCase().includes(filters.skills.toLowerCase());
             return matchesSearch && matchesDistrict && matchesSkill && matchesPreference;
         });
@@ -245,7 +249,7 @@ const AdminDashboard = () => {
                                 { id: 'projects', label: 'Projects', icon: LayoutGrid },
                                 { id: 'events', label: 'Events', icon: Calendar },
                                 { id: 'tasks', label: 'Tasks', icon: CheckSquare },
-                                { id: 'timesheets', label: 'Approvals', icon: Clock },
+                                { id: 'timesheets', label: 'Time Sheets', icon: Clock },
                                 { id: 'appraisals', label: 'Appraisals', icon: TrendingUp },
                                 { id: 'inquiries', label: 'Inquiries', icon: Mail },
                             ].map((item) => {

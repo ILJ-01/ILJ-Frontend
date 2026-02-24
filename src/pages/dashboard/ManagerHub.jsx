@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/lib/supabase";
 import {
-    
+
     Briefcase, CheckSquare, Clock, Users, Award,
     Plus, Check, X, Search, ChevronRight, Trash2, Archive, Star, MessageSquare,
     FileSpreadsheet, RotateCcw, History
@@ -313,31 +313,23 @@ export default function ManagerHub() {
     };
 
     const handleExportTimesheets = () => {
-        const dataToExport = [...pendingTimesheets, ...historyTimesheets].map(t => ({
-            Date: new Date(t.date_worked).toLocaleDateString(),
-            Volunteer: `${t.volunteer?.first_name} ${t.volunteer?.last_name}`,
-            ILJ_ID: t.volunteer?.ilj_id,
-            Project: t.project?.title,
-            Role: t.role,
-            Hours: t.hours,
-            Work_Mode: t.work_mode,
-            Description: t.description,
-            Status: t.status,
-            Volunteer_ID: t.volunteer_id, // Requirement: Capture IDs
-            Project_ID: t.project_id
-        }));
+        const dataToExport = [...pendingTimesheets, ...historyTimesheets].map(t => {
+            const { id, volunteer, project, ...rest } = t;
+            return {
+                ...rest,
+                Volunteer_Name: `${volunteer?.first_name || ''} ${volunteer?.last_name || ''}`.trim(),
+                ILJ_ID: volunteer?.ilj_id,
+                Project_Name: project?.title
+            };
+        });
         exportToExcel(dataToExport, `Timesheets_Report_${new Date().toLocaleDateString().replace(/\//g, '-')}`);
     };
 
     const handleExportTeam = () => {
-        const dataToExport = teamMembers.map(m => ({
-            First_Name: m.first_name,
-            Last_Name: m.last_name,
-            ILJ_ID: m.ilj_id,
-            Email: m.email,
-            Designation: m.designation,
-            ID: m.id
-        }));
+        const dataToExport = teamMembers.map(m => {
+            const { id, ...rest } = m;
+            return rest;
+        });
         exportToExcel(dataToExport, `Team_List_${new Date().toLocaleDateString().replace(/\//g, '-')}`);
     };
 

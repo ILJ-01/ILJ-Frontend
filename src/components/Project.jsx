@@ -320,8 +320,8 @@ export default function Project() {
         </div>
 
         {/* Right Column: Actions */}
-        <div className="space-y-6">
-          <div className="bg-white rounded-2xl p-6 shadow-md border-t-4 border-[#ae2b2b] sticky top-24">
+        <div className="space-y-6 sticky top-24 h-fit">
+          <div className="bg-white rounded-2xl p-6 shadow-md border-t-4 border-[#ae2b2b]">
             <h3 className="text-lg font-bold text-gray-900 mb-4 font-serif">Join the Mission</h3>
 
             {!isLoggedIn ? (

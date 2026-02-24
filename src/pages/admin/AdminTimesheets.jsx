@@ -51,22 +51,58 @@ export default function AdminTimesheets() {
         setLoading(false);
     };
 
-    const exportToExcel = () => {
-        const dataToExport = entries.map(t => ({
-            Date: new Date(t.date_worked).toLocaleDateString(),
-            Volunteer: `${t.volunteer?.first_name} ${t.volunteer?.last_name}`,
-            ILJ_ID: t.volunteer?.ilj_id,
-            Project: t.project?.title,
-            Role: t.role,
-            Hours: t.hours,
-            Work_Mode: t.work_mode,
-            Description: t.description,
-            Status: t.status,
-            Volunteer_ID: t.volunteer_id,
-            Project_ID: t.project_id
-        }));
+    const getAggregatedData = () => {
+        const aggregated = {};
+        entries.forEach(entry => {
+            const volId = entry.volunteer_id;
+            if (!aggregated[volId]) {
+                aggregated[volId] = {
+                    id: volId,
+                    volunteer: entry.volunteer,
+                    total_hrs: 0,
+                    approved_hrs: 0,
+                    pending_hrs: 0
+                };
+            }
+            const hrs = Number(entry.hours) || 0;
+            aggregated[volId].total_hrs += hrs;
+            if (entry.status === 'approved') {
+                aggregated[volId].approved_hrs += hrs;
+            } else if (entry.status === 'pending') {
+                aggregated[volId].pending_hrs += hrs;
+            }
+        });
+        return Object.values(aggregated).sort((a, b) => b.total_hrs - a.total_hrs);
+    };
 
-        const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+    const exportToExcel = () => {
+        let worksheet;
+        if (filter === 'all') {
+            const dataToExport = getAggregatedData().map(agg => ({
+                "ILJ Code": agg.volunteer?.ilj_id || 'N/A',
+                "Name": `${agg.volunteer?.first_name || ''} ${agg.volunteer?.last_name || ''}`.trim(),
+                "Total Hrs": agg.total_hrs,
+                "Approved Hrs": agg.approved_hrs,
+                "Pending Hrs": agg.pending_hrs
+            }));
+            worksheet = XLSX.utils.json_to_sheet(dataToExport);
+        } else {
+            const dataToExport = entries.map(t => ({
+                Date: new Date(t.date_worked).toLocaleDateString(),
+                Volunteer: `${t.volunteer?.first_name} ${t.volunteer?.last_name}`,
+                ILJ_ID: t.volunteer?.ilj_id,
+                Project: t.project?.title,
+                Role: t.role,
+                Hours: t.hours,
+                Work_Mode: t.work_mode,
+                Description: t.description,
+                Status: t.status,
+                Volunteer_ID: t.volunteer_id,
+                Project_ID: t.project_id
+            }));
+            worksheet = XLSX.utils.json_to_sheet(dataToExport);
+        }
+
         const workbook = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(workbook, worksheet, "Timesheets");
         XLSX.writeFile(workbook, `Admin_Timesheets_${new Date().toLocaleDateString().replace(/\//g, '-')}.xlsx`);
@@ -149,6 +185,41 @@ export default function AdminTimesheets() {
                         <div className="text-center py-12">
                             <Clock className="h-12 w-12 text-gray-300 mx-auto mb-3" />
                             <p className="text-gray-500">No entries found for this filter.</p>
+                        </div>
+                    ) : filter === 'all' ? (
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-left text-sm">
+                                <thead className="bg-gray-50 text-gray-500 font-medium border-b border-gray-100">
+                                    <tr>
+                                        <th className="px-6 py-4">ILJ Code</th>
+                                        <th className="px-6 py-4">Name</th>
+                                        <th className="px-6 py-4">Total Hrs</th>
+                                        <th className="px-6 py-4">Approved Hrs</th>
+                                        <th className="px-6 py-4">Pending Hrs</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-gray-100">
+                                    {getAggregatedData().map(agg => (
+                                        <tr key={agg.id} className="hover:bg-gray-50 transition-colors">
+                                            <td className="px-6 py-4 text-gray-500 font-mono text-xs">
+                                                {agg.volunteer?.ilj_id || 'N/A'}
+                                            </td>
+                                            <td className="px-6 py-4 font-bold text-gray-900">
+                                                {agg.volunteer?.first_name} {agg.volunteer?.last_name}
+                                            </td>
+                                            <td className="px-6 py-4 font-bold text-[#ae2b2b]">
+                                                {agg.total_hrs}
+                                            </td>
+                                            <td className="px-6 py-4 text-green-600 font-medium">
+                                                {agg.approved_hrs}
+                                            </td>
+                                            <td className="px-6 py-4 text-amber-600 font-medium">
+                                                {agg.pending_hrs}
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
                         </div>
                     ) : (
                         <div className="overflow-x-auto">
