@@ -88,7 +88,7 @@ const volunteeringOptions = [
     { label: "Photography & Videography", icon: Camera },
     { label: "Event Planning & Management", icon: LucideCalendar },
     { label: "Marketing & Outreach", icon: Megaphone },
-    { label: "Marketing & Outreach", icon: Megaphone },
+    { label: "Pathshala & Educational Activities", icon: School },
     { label: "Inhouse Pathshala and Home Schooling", icon: School },
     { label: "IT & Technical Support", icon: Code },
 ];
@@ -763,9 +763,9 @@ export default function VolunteerForm() {
                             )}
 
                             {/* Conditional Pathshala Question */}
-                            {(form.watch("volunteeringPreference1") === "Inhouse Pathshala and Home Schooling" ||
-                                form.watch("volunteeringPreference2") === "Inhouse Pathshala and Home Schooling" ||
-                                form.watch("volunteeringPreference3") === "Inhouse Pathshala and Home Schooling") && (
+                            {(["Inhouse Pathshala and Home Schooling", "Pathshala & Educational Activities"].includes(form.watch("volunteeringPreference1")) ||
+                                ["Inhouse Pathshala and Home Schooling", "Pathshala & Educational Activities"].includes(form.watch("volunteeringPreference2")) ||
+                                ["Inhouse Pathshala and Home Schooling", "Pathshala & Educational Activities"].includes(form.watch("volunteeringPreference3"))) && (
                                     <FormField
                                         control={form.control}
                                         name="pathshalaRole"

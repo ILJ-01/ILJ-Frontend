@@ -276,6 +276,9 @@ export default function Profile() {
                 { icon: GraduationCap, label: "Qualification", value: user.qualification },
                 { icon: Sparkles, label: "Specialization", value: user.specialization },
                 { icon: Briefcase, label: "Occupation", value: user.occupation === 'Other' ? user.occupation_other : user.occupation },
+                { icon: Award, label: "Dharmik Studies", value: user.dharmik_studies },
+                { icon: User, label: "Sangh Name", value: user.sangh_name },
+                { icon: User, label: "Kalyan Mitra", value: user.kalyan_mitra },
             ]
         },
         {

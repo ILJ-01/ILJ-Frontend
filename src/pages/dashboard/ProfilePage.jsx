@@ -158,6 +158,7 @@ export default function ProfilePage() {
         "Event Planning & Management",
         "Marketing & Outreach",
         "Pathshala & Educational Activities",
+        "Inhouse Pathshala and Home Schooling",
         "IT & Technical Support"
     ];
 
@@ -274,6 +275,7 @@ export default function ProfilePage() {
                 kalyan_mitra: user.kalyan_mitra || "",
                 time_commitment: user.time_commitment || "",
                 rank: user.rank || "Intern",
+                additional_areas: user.additional_areas || [],
             });
         }
     }, [user]);
@@ -594,6 +596,40 @@ export default function ProfilePage() {
                                             <div className="flex flex-wrap gap-2">
                                                 {formData.skills?.split(',').filter(Boolean).map((s, i) => <span key={i} className="px-3 py-1 bg-red-50 text-[#ae2b2b] border border-red-100 rounded-full text-sm font-medium shadow-sm">{s.trim()}</span>)}
                                                 {!formData.skills && <span className="text-gray-400 italic text-sm">No skills listed</span>}
+                                            </div>
+                                        )}
+                                    </div>
+                                    <div className="h-px bg-gray-100"></div>
+                                    <div>
+                                        <p className="text-sm font-medium text-gray-500 mb-2 uppercase">Additional Focus Areas</p>
+                                        {isEditing ? (
+                                            <div className="space-y-2">
+                                                {["Building Community & Government Relations", "Defending Jainism On-field engagement", "Defending Jainism on Social media & digital platforms"].map(area => (
+                                                    <label key={area} className="flex items-center space-x-2 text-sm text-gray-700">
+                                                        <input
+                                                            type="checkbox"
+                                                            className="rounded border-gray-300 text-[#ae2b2b] focus:ring-[#ae2b2b]"
+                                                            checked={formData.additional_areas?.includes(area) || false}
+                                                            onChange={(e) => {
+                                                                const checked = e.target.checked;
+                                                                let newAreas = [...(formData.additional_areas || [])];
+                                                                if (checked) {
+                                                                    if (!newAreas.includes(area)) newAreas.push(area);
+                                                                } else {
+                                                                    newAreas = newAreas.filter(a => a !== area);
+                                                                }
+                                                                handleUpdate('additional_areas', newAreas);
+                                                            }}
+                                                        />
+                                                        <span>{area}</span>
+                                                    </label>
+                                                ))}
+                                            </div>
+                                        ) : (
+                                            <div className="flex flex-wrap gap-2">
+                                                {formData.additional_areas?.length > 0 ? formData.additional_areas.map((area, i) => (
+                                                    <span key={i} className="px-3 py-1 bg-purple-50 text-purple-700 border border-purple-100 rounded-full text-sm font-medium shadow-sm">{area}</span>
+                                                )) : <span className="text-gray-400 italic text-sm">No additional areas selected</span>}
                                             </div>
                                         )}
                                     </div>
