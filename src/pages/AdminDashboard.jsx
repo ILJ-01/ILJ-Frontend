@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '../lib/supabase';
+import { supabase, supabaseUrl } from '../lib/supabase';
 import {
     Search, Filter, LogOut, MapPin, Mail, Phone,
     X, User, Briefcase, Heart, BookOpen, Plus, LayoutGrid, Users,
@@ -701,7 +701,7 @@ const AdminDashboard = () => {
                                                             if (confirmAssign) {
                                                                 try {
                                                                     const mitraName = `${v.first_name} ${v.last_name}`;
-                                                                    const response = await fetch(`https://pdcgcqsgzupoyzklvoju.supabase.co/functions/v1/assign-kalyan-mitra`, {
+                                                                    const response = await fetch(`${supabaseUrl}/functions/v1/assign-kalyan-mitra`, {
                                                                         method: 'POST',
                                                                         headers: { 'Content-Type': 'application/json' },
                                                                         body: JSON.stringify({
