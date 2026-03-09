@@ -273,7 +273,7 @@ export default function EventRegistrationPage() {
 
                             <div className="bg-amber-50 p-6 rounded-xl border border-amber-200 shadow-sm mt-8">
                                 <label className="text-sm font-semibold text-amber-900 flex items-center gap-2 mb-2">
-                                    <Upload className="h-5 w-5 text-amber-600" /> Payment Screenshot <span className="text-amber-700 font-normal">(Optional)</span>
+                                    <Upload className="h-5 w-5 text-amber-600" /> Payment Screenshot <span className="text-amber-700 font-normal"></span>
                                 </label>
                                 <p className="text-sm text-amber-700 mb-4 inline-block">If required by the organizers, please upload a screenshot of your successful transaction.</p>
                                 <input
