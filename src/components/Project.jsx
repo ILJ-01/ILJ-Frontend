@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { Link, useParams } from "react-router-dom";
 import { useNavigate } from "react-router";
 import projects from "../data/projects-full.json";
@@ -25,6 +25,7 @@ import {
   CardContent,
   CardFooter,
 } from "@/components/ui/card";
+import Autoplay from "embla-carousel-autoplay";
 
 const projectThumbs = import.meta.glob(
   "../assets/projects/*.{png,jpg,jpeg,webp}",
@@ -323,7 +324,7 @@ export default function Project() {
         {gallery.length > 0 && (
           <>
             <h2 className="mt-16 mb-6 text-2xl font-bold text-[#ae2b2b]">Project Gallery</h2>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
               {gallery.map((img, i) => (
                 <img key={i} src={img} className="rounded-xl object-cover h-48 w-full shadow hover:scale-105 transition duration-300" alt="Gallery" />
               ))}
@@ -512,24 +513,31 @@ export default function Project() {
       {/* Database Gallery & Testimonials */}
       <div className="max-w-7xl mx-auto px-6 mt-12 grid grid-cols-1 gap-12">
         {dbGallery.length > 0 && (
-          <div className="w-full relative px-6 md:px-12">
+          <div className="w-full relative px-2 sm:px-6 md:px-12">
             <h2 className="text-2xl font-bold text-gray-900 mb-6 font-serif border-b pb-4">Project Gallery</h2>
             <Carousel
               opts={{
                 align: "start",
                 loop: true,
               }}
+              plugins={[
+                Autoplay({
+                  delay: 3000,
+                  stopOnInteraction: false,
+                  stopOnMouseEnter: true,
+                }),
+              ]}
               className="w-full"
             >
-              <CarouselContent className="-ml-4">
+              <CarouselContent className="-ml-2 sm:-ml-4">
                 {dbGallery.map((img, i) => (
-                  <CarouselItem key={i} className="pl-4 md:basis-1/2 lg:basis-1/3 xl:basis-1/4">
+                  <CarouselItem key={i} className="pl-2 sm:pl-4 basis-full sm:basis-1/2 lg:basis-1/3 xl:basis-1/4">
                     <Dialog>
                       <DialogTrigger asChild>
                         <div className="p-1 cursor-pointer overflow-hidden rounded-xl">
                           <img
                             src={img}
-                            className="rounded-xl object-cover h-48 w-full shadow hover:scale-105 transition duration-300"
+                            className="rounded-xl object-cover h-48 sm:h-48 w-full shadow hover:scale-105 transition duration-300"
                             alt={`Gallery ${i}`}
                           />
                         </div>
@@ -553,15 +561,15 @@ export default function Project() {
         )}
 
         {dbTestimonials.length > 0 && (
-          <div className="w-full px-6 md:px-12 mt-10">
+          <div className="w-full px-2 sm:px-6 md:px-12 mt-10">
             <h2 className="text-2xl font-bold text-gray-900 mb-6 font-serif border-b pb-2">Voices of Impact</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {dbTestimonials.map(t => (
-                <Card key={t.id} className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between bg-white rounded-xl">
-                  <CardContent className="pt-8">
-                    <p className="text-gray-700 leading-relaxed font-serif text-lg">"{t.comments}"</p>
+                <Card key={t.id} className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between bg-white rounded-xl overflow-hidden">
+                  <CardContent className="pt-8 px-4 sm:px-6">
+                    <p className="text-gray-700 leading-relaxed font-serif text-base sm:text-lg break-words">"{t.comments}"</p>
                   </CardContent>
-                  <CardFooter className="pt-0 pb-6 mt-4">
+                  <CardFooter className="pt-0 pb-6 mt-4 px-4 sm:px-6">
                     <div className="flex flex-col w-full pt-4 border-t border-gray-50">
                       <span className="text-sm font-bold text-gray-900 tracking-tight">~ {t.name || 'Community Member'}</span>
                       {t.city && <span className="text-xs text-gray-500 mt-0.5">{t.city}</span>}
