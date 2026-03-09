@@ -1,9 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 
-// Original Supabase URL (blocked by Jio ISP DNS poisoning — see: https://github.com/supabase/supabase/issues/43142)
-// const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://pdcgcqsgzupoyzklvoju.supabase.co';
-// Using Cloudflare Worker proxy to bypass DNS poisoning
-export const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://flat-term-59b8.mehtameet115.workers.dev';
+export const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://pdcgcqsgzupoyzklvoju.supabase.co';
 export const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBkY2djcXNnenVwb3l6a2x2b2p1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk0OTM0MDUsImV4cCI6MjA4NTA2OTQwNX0.Adh2epzvTt0jmif6x6FdJr0YphHtZ_spciyg9z1Et0s';
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);

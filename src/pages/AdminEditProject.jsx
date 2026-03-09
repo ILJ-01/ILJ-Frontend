@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import {
     ArrowLeft, Save, Search, User,
-    Check, X, Briefcase, Image, Hash, Upload, Cloud, Trash2, CheckCircle, XCircle
+    Check, X, Briefcase, Image, Hash, Upload, Cloud, Trash2, CheckCircle, XCircle, Pencil
 } from 'lucide-react';
 
 const AdminEditProject = () => {
@@ -12,6 +12,15 @@ const AdminEditProject = () => {
     const [loading, setLoading] = useState(false);
     const [fetching, setFetching] = useState(true);
     const [volunteers, setVolunteers] = useState([]);
+    const [galleryPhotos, setGalleryPhotos] = useState([]);
+    const [testimonials, setTestimonials] = useState([]);
+    const [newTestimonial, setNewTestimonial] = useState({ name: '', comments: '' });
+    const [eventRegistrations, setEventRegistrations] = useState([]);
+
+    // Testimonial Edit State
+    const [editingTestimonialId, setEditingTestimonialId] = useState(null);
+    const [editingTestimonialContent, setEditingTestimonialContent] = useState('');
+    const [editingTestimonialName, setEditingTestimonialName] = useState('');
 
     // Form State
     const [formData, setFormData] = useState({
@@ -19,7 +28,9 @@ const AdminEditProject = () => {
         title: '',
         description: '',
         status: 'upcoming',
-        banner_url: ''
+        banner_url: '',
+        next_event_date: '',
+        is_event_registration_enabled: false
     });
 
     const [bannerFile, setBannerFile] = useState(null);
@@ -76,7 +87,9 @@ const AdminEditProject = () => {
                 title: project.title,
                 description: project.description || '',
                 status: project.status || 'upcoming',
-                banner_url: project.banner_url || ''
+                banner_url: project.banner_url || '',
+                next_event_date: project.next_event_date || '',
+                is_event_registration_enabled: project.is_event_registration_enabled || false
             });
 
             if (project.banner_url) {
@@ -112,6 +125,31 @@ const AdminEditProject = () => {
 
                 setSelectedVolunteers(approvedIds);
                 setPendingRequests(pending);
+            }
+
+            // 4. Get Project Photos
+            const { data: photos } = await supabase
+                .from('project_photos')
+                .select('*')
+                .eq('project_id', id);
+            if (photos) setGalleryPhotos(photos);
+
+            // 5. Get Project Feedback
+            const { data: feedback } = await supabase
+                .from('project_feedback')
+                .select('*')
+                .eq('project_id', id)
+                .order('created_at', { ascending: false });
+            if (feedback) setTestimonials(feedback);
+
+            // 6. Get Event Registrations (for PRJ-002 mainly)
+            if (project.project_code === 'PRJ-002') {
+                const { data: registrations } = await supabase
+                    .from('event_registrations')
+                    .select('*')
+                    .eq('project_id', id)
+                    .order('created_at', { ascending: false });
+                if (registrations) setEventRegistrations(registrations);
             }
 
         } catch (error) {
@@ -180,6 +218,99 @@ const AdminEditProject = () => {
         }
     }
 
+    const handleAddPhotos = async (e) => {
+        const files = Array.from(e.target.files);
+        if (files.length === 0) return;
+        setLoading(true);
+        try {
+            const newPhotos = [];
+            for (const file of files) {
+                const fileExt = file.name.split('.').pop();
+                const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+                const { error: uploadError } = await supabase.storage.from('project-gallery').upload(fileName, file, { upsert: false });
+                if (uploadError) throw uploadError;
+
+                const { data: { publicUrl } } = supabase.storage.from('project-gallery').getPublicUrl(fileName);
+                const { data, error } = await supabase.from('project_photos').insert({ project_id: id, photo_url: publicUrl }).select().single();
+                if (error) throw error;
+                newPhotos.push(data);
+            }
+            setGalleryPhotos(prev => [...prev, ...newPhotos]);
+        } catch (error) {
+            console.error("Upload Error:", error);
+            alert('Failed to upload one or more photos');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleDeletePhoto = async (photoId) => {
+        if (!window.confirm("Delete this photo?")) return;
+        try {
+            await supabase.from('project_photos').delete().eq('id', photoId);
+            setGalleryPhotos(prev => prev.filter(p => p.id !== photoId));
+        } catch (error) {
+            alert('Failed to delete photo');
+        }
+    };
+
+
+
+    const handleAddTestimonial = async () => {
+        if (!newTestimonial.name || !newTestimonial.comments) {
+            alert("Name and comments are required!");
+            return;
+        }
+        try {
+            const { data, error } = await supabase.from('project_feedback').insert({
+                project_id: id,
+                name: newTestimonial.name,
+                comments: newTestimonial.comments,
+                is_featured: true,
+                is_anonymous: false
+            }).select().single();
+            if (error) throw error;
+            setTestimonials(prev => [data, ...prev]);
+            setNewTestimonial({ name: '', comments: '' });
+            alert("Testimonial added!");
+        } catch (error) {
+            alert('Failed to add testimonial');
+        }
+    };
+
+    const handleDeleteTestimonial = async (feedbackId) => {
+        if (!window.confirm("Are you sure you want to completely delete this feedback?")) return;
+        try {
+            await supabase.from('project_feedback').delete().eq('id', feedbackId);
+            setTestimonials(prev => prev.filter(t => t.id !== feedbackId));
+        } catch (error) {
+            alert('Failed to delete testimonial');
+        }
+    };
+
+    const handleSaveEditTestimonial = async (feedbackId) => {
+        if (!editingTestimonialName || !editingTestimonialContent) {
+            alert('Name and comments cannot be empty.');
+            return;
+        }
+        try {
+            const { error } = await supabase.from('project_feedback').update({
+                name: editingTestimonialName,
+                comments: editingTestimonialContent
+            }).eq('id', feedbackId);
+
+            if (error) throw error;
+
+            setTestimonials(prev => prev.map(t =>
+                t.id === feedbackId ? { ...t, name: editingTestimonialName, comments: editingTestimonialContent } : t
+            ));
+            setEditingTestimonialId(null);
+        } catch (error) {
+            alert('Failed to update testimonial');
+        }
+    };
+
+
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -222,6 +353,8 @@ const AdminEditProject = () => {
                     description: formData.description,
                     status: formData.status,
                     banner_url: finalBannerUrl,
+                    next_event_date: formData.next_event_date,
+                    is_event_registration_enabled: formData.is_event_registration_enabled,
                     manager_id: selectedManager.id
                 })
                 .eq('id', id);
@@ -374,6 +507,34 @@ const AdminEditProject = () => {
                                     </div>
                                 </div>
 
+                                {formData.project_code === 'PRJ-002' && (
+                                    <div className="space-y-4">
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">Next Event Date (e.g. 24th March, 4PM)</label>
+                                            <input
+                                                type="text"
+                                                name="next_event_date"
+                                                value={formData.next_event_date}
+                                                onChange={handleInputChange}
+                                                className="w-full px-4 py-2.5 border border-amber-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:outline-none bg-amber-50"
+                                                placeholder="Enter Next Event Date"
+                                            />
+                                        </div>
+                                        <div className="flex items-center gap-3 bg-amber-50 border border-amber-200 p-3 rounded-lg">
+                                            <input
+                                                type="checkbox"
+                                                id="enable_registrations"
+                                                checked={formData.is_event_registration_enabled}
+                                                onChange={(e) => setFormData(prev => ({ ...prev, is_event_registration_enabled: e.target.checked }))}
+                                                className="w-5 h-5 text-amber-600 border-gray-300 rounded focus:ring-amber-500"
+                                            />
+                                            <label htmlFor="enable_registrations" className="text-sm font-medium text-amber-900 cursor-pointer">
+                                                Enable Upcoming Event Registrations
+                                            </label>
+                                        </div>
+                                    </div>
+                                )}
+
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Project Title</label>
                                     <input
@@ -493,6 +654,155 @@ const AdminEditProject = () => {
                                 </div>
                             )}
                         </div>
+
+                        {/* 3. Project Gallery Section */}
+                        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                            <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                                <Image className="h-5 w-5 text-amber-600" /> Photo Gallery
+                            </h2>
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                                {galleryPhotos.map(photo => (
+                                    <div key={photo.id} className="relative group">
+                                        <img src={photo.photo_url} alt="Gallery item" className="w-full h-32 object-cover rounded-md border border-gray-200" />
+                                        <button
+                                            type="button"
+                                            onClick={() => handleDeletePhoto(photo.id)}
+                                            className="absolute top-1 right-1 bg-red-600 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                                        >
+                                            <X className="w-4 h-4" />
+                                        </button>
+                                    </div>
+                                ))}
+                                <label className="w-full h-32 flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-md cursor-pointer hover:bg-gray-50 text-gray-500 hover:text-amber-600 transition">
+                                    <Upload className="w-6 h-6 mb-2" />
+                                    <span className="text-xs font-semibold">Add Photos</span>
+                                    <input type="file" multiple className="hidden" accept="image/*" onChange={handleAddPhotos} />
+                                </label>
+                            </div>
+                        </div>
+
+                        {/* 4. Testimonials & Feedback Section */}
+                        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                            <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                                <Briefcase className="h-5 w-5 text-amber-600" /> Testimonials & Public Feedback
+                            </h2>
+
+                            <div className="bg-amber-50/50 p-5 rounded-xl border border-amber-100 mb-8">
+                                <h3 className="text-sm font-bold text-amber-900 mb-3 uppercase tracking-wider">Add Custom Testimonial</h3>
+                                <div className="mb-4">
+                                    <input type="text" placeholder="Contributor Name *" value={newTestimonial.name} onChange={e => setNewTestimonial({ ...newTestimonial, name: e.target.value })} className="w-full p-2.5 border border-amber-200 rounded-lg focus:ring-2 focus:ring-amber-500 bg-white outline-none text-sm" />
+                                </div>
+                                <textarea placeholder="Inspiring quote or comments... *" value={newTestimonial.comments} onChange={e => setNewTestimonial({ ...newTestimonial, comments: e.target.value })} className="w-full p-2.5 border border-amber-200 rounded-lg focus:ring-2 focus:ring-amber-500 bg-white outline-none text-sm resize-none mb-4 shadow-inner" rows="3"></textarea>
+                                <div className="flex justify-end">
+                                    <button type="button" onClick={handleAddTestimonial} className="px-5 py-2.5 bg-amber-600 hover:bg-amber-700 text-white font-semibold rounded-lg text-sm shadow-md transition-all flex items-center gap-2">
+                                        <CheckCircle className="w-4 h-4" /> Add Testimonial
+                                    </button>
+                                </div>
+                            </div>
+
+                            <h3 className="text-sm font-bold text-gray-500 mb-4 uppercase tracking-wider">Manage Existing Feedback</h3>
+                            <div className="grid gap-4 max-h-[500px] overflow-y-auto custom-scrollbar pr-2">
+                                {testimonials.length === 0 ? (
+                                    <p className="text-sm text-gray-400 text-center py-8 border-2 border-dashed rounded-lg">No feedback found. Waiting for public submissions...</p>
+                                ) : testimonials.map(t => (
+                                    <div key={t.id} className="p-5 rounded-xl border border-gray-100 shadow-sm flex flex-col sm:flex-row justify-between gap-5 items-start bg-white hover:border-gray-300 transition-all">
+                                        <div className="flex-1 w-full">
+                                            {editingTestimonialId === t.id ? (
+                                                <div className="flex flex-col gap-3 w-full animate-in fade-in duration-200">
+                                                    <input
+                                                        type="text"
+                                                        value={editingTestimonialName}
+                                                        onChange={(e) => setEditingTestimonialName(e.target.value)}
+                                                        className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-amber-500 text-sm font-semibold outline-none"
+                                                        placeholder="Name"
+                                                    />
+                                                    <textarea
+                                                        value={editingTestimonialContent}
+                                                        onChange={(e) => setEditingTestimonialContent(e.target.value)}
+                                                        className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-amber-500 text-sm min-h-[80px] resize-y outline-none"
+                                                        placeholder="Comments"
+                                                    />
+                                                    <div className="flex items-center gap-2 mt-1">
+                                                        <button type="button" onClick={() => handleSaveEditTestimonial(t.id)} className="px-4 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-md text-xs font-bold transition-colors">Save Changes</button>
+                                                        <button type="button" onClick={() => setEditingTestimonialId(null)} className="px-4 py-1.5 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-md text-xs font-bold transition-colors">Cancel</button>
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                <>
+                                                    <div className="flex items-center gap-3 mb-2">
+                                                        <h4 className="font-bold text-gray-900">{t.name || 'Anonymous User'}</h4>
+                                                    </div>
+                                                    <p className="text-sm text-gray-600 italic">"{t.comments}"</p>
+                                                    {t.city && <p className="text-xs text-gray-400 mt-2 flex items-center gap-1">📍 {t.city}</p>}
+                                                </>
+                                            )}
+                                        </div>
+                                        <div className="flex flex-col gap-2 w-full sm:w-auto">
+                                            <div className="flex gap-2 w-full">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        setEditingTestimonialId(t.id);
+                                                        setEditingTestimonialName(t.name || '');
+                                                        setEditingTestimonialContent(t.comments || '');
+                                                    }}
+                                                    title="Edit Feedback"
+                                                    className="w-full flex items-center justify-center p-2 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 border border-blue-200 transition-colors"
+                                                >
+                                                    <Pencil className="h-4 w-4" />
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleDeleteTestimonial(t.id)}
+                                                    title="Delete Feedback permanently"
+                                                    className="w-full flex items-center justify-center p-2 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 border border-red-200 transition-colors"
+                                                >
+                                                    <Trash2 className="h-4 w-4" />
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* 5. Event Registrations (PRJ-002 specifically) */}
+                        {formData.project_code === 'PRJ-002' && (
+                            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                                <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                                    <User className="h-5 w-5 text-amber-600" /> Event Registrations ({eventRegistrations.length})
+                                </h2>
+
+                                <div className="grid gap-4 max-h-[500px] overflow-y-auto custom-scrollbar pr-2">
+                                    {eventRegistrations.length === 0 ? (
+                                        <p className="text-sm text-gray-400 text-center py-8 border-2 border-dashed rounded-lg">No registrations found yet...</p>
+                                    ) : eventRegistrations.map((r, i) => (
+                                        <div key={r.id} className="p-4 rounded-xl border border-gray-100 shadow-sm flex flex-col sm:flex-row justify-between gap-5 bg-white hover:border-amber-200 transition-all">
+                                            <div className="flex-1 w-full space-y-1">
+                                                <div className="flex justify-between items-start">
+                                                    <h4 className="font-bold text-gray-900 text-md">{i + 1}. {r.full_name}</h4>
+                                                    <span className="text-[10px] text-gray-500 bg-gray-100 px-2 py-1 rounded-md">{new Date(r.created_at).toLocaleDateString()}</span>
+                                                </div>
+                                                <div className="grid grid-cols-2 gap-2 text-sm text-gray-700 mt-2">
+                                                    <p><span className="font-semibold text-gray-500">WhatsApp:</span> {r.whatsapp_number}</p>
+                                                    {r.age && <p><span className="font-semibold text-gray-500">Age:</span> {r.age}</p>}
+                                                    {r.sangh_name && <p><span className="font-semibold text-gray-500">Sangh:</span> {r.sangh_name}</p>}
+                                                    {r.address && <p className="col-span-2"><span className="font-semibold text-gray-500">Address:</span> {r.address}</p>}
+                                                </div>
+                                            </div>
+                                            {r.payment_screenshot_url && (
+                                                <div className="w-full sm:w-24 shrink-0">
+                                                    <a href={r.payment_screenshot_url} target="_blank" rel="noreferrer" className="block w-full text-center">
+                                                        <img src={r.payment_screenshot_url} alt="Payment" className="w-24 h-24 object-cover rounded-md border shadow-sm mb-1 hover:opacity-80" />
+                                                        <span className="text-[10px] font-bold text-amber-600 underline">View Payment</span>
+                                                    </a>
+                                                </div>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
                     </div>
 
                     {/* Right Column: Add Team Members */}
@@ -618,7 +928,7 @@ const AdminEditProject = () => {
 
                 </form>
             </main>
-        </div>
+        </div >
     );
 };
 

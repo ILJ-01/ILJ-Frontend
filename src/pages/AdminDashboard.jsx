@@ -4,7 +4,7 @@ import { supabase, supabaseUrl } from '../lib/supabase';
 import {
     Search, Filter, LogOut, MapPin, Mail, Phone,
     X, User, Briefcase, Heart, BookOpen, Plus, LayoutGrid, Users,
-    Calendar, CheckSquare, Clock, Menu, Trash2, Shield, Award, TrendingUp, Download
+    Calendar, CheckSquare, Clock, Menu, Trash2, Shield, Award, TrendingUp, Download, Ticket
 } from 'lucide-react';
 
 import AdminEvents from './admin/AdminEvents';
@@ -12,6 +12,7 @@ import AdminTasks from './admin/AdminTasks';
 import AdminTimesheets from './admin/AdminTimesheets';
 import AdminAppraisals from './admin/AdminAppraisals';
 import AdminInquiries from './admin/AdminInquiries';
+import AdminEventRegistrations from './admin/AdminEventRegistrations';
 
 const RANKS = [
     { title: "Intern", minHours: 0, order: 0 },
@@ -248,6 +249,7 @@ const AdminDashboard = () => {
                                 { id: 'volunteers', label: 'Volunteers', icon: Users },
                                 { id: 'projects', label: 'Projects', icon: LayoutGrid },
                                 { id: 'events', label: 'Events', icon: Calendar },
+                                { id: 'event-registrations', label: 'Event Registrations', icon: Ticket },
                                 { id: 'tasks', label: 'Tasks', icon: CheckSquare },
                                 { id: 'timesheets', label: 'Time Sheets', icon: Clock },
                                 { id: 'appraisals', label: 'Appraisals', icon: TrendingUp },
@@ -315,6 +317,9 @@ const AdminDashboard = () => {
                             </button>
                             <button onClick={() => setActiveTab('events')} className={`flex items-center gap-2 px-3 py-2 rounded-md font-medium text-sm whitespace-nowrap transition-all ${activeTab === 'events' ? 'bg-white text-[#ae2b2b] shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}>
                                 <Calendar className="h-4 w-4" /> Events
+                            </button>
+                            <button onClick={() => setActiveTab('event-registrations')} className={`flex items-center gap-2 px-3 py-2 rounded-md font-medium text-sm whitespace-nowrap transition-all ${activeTab === 'event-registrations' ? 'bg-white text-[#ae2b2b] shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}>
+                                <Ticket className="h-4 w-4" /> Registrations
                             </button>
                             <button onClick={() => setActiveTab('tasks')} className={`flex items-center gap-2 px-3 py-2 rounded-md font-medium text-sm whitespace-nowrap transition-all ${activeTab === 'tasks' ? 'bg-white text-[#ae2b2b] shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}>
                                 <CheckSquare className="h-4 w-4" /> Tasks
@@ -581,6 +586,11 @@ const AdminDashboard = () => {
                 {activeTab === 'inquiries' && (
                     <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
                         <AdminInquiries />
+                    </div>
+                )}
+                {activeTab === 'event-registrations' && (
+                    <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
+                        <AdminEventRegistrations />
                     </div>
                 )}
             </main>

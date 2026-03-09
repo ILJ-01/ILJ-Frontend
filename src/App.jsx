@@ -10,6 +10,7 @@ import Profile from "./pages/Profile";
 import Form from "./components/Form.jsx";
 import VolunteerRegistration from "./pages/VolunteerRegistration";
 import Project from "./components/Project.jsx";
+import EventRegistrationPage from "./pages/EventRegistrationPage.jsx";
 import AdminLogin from "./pages/AdminLogin";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminAddProject from "./pages/AdminAddProject";
@@ -68,6 +69,7 @@ function App() {
             <Route path="/aboutus" element={<MainLayout><AboutUs /></MainLayout>} />
             <Route path="/projects" element={<MainLayout><Projects /></MainLayout>} />
             <Route path="/project/:title" element={<MainLayout><Project /></MainLayout>} />
+            <Route path="/projects/:id/event-registration" element={<MainLayout><EventRegistrationPage /></MainLayout>} />
             <Route path="/profile" element={<MainLayout><Profile /></MainLayout>} />
             <Route path="/form" element={<MainLayout><Form /></MainLayout>} />
             <Route path="/volunteer-registration" element={<MainLayout><VolunteerRegistration /></MainLayout>} />

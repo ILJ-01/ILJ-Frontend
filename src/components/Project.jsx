@@ -7,6 +7,24 @@ import { supabase } from "../lib/supabase";
 import { useAuth } from "../context/AuthContext";
 import { User, Phone, Mail, CheckCircle, Clock, Calendar, Shield, ArrowLeft, MessageSquare, MapPin, Star, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
+import {
+  Dialog,
+  DialogContent,
+  DialogTrigger,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+} from "@/components/ui/card";
 
 const projectThumbs = import.meta.glob(
   "../assets/projects/*.{png,jpg,jpeg,webp}",
@@ -40,12 +58,19 @@ export default function Project() {
   const [loading, setLoading] = useState(true);
   const [applicationStatus, setApplicationStatus] = useState(null); // 'pending', 'approved', or null
   const [isApplying, setIsApplying] = useState(false);
+  const [dbGallery, setDbGallery] = useState([]);
+  const [dbTestimonials, setDbTestimonials] = useState([]);
+
 
   // Inquiry & Feedback State
   const [isInquiryOpen, setIsInquiryOpen] = useState(false);
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [inquiryForm, setInquiryForm] = useState({ name: '', email: '', mobile: '', message: '' });
+  const [inquiryForm, setInquiryForm] = useState({
+    name: '', email: '', mobile: '', message: '',
+    sangh_name: '', sangh_address: '', proposed_venue: '',
+    proposed_dates: '', how_did_you_know: ''
+  });
   const [feedbackForm, setFeedbackForm] = useState({
     rating: 5,
     comments: '',
@@ -56,6 +81,17 @@ export default function Project() {
     age: '',
     city: ''
   });
+
+  const [eventForm, setEventForm] = useState({
+    full_name: '',
+    whatsapp_number: '',
+    age: '',
+    address: '',
+    sangh_name: ''
+  });
+  const [eventPaymentImage, setEventPaymentImage] = useState(null);
+  const [isEventSubmitting, setIsEventSubmitting] = useState(false);
+  const [isEventFormOpen, setIsEventFormOpen] = useState(false);
 
   // Check if params is a UUID (Database Project) or a Title (Static JSON)
   const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(title);
@@ -80,6 +116,12 @@ export default function Project() {
 
           if (error) throw error;
           setProject({ ...data, type: 'db' });
+
+          const { data: photosData } = await supabase.from('project_photos').select('photo_url').eq('project_id', title);
+          if (photosData) setDbGallery(photosData.map(p => p.photo_url));
+
+          const { data: testData } = await supabase.from('project_feedback').select('*').eq('project_id', title);
+          if (testData) setDbTestimonials(testData);
 
           // 2. Check application status if logged in
           if (isLoggedIn && user) {
@@ -153,7 +195,11 @@ export default function Project() {
       if (error) throw error;
       alert("Inquiry sent successfully! We will contact you soon.");
       setIsInquiryOpen(false);
-      setInquiryForm({ name: '', email: '', mobile: '', message: '' });
+      setInquiryForm({
+        name: '', email: '', mobile: '', message: '',
+        sangh_name: '', sangh_address: '', proposed_venue: '',
+        proposed_dates: '', how_did_you_know: ''
+      });
     } catch (error) {
       console.error("Inquiry Error:", error);
       alert("Failed to send inquiry.");
@@ -188,6 +234,52 @@ export default function Project() {
       alert("Failed to submit feedback.");
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleEventFormSubmit = async (e) => {
+    e.preventDefault();
+    setIsEventSubmitting(true);
+    let payment_url = '';
+
+    try {
+      if (eventPaymentImage) {
+        const fileExt = eventPaymentImage.name.split('.').pop();
+        const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('event-payments')
+          .upload(fileName, eventPaymentImage);
+
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('event-payments')
+          .getPublicUrl(fileName);
+
+        payment_url = publicUrl;
+      }
+
+      const { error } = await supabase.from('event_registrations').insert({
+        project_id: project.id,
+        payment_screenshot_url: payment_url,
+        ...eventForm
+      });
+      if (error) throw error;
+
+      alert("Registration submitted successfully!");
+      setEventForm({ full_name: '', whatsapp_number: '', age: '', address: '', sangh_name: '' });
+      setEventPaymentImage(null);
+
+      // Clear file input manually if needed (optional)
+      const fileInput = document.getElementById('event-payment-upload');
+      if (fileInput) fileInput.value = '';
+
+    } catch (error) {
+      console.error("Event Registration Error:", error);
+      alert("Failed to submit registration.");
+    } finally {
+      setIsEventSubmitting(false);
     }
   };
 
@@ -317,6 +409,30 @@ export default function Project() {
               </div>
             </div>
           )}
+
+          {/* Upcoming Event Registration Banner */}
+          {project.is_event_registration_enabled && project.next_event_date && (
+            <div className="bg-white rounded-2xl p-8 shadow-sm border border-l-4 border-l-[#ae2b2b]">
+              <h2 className="text-2xl font-bold text-[#ae2b2b] mb-4 font-serif flex items-center gap-2">
+                <Calendar className="text-[#ae2b2b] w-6 h-6" /> Upcoming Event Registration
+              </h2>
+
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                <div>
+                  <p className="text-sm font-bold text-gray-500 uppercase tracking-widest mb-1">Next Event Date</p>
+                  <p className="text-xl font-bold text-gray-900">{project.next_event_date}</p>
+                </div>
+                <Link to={`/projects/${project.id}/event-registration`}>
+                  <Button className="bg-[#ae2b2b] hover:bg-[#8f1f1f] text-white px-8 py-2 border-0">
+                    Click to Register
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          )}
+
+
+
         </div>
 
         {/* Right Column: Actions */}
@@ -393,11 +509,76 @@ export default function Project() {
         </div>
       </div>
 
+      {/* Database Gallery & Testimonials */}
+      <div className="max-w-7xl mx-auto px-6 mt-12 grid grid-cols-1 gap-12">
+        {dbGallery.length > 0 && (
+          <div className="w-full relative px-6 md:px-12">
+            <h2 className="text-2xl font-bold text-gray-900 mb-6 font-serif border-b pb-4">Project Gallery</h2>
+            <Carousel
+              opts={{
+                align: "start",
+                loop: true,
+              }}
+              className="w-full"
+            >
+              <CarouselContent className="-ml-4">
+                {dbGallery.map((img, i) => (
+                  <CarouselItem key={i} className="pl-4 md:basis-1/2 lg:basis-1/3 xl:basis-1/4">
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <div className="p-1 cursor-pointer overflow-hidden rounded-xl">
+                          <img
+                            src={img}
+                            className="rounded-xl object-cover h-48 w-full shadow hover:scale-105 transition duration-300"
+                            alt={`Gallery ${i}`}
+                          />
+                        </div>
+                      </DialogTrigger>
+                      <DialogContent className="max-w-4xl p-1 bg-transparent border-none shadow-none flex items-center justify-center">
+                        <DialogTitle className="sr-only">Project Photo {i + 1}</DialogTitle>
+                        <img
+                          src={img}
+                          alt={`Gallery ${i} Full`}
+                          className="w-full max-h-[85vh] object-contain rounded-md"
+                        />
+                      </DialogContent>
+                    </Dialog>
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+              <CarouselPrevious className="hidden md:flex bg-white/80 hover:bg-white border-none shadow-md -left-6 lg:-left-12" />
+              <CarouselNext className="hidden md:flex bg-white/80 hover:bg-white border-none shadow-md -right-6 lg:-right-12" />
+            </Carousel>
+          </div>
+        )}
+
+        {dbTestimonials.length > 0 && (
+          <div className="w-full px-6 md:px-12 mt-10">
+            <h2 className="text-2xl font-bold text-gray-900 mb-6 font-serif border-b pb-2">Voices of Impact</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {dbTestimonials.map(t => (
+                <Card key={t.id} className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between bg-white rounded-xl">
+                  <CardContent className="pt-8">
+                    <p className="text-gray-700 leading-relaxed font-serif text-lg">"{t.comments}"</p>
+                  </CardContent>
+                  <CardFooter className="pt-0 pb-6 mt-4">
+                    <div className="flex flex-col w-full pt-4 border-t border-gray-50">
+                      <span className="text-sm font-bold text-gray-900 tracking-tight">~ {t.name || 'Community Member'}</span>
+                      {t.city && <span className="text-xs text-gray-500 mt-0.5">{t.city}</span>}
+                    </div>
+                  </CardFooter>
+                </Card>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
       {/* Inquiry Modal */}
       {
         isInquiryOpen && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 backdrop-blur-sm">
-            <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl relative">
+            <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl relative max-h-[90vh] overflow-y-auto custom-scrollbar">
               <button onClick={() => setIsInquiryOpen(false)} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
                 <X className="h-5 w-5" />
               </button>
@@ -411,20 +592,55 @@ export default function Project() {
                   value={inquiryForm.name} onChange={e => setInquiryForm({ ...inquiryForm, name: e.target.value })}
                 />
                 <input
-                  type="email" placeholder="Email Address" required
-                  className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-[#ae2b2b]/20 outline-none"
-                  value={inquiryForm.email} onChange={e => setInquiryForm({ ...inquiryForm, email: e.target.value })}
-                />
-                <input
-                  type="tel" placeholder="Mobile Number" required
+                  type="tel" placeholder="Contact Number" required
                   className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-[#ae2b2b]/20 outline-none"
                   value={inquiryForm.mobile} onChange={e => setInquiryForm({ ...inquiryForm, mobile: e.target.value })}
                 />
-                <textarea
-                  placeholder="Message (Location, estimated participants, etc.)" required rows="3"
-                  className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-[#ae2b2b]/20 outline-none"
-                  value={inquiryForm.message} onChange={e => setInquiryForm({ ...inquiryForm, message: e.target.value })}
-                ></textarea>
+
+                {project?.project_code === 'PRJ-002' || project?.project_code === 'PRJ-003' ? (
+                  <>
+                    <input
+                      type="text" placeholder="Name of Sangh" required
+                      className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-[#ae2b2b]/20 outline-none"
+                      value={inquiryForm.sangh_name} onChange={e => setInquiryForm({ ...inquiryForm, sangh_name: e.target.value })}
+                    />
+                    <textarea
+                      placeholder="Address of Sangh" required rows="2"
+                      className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-[#ae2b2b]/20 outline-none"
+                      value={inquiryForm.sangh_address} onChange={e => setInquiryForm({ ...inquiryForm, sangh_address: e.target.value })}
+                    />
+                    {project?.project_code === 'PRJ-002' && (
+                      <input
+                        type="text" placeholder="Proposed dates and timing" required
+                        className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-[#ae2b2b]/20 outline-none"
+                        value={inquiryForm.proposed_dates} onChange={e => setInquiryForm({ ...inquiryForm, proposed_dates: e.target.value })}
+                      />
+                    )}
+                    <textarea
+                      placeholder={project?.project_code === 'PRJ-003' ? "Address of proposed venue for exhibition" : "Address of proposed venue for workshop"} required rows="2"
+                      className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-[#ae2b2b]/20 outline-none"
+                      value={inquiryForm.proposed_venue} onChange={e => setInquiryForm({ ...inquiryForm, proposed_venue: e.target.value })}
+                    />
+                    <textarea
+                      placeholder={`How did you come to know about ${project?.project_code === 'PRJ-003' ? 'Jainific' : 'Veer Vanshaj Self Defence Workshop'}?`} required rows="2"
+                      className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-[#ae2b2b]/20 outline-none"
+                      value={inquiryForm.how_did_you_know} onChange={e => setInquiryForm({ ...inquiryForm, how_did_you_know: e.target.value })}
+                    />
+                  </>
+                ) : (
+                  <>
+                    <input
+                      type="email" placeholder="Email Address" required
+                      className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-[#ae2b2b]/20 outline-none"
+                      value={inquiryForm.email} onChange={e => setInquiryForm({ ...inquiryForm, email: e.target.value })}
+                    />
+                    <textarea
+                      placeholder="Message (Location, estimated participants, etc.)" required rows="3"
+                      className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-[#ae2b2b]/20 outline-none"
+                      value={inquiryForm.message} onChange={e => setInquiryForm({ ...inquiryForm, message: e.target.value })}
+                    ></textarea>
+                  </>
+                )}
 
                 <Button type="submit" disabled={submitting} className="w-full bg-[#ae2b2b] hover:bg-[#912323]">
                   {submitting ? "Sending..." : "Send Inquiry"}
