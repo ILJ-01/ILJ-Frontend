@@ -386,14 +386,14 @@ export default function Project() {
             </div>
           </div>
 
-          {/* Manager Contact Card (Only for logged in) */}
+          {/* Manager Contact Card - TEMPORARILY COMMENTED OUT
           {isLoggedIn && project.manager && (
             <div className="bg-gradient-to-br from-[#ae2b2b]/5 to-white rounded-2xl p-6 border border-[#ae2b2b]/10 shadow-sm flex flex-col md:flex-row gap-6 items-start md:items-center">
               <div className="bg-[#ae2b2b]/10 p-4 rounded-full text-[#ae2b2b]">
                 <User size={32} />
               </div>
               <div className="flex-1">
-                <p className="text-xs font-bold text-[#ae2b2b] uppercase tracking-widest mb-1">Project Manager</p>
+                <p className="text-xs font-bold text-[#ae2b2b] uppercase tracking-widest mb-1">Pod Head</p>
                 <h3 className="text-xl font-semibold text-gray-900">{project.manager.first_name} {project.manager.last_name}</h3>
                 <p className="text-sm text-gray-500 mb-3">{project.manager.ilj_id}</p>
 
@@ -410,6 +410,7 @@ export default function Project() {
               </div>
             </div>
           )}
+          */}
 
           {/* Upcoming Event Registration Banner */}
           {project.is_event_registration_enabled && project.next_event_date && (

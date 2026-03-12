@@ -75,9 +75,12 @@ const Badge3D = ({ user }) => {
                                     <div className="h-14 w-14 sm:h-16 sm:w-16 rounded-xl bg-gradient-to-br from-white to-gray-200 shadow-lg flex items-center justify-center text-[#ae2b2b] font-serif font-bold text-xl sm:text-2xl border-2 border-white/30 truncate">{initials}</div>
                                     <div className="min-w-0 flex-1">
                                         <h2 className="text-lg sm:text-xl font-bold leading-tight drop-shadow-sm truncate">{user.first_name} {user.last_name}</h2>
-                                        <p className="text-[10px] sm:text-xs text-red-50 mt-1 font-bold uppercase tracking-wider flex items-center gap-2">
+                                        <p className="text-[10px] sm:text-xs text-red-50 mt-1 font-bold uppercase tracking-wider flex items-center gap-2 flex-wrap">
                                             <Briefcase className="h-3 w-3" />
                                             {user.designation || 'Volunteer'}
+                                            {user.secondary_designation && (
+                                                <span className="bg-white/15 px-1.5 py-0.5 rounded text-[9px]">• {user.secondary_designation}</span>
+                                            )}
                                         </p>
                                     </div>
                                 </div>
@@ -429,6 +432,17 @@ export default function ProfilePage() {
                                     >
                                         <Briefcase className="h-3.5 w-3.5 text-blue-600" />
                                         {user.designation}
+                                    </motion.div>
+                                )}
+                                {user.secondary_designation && (
+                                    <motion.div
+                                        initial={{ scale: 0 }}
+                                        animate={{ scale: 1 }}
+                                        transition={{ delay: 0.15 }}
+                                        className="bg-purple-50 text-purple-700 px-3 py-1 rounded-full border border-purple-200 text-xs font-bold uppercase tracking-widest flex items-center gap-1 shadow-sm mt-1"
+                                    >
+                                        <Shield className="h-3.5 w-3.5 text-purple-600" />
+                                        {user.secondary_designation}
                                     </motion.div>
                                 )}
                             </div>

@@ -160,7 +160,7 @@ export default function TeamLeaderHub() {
         "Public Speaking, Acting & Stage Activities": { icon: Mic, color: "purple" },
         "Graphic Design & Video Editing": { icon: Palette, color: "pink" },
         "Photography & Videography": { icon: Camera, color: "rose" },
-        "Event Planning & Management": { icon: Calendar, color: "orange" },
+        "Event Planning & Management": { icon: Calendar, color: "red" },
         "Marketing & Outreach": { icon: Megaphone, color: "amber" },
         "Pathshala & Educational Activities": { icon: School, color: "emerald" },
         "IT & Technical Support": { icon: Code, color: "cyan" }

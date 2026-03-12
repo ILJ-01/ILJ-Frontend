@@ -3,7 +3,7 @@ import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/lib/supabase";
 import {
     Calendar, CheckCircle, Clock, Award,
-    ArrowRight, Activity, Briefcase
+    ArrowRight, Activity, Briefcase, Lightbulb, Send, Loader2
 } from "lucide-react";
 import { Link } from "react-router-dom";
 
@@ -20,6 +20,13 @@ export default function VolunteerDashboard() {
     const [announcements, setAnnouncements] = useState([]);
     const [opportunities, setOpportunities] = useState([]);
     const [loading, setLoading] = useState(true);
+
+    // Idea states
+    const [projects, setProjects] = useState([]);
+    const [myIdeas, setMyIdeas] = useState([]);
+    const [ideaForm, setIdeaForm] = useState({ title: '', description: '', project_id: '' });
+    const [submittingIdea, setSubmittingIdea] = useState(false);
+    const [showIdeaForm, setShowIdeaForm] = useState(false);
 
     useEffect(() => {
         if (user?.id) fetchDashboardData();
@@ -93,6 +100,21 @@ export default function VolunteerDashboard() {
             })) || [];
             setOpportunities(processedOpps);
 
+            // 7. Fetch projects for idea form
+            const { data: projectData } = await supabase
+                .from('projects')
+                .select('id, title')
+                .order('title');
+            setProjects(projectData || []);
+
+            // 8. Fetch my ideas
+            const { data: ideasData } = await supabase
+                .from('ideas')
+                .select('*, project:projects(title)')
+                .eq('submitted_by', user.id)
+                .order('created_at', { ascending: false });
+            setMyIdeas(ideasData || []);
+
         } catch (error) {
             console.error("Dashboard Load Error:", error);
         } finally {
@@ -156,6 +178,40 @@ export default function VolunteerDashboard() {
         } catch (e) {
             console.error("Interest Error:", e);
             alert("Could not mark interest. Please try again.");
+        }
+    };
+
+    const handleSubmitIdea = async (e) => {
+        e.preventDefault();
+        if (!ideaForm.title.trim() || !ideaForm.description.trim()) {
+            alert('Please fill in the title and description.');
+            return;
+        }
+
+        setSubmittingIdea(true);
+        try {
+            const { data, error } = await supabase
+                .from('ideas')
+                .insert({
+                    title: ideaForm.title.trim(),
+                    description: ideaForm.description.trim(),
+                    project_id: ideaForm.project_id || null,
+                    submitted_by: user.id
+                })
+                .select('*, project:projects(title)')
+                .single();
+
+            if (error) throw error;
+
+            setMyIdeas(prev => [data, ...prev]);
+            setIdeaForm({ title: '', description: '', project_id: '' });
+            setShowIdeaForm(false);
+            alert('Your idea has been submitted successfully! 🎉');
+        } catch (err) {
+            console.error('Idea Submit Error:', err);
+            alert('Failed to submit idea. Please try again.');
+        } finally {
+            setSubmittingIdea(false);
         }
     };
 
@@ -400,6 +456,124 @@ export default function VolunteerDashboard() {
                     </div>
                 </div>
 
+            </div>
+
+            {/* Share an Idea Section */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                <div className="p-6">
+                    <div className="flex justify-between items-center mb-4">
+                        <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+                            <Lightbulb className="h-5 w-5 text-amber-500" /> Share an Idea
+                        </h3>
+                        <button
+                            onClick={() => setShowIdeaForm(!showIdeaForm)}
+                            className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${showIdeaForm
+                                    ? 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                    : 'bg-gradient-to-r from-amber-500 to-red-500 text-white hover:from-amber-600 hover:to-red-600 shadow-md'
+                                }`}
+                        >
+                            {showIdeaForm ? 'Cancel' : '+ New Idea'}
+                        </button>
+                    </div>
+
+                    <p className="text-sm text-gray-500 mb-4">Have a great idea? Share it with the leadership team. Your ideas help shape our community!</p>
+
+                    {/* Idea Form */}
+                    {showIdeaForm && (
+                        <form onSubmit={handleSubmitIdea} className="mb-6 p-5 bg-gradient-to-br from-amber-50/80 to-red-50/80 rounded-xl border border-amber-200/50 space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Idea Title *</label>
+                                <input
+                                    type="text"
+                                    className="w-full p-3 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none bg-white"
+                                    placeholder="Give your idea a clear title..."
+                                    value={ideaForm.title}
+                                    onChange={(e) => setIdeaForm(prev => ({ ...prev, title: e.target.value }))}
+                                    required
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Description *</label>
+                                <textarea
+                                    className="w-full p-3 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none bg-white resize-none"
+                                    rows={4}
+                                    placeholder="Describe your idea in detail — what problem does it solve, how can it be implemented?"
+                                    value={ideaForm.description}
+                                    onChange={(e) => setIdeaForm(prev => ({ ...prev, description: e.target.value }))}
+                                    required
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Related Pod (Optional)</label>
+                                <select
+                                    className="w-full p-3 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none bg-white"
+                                    value={ideaForm.project_id}
+                                    onChange={(e) => setIdeaForm(prev => ({ ...prev, project_id: e.target.value }))}
+                                >
+                                    <option value="">Not related to any Pod</option>
+                                    {projects.map(p => (
+                                        <option key={p.id} value={p.id}>{p.title}</option>
+                                    ))}
+                                </select>
+                            </div>
+                            <button
+                                type="submit"
+                                disabled={submittingIdea}
+                                className="w-full flex items-center justify-center gap-2 py-3 bg-gradient-to-r from-red-500 to-red-500 text-white rounded-lg font-bold hover:from-red-600 hover:to-red-600 transition-all shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                {submittingIdea ? (
+                                    <><Loader2 className="h-4 w-4 animate-spin" /> Submitting...</>
+                                ) : (
+                                    <><Send className="h-4 w-4" /> Submit Idea</>
+                                )}
+                            </button>
+                        </form>
+                    )}
+
+                    {/* My Ideas List */}
+                    {myIdeas.length > 0 && (
+                        <div className="space-y-3">
+                            <h4 className="text-xs font-bold text-gray-500 uppercase tracking-widest">Your Submitted Ideas</h4>
+                            {myIdeas.map(idea => {
+                                const statusMap = {
+                                    pending: { label: 'Pending Review', style: 'bg-amber-100 text-amber-700' },
+                                    reviewed: { label: 'Reviewed', style: 'bg-blue-100 text-blue-700' },
+                                    approved: { label: 'Approved', style: 'bg-green-100 text-green-700' },
+                                    implemented: { label: 'Implemented', style: 'bg-purple-100 text-purple-700' },
+                                    rejected: { label: 'Rejected', style: 'bg-red-100 text-red-700' }
+                                };
+                                const s = statusMap[idea.status] || statusMap.pending;
+
+                                return (
+                                    <div key={idea.id} className="p-4 bg-gray-50 rounded-lg border border-gray-100 hover:bg-white hover:shadow-sm transition-all">
+                                        <div className="flex items-start justify-between gap-3">
+                                            <div className="flex-1 min-w-0">
+                                                <div className="flex items-center gap-2 flex-wrap">
+                                                    <Lightbulb className="h-4 w-4 text-amber-500 shrink-0" />
+                                                    <h4 className="font-bold text-gray-900 text-sm">{idea.title}</h4>
+                                                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${s.style}`}>
+                                                        {s.label}
+                                                    </span>
+                                                </div>
+                                                <p className="text-gray-600 text-xs mt-1 line-clamp-2">{idea.description}</p>
+                                                <div className="flex items-center gap-3 mt-2">
+                                                    {idea.project && (
+                                                        <span className="text-xs text-blue-600 font-medium flex items-center gap-1">
+                                                            <Briefcase className="h-3 w-3" /> {idea.project.title}
+                                                        </span>
+                                                    )}
+                                                    <span className="text-xs text-gray-400">
+                                                        {new Date(idea.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    )}
+                </div>
             </div>
         </div>
     );

@@ -4,7 +4,7 @@ import { supabase, supabaseUrl } from '../lib/supabase';
 import {
     Search, Filter, LogOut, MapPin, Mail, Phone,
     X, User, Briefcase, Heart, BookOpen, Plus, LayoutGrid, Users,
-    Calendar, CheckSquare, Clock, Menu, Trash2, Shield, Award, TrendingUp, Download, Ticket
+    Calendar, CheckSquare, Clock, Menu, Trash2, Shield, Award, TrendingUp, Download, Ticket, Lightbulb, Activity
 } from 'lucide-react';
 
 import AdminEvents from './admin/AdminEvents';
@@ -13,6 +13,8 @@ import AdminTimesheets from './admin/AdminTimesheets';
 import AdminAppraisals from './admin/AdminAppraisals';
 import AdminInquiries from './admin/AdminInquiries';
 import AdminEventRegistrations from './admin/AdminEventRegistrations';
+import AdminIdeas from './admin/AdminIdeas';
+import AdminSTC from './admin/AdminSTC';
 
 const RANKS = [
     { title: "Intern", minHours: 0, order: 0 },
@@ -254,6 +256,8 @@ const AdminDashboard = () => {
                                 { id: 'timesheets', label: 'Time Sheets', icon: Clock },
                                 { id: 'appraisals', label: 'Appraisals', icon: TrendingUp },
                                 { id: 'inquiries', label: 'Inquiries', icon: Mail },
+                                { id: 'ideas', label: 'Ideas', icon: Lightbulb },
+                                { id: 'stc', label: 'Spiritual Tasks', icon: Activity },
                             ].map((item) => {
                                 const Icon = item.icon;
                                 const isActive = activeTab === item.id;
@@ -332,6 +336,12 @@ const AdminDashboard = () => {
                             </button>
                             <button onClick={() => setActiveTab('inquiries')} className={`flex items-center gap-2 px-3 py-2 rounded-md font-medium text-sm whitespace-nowrap transition-all ${activeTab === 'inquiries' ? 'bg-white text-[#ae2b2b] shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}>
                                 <Mail className="h-4 w-4" /> Inquiries
+                            </button>
+                            <button onClick={() => setActiveTab('ideas')} className={`flex items-center gap-2 px-3 py-2 rounded-md font-medium text-sm whitespace-nowrap transition-all ${activeTab === 'ideas' ? 'bg-white text-[#ae2b2b] shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}>
+                                <Lightbulb className="h-4 w-4" /> Ideas
+                            </button>
+                            <button onClick={() => setActiveTab('stc')} className={`flex items-center gap-2 px-3 py-2 rounded-md font-medium text-sm whitespace-nowrap transition-all ${activeTab === 'stc' ? 'bg-white text-[#ae2b2b] shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}>
+                                <Activity className="h-4 w-4" /> STC
                             </button>
                         </div>
 
@@ -449,6 +459,12 @@ const AdminDashboard = () => {
                                                                 <span className="text-xs font-bold bg-blue-50 text-blue-700 px-2 py-0.5 rounded border border-blue-100 flex items-center gap-1 uppercase tracking-tight">
                                                                     <Briefcase className="h-3 w-3" />
                                                                     {volunteer.designation}
+                                                                </span>
+                                                            )}
+                                                            {volunteer.secondary_designation && (
+                                                                <span className="text-xs font-bold bg-purple-50 text-purple-700 px-2 py-0.5 rounded border border-purple-100 flex items-center gap-1 uppercase tracking-tight">
+                                                                    <Shield className="h-3 w-3" />
+                                                                    {volunteer.secondary_designation}
                                                                 </span>
                                                             )}
                                                         </div>
@@ -593,6 +609,16 @@ const AdminDashboard = () => {
                         <AdminEventRegistrations />
                     </div>
                 )}
+                {activeTab === 'ideas' && (
+                    <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
+                        <AdminIdeas />
+                    </div>
+                )}
+                {activeTab === 'stc' && (
+                    <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
+                        <AdminSTC />
+                    </div>
+                )}
             </main>
 
             {/* Volunteer Modal (Same as before) */}
@@ -608,13 +634,31 @@ const AdminDashboard = () => {
                                     <h2 className="text-2xl font-bold text-gray-900">
                                         {selectedVolunteer.first_name} {selectedVolunteer.middle_name} {selectedVolunteer.last_name}
                                     </h2>
-                                    <div className="flex items-center gap-2 mt-1">
+                                    <div className="flex items-center gap-2 mt-1 flex-wrap">
                                         <p className="text-[#ae2b2b] font-medium">{selectedVolunteer.ilj_id}</p>
                                         <span className="h-4 w-px bg-gray-300"></span>
                                         <div className="flex items-center gap-1 text-amber-600 font-bold text-xs uppercase tracking-wider">
                                             <Award className="h-4 w-4" />
                                             {selectedVolunteer.rank || 'Intern'}
                                         </div>
+                                        {selectedVolunteer.designation && (
+                                            <>
+                                                <span className="h-4 w-px bg-gray-300"></span>
+                                                <div className="flex items-center gap-1 text-blue-600 font-bold text-xs uppercase tracking-wider">
+                                                    <Briefcase className="h-3.5 w-3.5" />
+                                                    {selectedVolunteer.designation}
+                                                </div>
+                                            </>
+                                        )}
+                                        {selectedVolunteer.secondary_designation && (
+                                            <>
+                                                <span className="h-4 w-px bg-gray-300"></span>
+                                                <div className="flex items-center gap-1 text-purple-600 font-bold text-xs uppercase tracking-wider">
+                                                    <Shield className="h-3.5 w-3.5" />
+                                                    {selectedVolunteer.secondary_designation}
+                                                </div>
+                                            </>
+                                        )}
                                     </div>
                                 </div>
                             </div>
@@ -820,6 +864,43 @@ const AdminDashboard = () => {
                                                         Update
                                                     </button>
                                                 </div>
+                                            </div>
+
+                                            {/* Secondary Designation (Chair Person / Vice Chair Person) */}
+                                            <div>
+                                                <label className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2 block">Secondary Designation</label>
+                                                <div className="flex gap-2">
+                                                    <select
+                                                        id="secondary-designation-selector"
+                                                        defaultValue={selectedVolunteer.secondary_designation || ""}
+                                                        className="flex-1 p-2.5 bg-white border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#ae2b2b] outline-none"
+                                                    >
+                                                        <option value="">None</option>
+                                                        <option value="Chair Person">Chair Person</option>
+                                                        <option value="Vice Chair Person">Vice Chair Person</option>
+                                                    </select>
+                                                    <button
+                                                        onClick={async () => {
+                                                            const newVal = document.getElementById('secondary-designation-selector').value;
+                                                            try {
+                                                                const { error } = await supabase
+                                                                    .from('volunteers')
+                                                                    .update({ secondary_designation: newVal || null })
+                                                                    .eq('id', selectedVolunteer.id);
+
+                                                                if (error) throw error;
+                                                                const updated = { ...selectedVolunteer, secondary_designation: newVal || null };
+                                                                setSelectedVolunteer(updated);
+                                                                setVolunteers(prev => prev.map(vol => vol.id === updated.id ? updated : vol));
+                                                                alert("Secondary designation updated!");
+                                                            } catch (err) { alert(`Error: ${err.message}`); }
+                                                        }}
+                                                        className="bg-[#ae2b2b] text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-[#8b1e1e] transition-colors shadow-sm"
+                                                    >
+                                                        Update
+                                                    </button>
+                                                </div>
+                                                <p className="text-xs text-gray-400 mt-1">This is a dual designation — held alongside the primary designation above.</p>
                                             </div>
                                         </div>
                                     </div>

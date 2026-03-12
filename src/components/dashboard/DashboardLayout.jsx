@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
     Home, Calendar, CheckSquare, Clock, User, LogOut,
-    Menu, X, Bell, Briefcase, FileText, Shield, Heart
+    Menu, X, Bell, Briefcase, FileText, Shield, Heart, Lightbulb, Activity
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/lib/supabase";
@@ -60,9 +60,11 @@ export default function DashboardLayout({ children }) {
     };
 
     const menuItems = [
+        { icon: Lightbulb, label: "Share an Idea", path: "/dashboard/share-idea" },
         { icon: Calendar, label: "Events", path: "/dashboard/events" },
         { icon: CheckSquare, label: "Tasks", path: "/dashboard/tasks" },
         { icon: Clock, label: "Timesheet", path: "/dashboard/timesheet" },
+        { icon: Activity, label: "Spiritual Tasks", path: "/dashboard/stc" },
         { icon: User, label: "My Profile", path: "/dashboard/profile" },
         { icon: FileText, label: "Policies", path: "/dashboard/policies" },
 
@@ -78,6 +80,11 @@ export default function DashboardLayout({ children }) {
 
     if (user?.isKalyanMitra) {
         menuItems.unshift({ icon: Heart, label: "Kalyan Mitra Hub", path: "/dashboard/kalyan-mitra" });
+    }
+
+    // Chair Person / Vice Chair Person can access Ideas Hub
+    if (user?.secondary_designation === 'Chair Person' || user?.secondary_designation === 'Vice Chair Person') {
+        menuItems.push({ icon: Lightbulb, label: "Ideas Hub", path: "/dashboard/ideas" });
     }
 
     return (

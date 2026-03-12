@@ -31,7 +31,7 @@ const interests = [
         manager: "Aayushi Sanghavi",
         description: "Designing posters, reels, presentations, banners, or editing visuals/videos for events, social media, and awareness campaigns.",
         icon: Palette,
-        color: "bg-orange-50 text-orange-600 border-orange-100"
+        color: "bg-red-50 text-red-600 border-red-100"
     },
     {
         title: "Photography & Videography",

@@ -87,7 +87,7 @@ export default function ManagerHub() {
                 .select(`
                     id,
                     project_id,
-                    volunteer:volunteers(id, first_name, last_name, ilj_id, email, designation)
+                    volunteer:volunteers(id, first_name, last_name, ilj_id, email, designation, secondary_designation)
                 `)
                 .eq('project_id', projId);
 
@@ -111,7 +111,7 @@ export default function ManagerHub() {
                     deadline,
                     rating,
                     feedback_comments,
-                    assignee:volunteers(first_name, last_name, ilj_id, designation)
+                    assignee:volunteers(first_name, last_name, ilj_id, designation, secondary_designation)
                 `)
                 .eq('project_id', projId)
                 .order('created_at', { ascending: false });
@@ -207,7 +207,7 @@ export default function ManagerHub() {
                 .from('timesheets')
                 .select(`
                     *,
-                    volunteer:volunteers(first_name, last_name, ilj_id, designation),
+                    volunteer:volunteers(first_name, last_name, ilj_id, designation, secondary_designation),
                     project:projects(title)
                 `)
                 .in('project_id', projectIds)
@@ -746,6 +746,11 @@ export default function ManagerHub() {
                                                 {member.designation && (
                                                     <span className="text-[9px] bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded font-bold uppercase border border-blue-100/50">
                                                         {member.designation}
+                                                    </span>
+                                                )}
+                                                {member.secondary_designation && (
+                                                    <span className="text-[9px] bg-purple-50 text-purple-600 px-1.5 py-0.5 rounded font-bold uppercase border border-purple-100/50">
+                                                        {member.secondary_designation}
                                                     </span>
                                                 )}
                                             </div>

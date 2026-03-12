@@ -27,12 +27,14 @@ import TasksPage from "./pages/dashboard/TasksPage";
 import TimesheetPage from "./pages/dashboard/TimesheetPage";
 import ProfilePage from "./pages/dashboard/ProfilePage";
 
-import VolunteerDashboard from "./pages/dashboard/VolunteerDashboard";
+import VolunteerIdeas from "./pages/dashboard/VolunteerIdeas";
 import ManagerHub from "./pages/dashboard/ManagerHub";
 
 import PoliciesPage from "./pages/dashboard/PoliciesPage";
 import TeamLeaderHub from "./pages/dashboard/TeamLeaderHub";
 import KalyanMitraHub from "./pages/dashboard/KalyanMitraHub";
+import IdeasHub from "./pages/dashboard/IdeasHub";
+import VolunteerSTC from "./pages/dashboard/VolunteerSTC";
 
 // Helper components for routing structure
 import { useAuth } from "./context/AuthContext";
@@ -85,6 +87,7 @@ function App() {
 
             {/* Volunteer Dashboard Routes */}
             <Route path="/dashboard" element={<Navigate to="/dashboard/events" replace />} />
+            <Route path="/dashboard/share-idea" element={<ProtectedRoute><DashboardLayout><VolunteerIdeas /></DashboardLayout></ProtectedRoute>} />
             <Route path="/dashboard/manager" element={<ProtectedRoute><DashboardLayout><ManagerHub /></DashboardLayout></ProtectedRoute>} />
             <Route path="/dashboard/events" element={<ProtectedRoute><DashboardLayout><EventsPage /></DashboardLayout></ProtectedRoute>} />
             <Route path="/dashboard/tasks" element={<ProtectedRoute><DashboardLayout><TasksPage /></DashboardLayout></ProtectedRoute>} />
@@ -93,6 +96,8 @@ function App() {
             <Route path="/dashboard/profile" element={<ProtectedRoute><DashboardLayout><ProfilePage /></DashboardLayout></ProtectedRoute>} />
             <Route path="/dashboard/team-leader" element={<ProtectedRoute><DashboardLayout><TeamLeaderHub /></DashboardLayout></ProtectedRoute>} />
             <Route path="/dashboard/kalyan-mitra" element={<ProtectedRoute><DashboardLayout><KalyanMitraHub /></DashboardLayout></ProtectedRoute>} />
+            <Route path="/dashboard/ideas" element={<ProtectedRoute><DashboardLayout><IdeasHub /></DashboardLayout></ProtectedRoute>} />
+            <Route path="/dashboard/stc" element={<ProtectedRoute><DashboardLayout><VolunteerSTC /></DashboardLayout></ProtectedRoute>} />
 
           </Routes>
         </div>
