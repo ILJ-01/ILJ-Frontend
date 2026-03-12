@@ -233,10 +233,11 @@ export default function EventRegistrationPage() {
 
                                 <div className="space-y-2">
                                     <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                                        <span className="h-4 w-4 text-[#ae2b2b] font-bold text-center leading-4 text-xs">A</span> Age <span className="text-gray-400 font-normal"></span>
+                                        <span className="h-4 w-4 text-[#ae2b2b] font-bold text-center leading-4 text-xs">A</span> Age <span className="text-red-500">*</span>
                                     </label>
                                     <input
                                         type="text"
+                                        required
                                         placeholder="Your age"
                                         value={eventForm.age}
                                         onChange={e => setEventForm({ ...eventForm, age: e.target.value })}
@@ -246,10 +247,11 @@ export default function EventRegistrationPage() {
 
                                 <div className="space-y-2 md:col-span-2">
                                     <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                                        <span className="h-4 w-4 text-[#ae2b2b] flex items-center justify-center font-bold text-xs uppercase">S</span> Sangh Name <span className="text-gray-400 font-normal"></span>
+                                        <span className="h-4 w-4 text-[#ae2b2b] flex items-center justify-center font-bold text-xs uppercase">S</span> Sangh Name <span className="text-red-500">*</span>
                                     </label>
                                     <input
                                         type="text"
+                                        required
                                         placeholder="Your Sangh Name"
                                         value={eventForm.sangh_name}
                                         onChange={e => setEventForm({ ...eventForm, sangh_name: e.target.value })}
@@ -259,9 +261,10 @@ export default function EventRegistrationPage() {
 
                                 <div className="space-y-2 md:col-span-2">
                                     <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                                        <MapPin className="h-4 w-4 text-[#ae2b2b]" /> Address <span className="text-gray-400 font-normal"></span>
+                                        <MapPin className="h-4 w-4 text-[#ae2b2b]" /> Address <span className="text-red-500">*</span>
                                     </label>
                                     <textarea
+                                        required
                                         rows="3"
                                         placeholder="Street, City, State, Pincode"
                                         value={eventForm.address}
@@ -275,7 +278,16 @@ export default function EventRegistrationPage() {
                                 <label className="text-sm font-semibold text-amber-900 flex items-center gap-2 mb-2">
                                     <Upload className="h-5 w-5 text-amber-600" /> Payment Screenshot <span className="text-amber-700 font-normal"></span>
                                 </label>
-                                <p className="text-sm text-amber-700 mb-4 inline-block">If required by the organizers, please upload a screenshot of your successful transaction.</p>
+                                <div className="mb-6 flex flex-col md:flex-row items-center gap-8 bg-white p-6 rounded-xl border border-amber-100 shadow-sm">
+                                    <div className="bg-white p-2 rounded-xl border border-gray-200 shadow-sm shrink-0">
+                                        <img src="/paymentqr.jpeg" alt="Payment QR Code" className="w-56 h-56 sm:w-64 sm:h-64 object-contain rounded-lg" />
+                                    </div>
+                                    <div className="text-sm text-gray-600 text-center md:text-left">
+                                        <p className="font-bold text-gray-900 text-lg mb-2">Scan to Pay</p>
+                                        <p className="text-base mb-2">Please use this QR code to complete your event registration payment.</p>
+                                        <p className="text-[#ae2b2b] mt-3 font-semibold text-base bg-red-50 p-3 rounded-lg border border-red-100">After successful payment, please upload the screenshot below.</p>
+                                    </div>
+                                </div>
                                 <input
                                     id="event-payment-upload"
                                     type="file"

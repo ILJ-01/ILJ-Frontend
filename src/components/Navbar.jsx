@@ -57,7 +57,7 @@ function Navbar() {
         <ul className="nav-links">
           <li><Link to="/" onClick={() => setIsOpen(false)}>HOME</Link></li>
           <li><Link to="/aboutus" onClick={() => setIsOpen(false)}>ABOUT US</Link></li>
-          <li><Link to="/projects" onClick={() => setIsOpen(false)}>PODS</Link></li>
+          <li><Link to="/projects" onClick={() => setIsOpen(false)}>PROJECTS</Link></li>
           <li><Link to="/blogs" onClick={() => setIsOpen(false)}>ARTICLES</Link></li>
           {isLoggedIn && (
             <li><Link to="/dashboard" onClick={() => setIsOpen(false)}>DASHBOARD</Link></li>
@@ -145,7 +145,7 @@ function Navbar() {
         <ul>
           <li><Link to="/" onClick={() => setIsOpen(false)}>HOME</Link></li>
           <li><Link to="/aboutus" onClick={() => setIsOpen(false)}>ABOUT US</Link></li>
-          <li><Link to="/projects" onClick={() => setIsOpen(false)}>PODS</Link></li>
+          <li><Link to="/projects" onClick={() => setIsOpen(false)}>PROJECTS</Link></li>
           <li><Link to="/blogs" onClick={() => setIsOpen(false)}>ARTICLES</Link></li>
 
           {!isLoggedIn && (
