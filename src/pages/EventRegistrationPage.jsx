@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
-import { Calendar, User, Phone, Mail, MapPin, Upload, ArrowLeft } from "lucide-react";
+import { Calendar, User, Users, Phone, Mail, MapPin, Upload, ArrowLeft } from "lucide-react";
 
 export default function EventRegistrationPage() {
     const { id } = useParams();
@@ -16,9 +16,18 @@ export default function EventRegistrationPage() {
         email: '',
         age: '',
         sangh_name: '',
-        address: ''
+        address: '',
+        dob: '',
+        mobile_number: '',
+        is_vihar_sevika: 'No',
+        fathers_name: '',
+        emergency_contact_name: '',
+        emergency_contact_number: '',
+        emergency_contact_relation: '',
+        payment_date: ''
     });
     const [eventPaymentImage, setEventPaymentImage] = useState(null);
+    const [photographFile, setPhotographFile] = useState(null);
     const [isEventSubmitting, setIsEventSubmitting] = useState(false);
     const [submitted, setSubmitted] = useState(false);
 
@@ -76,6 +85,16 @@ export default function EventRegistrationPage() {
                 finalPaymentImageUrl = publicUrl;
             }
 
+            let finalPhotographUrl = null;
+            if (photographFile) {
+                const fileExt = photographFile.name.split('.').pop();
+                const fileName = `photo-${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+                const { error: uploadError } = await supabase.storage.from('project-gallery').upload(`event-payments/${fileName}`, photographFile);
+                if (!uploadError) {
+                    finalPhotographUrl = supabase.storage.from('project-gallery').getPublicUrl(`event-payments/${fileName}`).data.publicUrl;
+                }
+            }
+
             // Insert Registration Record (including email)
             const { error: insertError } = await supabase
                 .from('event_registrations')
@@ -87,7 +106,16 @@ export default function EventRegistrationPage() {
                     age: eventForm.age || null,
                     address: eventForm.address || null,
                     sangh_name: eventForm.sangh_name || null,
-                    payment_screenshot_url: finalPaymentImageUrl
+                    payment_screenshot_url: finalPaymentImageUrl,
+                    dob: eventForm.dob || null,
+                    mobile_number: eventForm.mobile_number || null,
+                    is_vihar_sevika: eventForm.is_vihar_sevika === 'Yes',
+                    fathers_name: eventForm.fathers_name || null,
+                    emergency_contact_name: eventForm.emergency_contact_name || null,
+                    emergency_contact_number: eventForm.emergency_contact_number || null,
+                    emergency_contact_relation: eventForm.emergency_contact_relation || null,
+                    payment_date: eventForm.payment_date || null,
+                    photograph_url: finalPhotographUrl
                 });
 
             if (insertError) throw insertError;
@@ -231,33 +259,133 @@ export default function EventRegistrationPage() {
                                     />
                                 </div>
 
-                                <div className="space-y-2">
-                                    <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                                        <span className="h-4 w-4 text-[#ae2b2b] font-bold text-center leading-4 text-xs">A</span> Age <span className="text-red-500">*</span>
-                                    </label>
-                                    <input
-                                        type="text"
-                                        required
-                                        placeholder="Your age"
-                                        value={eventForm.age}
-                                        onChange={e => setEventForm({ ...eventForm, age: e.target.value })}
-                                        className="w-full rounded-lg border border-gray-300 px-4 py-3 bg-gray-50 text-gray-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#ae2b2b]/50 focus:border-[#ae2b2b] transition-all"
-                                    />
-                                </div>
+                                {project.project_code === 'PRJ-002' && (
+                                    <>
+                                        <div className="space-y-2">
+                                            <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                                                <User className="h-4 w-4 text-[#ae2b2b]" /> Date of Birth <span className="text-red-500">*</span>
+                                            </label>
+                                            <input
+                                                type="date"
+                                                required
+                                                value={eventForm.dob}
+                                                onChange={e => setEventForm({ ...eventForm, dob: e.target.value })}
+                                                className="w-full rounded-lg border border-gray-300 px-4 py-3 bg-gray-50 text-gray-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#ae2b2b]/50 focus:border-[#ae2b2b] transition-all"
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                                                <Phone className="h-4 w-4 text-[#ae2b2b]" /> Mobile Number <span className="text-red-500">*</span>
+                                            </label>
+                                            <input
+                                                type="tel"
+                                                required
+                                                placeholder="+91 XXXXX XXXXX"
+                                                value={eventForm.mobile_number}
+                                                onChange={e => setEventForm({ ...eventForm, mobile_number: e.target.value })}
+                                                className="w-full rounded-lg border border-gray-300 px-4 py-3 bg-gray-50 text-gray-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#ae2b2b]/50 focus:border-[#ae2b2b] transition-all"
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                                                <span className="h-4 w-4 text-[#ae2b2b] flex items-center justify-center font-bold text-xs uppercase">V</span> Are you an active Vihar Sevika? <span className="text-red-500">*</span>
+                                            </label>
+                                            <select
+                                                required
+                                                value={eventForm.is_vihar_sevika}
+                                                onChange={e => setEventForm({ ...eventForm, is_vihar_sevika: e.target.value })}
+                                                className="w-full rounded-lg border border-gray-300 px-4 py-3 bg-gray-50 text-gray-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#ae2b2b]/50 focus:border-[#ae2b2b] transition-all"
+                                            >
+                                                <option value="No">No</option>
+                                                <option value="Yes">Yes</option>
+                                            </select>
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                                                <User className="h-4 w-4 text-[#ae2b2b]" /> Father's Name <span className="text-red-500">*</span>
+                                            </label>
+                                            <input
+                                                type="text"
+                                                required
+                                                placeholder="Father's name"
+                                                value={eventForm.fathers_name}
+                                                onChange={e => setEventForm({ ...eventForm, fathers_name: e.target.value })}
+                                                className="w-full rounded-lg border border-gray-300 px-4 py-3 bg-gray-50 text-gray-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#ae2b2b]/50 focus:border-[#ae2b2b] transition-all"
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                                                <User className="h-4 w-4 text-[#ae2b2b]" /> Emergency Contact Name <span className="text-red-500">*</span>
+                                            </label>
+                                            <input
+                                                type="text"
+                                                required
+                                                placeholder="Emergency contact name"
+                                                value={eventForm.emergency_contact_name}
+                                                onChange={e => setEventForm({ ...eventForm, emergency_contact_name: e.target.value })}
+                                                className="w-full rounded-lg border border-gray-300 px-4 py-3 bg-gray-50 text-gray-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#ae2b2b]/50 focus:border-[#ae2b2b] transition-all"
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                                                <Phone className="h-4 w-4 text-[#ae2b2b]" /> Emergency Contact Number <span className="text-red-500">*</span>
+                                            </label>
+                                            <input
+                                                type="tel"
+                                                required
+                                                placeholder="Emergency contact number"
+                                                value={eventForm.emergency_contact_number}
+                                                onChange={e => setEventForm({ ...eventForm, emergency_contact_number: e.target.value })}
+                                                className="w-full rounded-lg border border-gray-300 px-4 py-3 bg-gray-50 text-gray-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#ae2b2b]/50 focus:border-[#ae2b2b] transition-all"
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                                                <Users className="h-4 w-4 text-[#ae2b2b]" /> Relation to Emergency Contact <span className="text-red-500">*</span>
+                                            </label>
+                                            <input
+                                                type="text"
+                                                required
+                                                placeholder="e.g., Mother, Brother, Friend"
+                                                value={eventForm.emergency_contact_relation}
+                                                onChange={e => setEventForm({ ...eventForm, emergency_contact_relation: e.target.value })}
+                                                className="w-full rounded-lg border border-gray-300 px-4 py-3 bg-gray-50 text-gray-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#ae2b2b]/50 focus:border-[#ae2b2b] transition-all"
+                                            />
+                                        </div>
+                                    </>
+                                )}
 
-                                <div className="space-y-2 md:col-span-2">
-                                    <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                                        <span className="h-4 w-4 text-[#ae2b2b] flex items-center justify-center font-bold text-xs uppercase">S</span> Sangh Name <span className="text-red-500">*</span>
-                                    </label>
-                                    <input
-                                        type="text"
-                                        required
-                                        placeholder="Your Sangh Name"
-                                        value={eventForm.sangh_name}
-                                        onChange={e => setEventForm({ ...eventForm, sangh_name: e.target.value })}
-                                        className="w-full rounded-lg border border-gray-300 px-4 py-3 bg-gray-50 text-gray-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#ae2b2b]/50 focus:border-[#ae2b2b] transition-all"
-                                    />
-                                </div>
+                                {project.project_code !== 'PRJ-002' && (
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                                            <span className="h-4 w-4 text-[#ae2b2b] font-bold text-center leading-4 text-xs">A</span> Age <span className="text-red-500">*</span>
+                                        </label>
+                                        <input
+                                            type="text"
+                                            required
+                                            placeholder="Your age"
+                                            value={eventForm.age}
+                                            onChange={e => setEventForm({ ...eventForm, age: e.target.value })}
+                                            className="w-full rounded-lg border border-gray-300 px-4 py-3 bg-gray-50 text-gray-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#ae2b2b]/50 focus:border-[#ae2b2b] transition-all"
+                                        />
+                                    </div>
+                                )}
+
+                                {project.project_code !== 'PRJ-002' && (
+                                    <div className="space-y-2 md:col-span-2">
+                                        <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                                            <span className="h-4 w-4 text-[#ae2b2b] flex items-center justify-center font-bold text-xs uppercase">S</span> Sangh Name <span className="text-red-500">*</span>
+                                        </label>
+                                        <input
+                                            type="text"
+                                            required
+                                            placeholder="Your Sangh Name"
+                                            value={eventForm.sangh_name}
+                                            onChange={e => setEventForm({ ...eventForm, sangh_name: e.target.value })}
+                                            className="w-full rounded-lg border border-gray-300 px-4 py-3 bg-gray-50 text-gray-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#ae2b2b]/50 focus:border-[#ae2b2b] transition-all"
+                                        />
+                                    </div>
+                                )}
 
                                 <div className="space-y-2 md:col-span-2">
                                     <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
@@ -274,6 +402,23 @@ export default function EventRegistrationPage() {
                                 </div>
                             </div>
 
+                            {project.project_code === 'PRJ-002' && (
+                                <div className="mt-8">
+                                    <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm max-w-md">
+                                        <label className="text-sm font-semibold text-gray-900 flex items-center gap-2 mb-2">
+                                            <Upload className="h-5 w-5 text-[#ae2b2b]" /> Upload recent Photograph <span className="text-red-500">*</span>
+                                        </label>
+                                        <input
+                                            type="file"
+                                            required
+                                            accept="image/*"
+                                            onChange={e => setPhotographFile(e.target.files[0])}
+                                            className="block w-full text-sm text-gray-600 file:mr-4 file:py-3 file:px-6 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-[#ae2b2b]/10 file:text-[#ae2b2b] hover:file:bg-[#ae2b2b]/20 file:cursor-pointer file:shadow-sm cursor-pointer border border-gray-200 rounded-lg p-2 bg-gray-50 mt-3"
+                                        />
+                                    </div>
+                                </div>
+                            )}
+
                             <div className="bg-amber-50 p-6 rounded-xl border border-amber-200 shadow-sm mt-8">
                                 <label className="text-sm font-semibold text-amber-900 flex items-center gap-2 mb-2">
                                     <Upload className="h-5 w-5 text-amber-600" /> Payment Screenshot <span className="text-amber-700 font-normal"></span>
@@ -288,13 +433,35 @@ export default function EventRegistrationPage() {
                                         <p className="text-[#ae2b2b] mt-3 font-semibold text-base bg-red-50 p-3 rounded-lg border border-red-100">After successful payment, please upload the screenshot below.</p>
                                     </div>
                                 </div>
-                                <input
-                                    id="event-payment-upload"
-                                    type="file"
-                                    accept="image/*"
-                                    onChange={e => setEventPaymentImage(e.target.files[0])}
-                                    className="block w-full text-sm text-gray-600 file:mr-4 file:py-3 file:px-6 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-white file:text-amber-700 hover:file:bg-gray-50 file:cursor-pointer file:shadow-sm cursor-pointer border border-amber-200/50 rounded-lg p-2 bg-white/50"
-                                />
+                                <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div>
+                                        <label className="block text-sm font-medium text-amber-900 mb-1">
+                                            Attach screenshot of the payment <span className="text-red-500">*</span>
+                                        </label>
+                                        <input
+                                            id="event-payment-upload"
+                                            type="file"
+                                            required
+                                            accept="image/*"
+                                            onChange={e => setEventPaymentImage(e.target.files[0])}
+                                            className="block w-full text-sm text-gray-600 file:mr-4 file:py-3 file:px-6 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-white file:text-amber-700 hover:file:bg-gray-50 file:cursor-pointer file:shadow-sm cursor-pointer border border-amber-200/50 rounded-lg p-2 bg-white/50"
+                                        />
+                                    </div>
+                                    {project.project_code === 'PRJ-002' && (
+                                        <div>
+                                            <label className="block text-sm font-medium text-amber-900 mb-1">
+                                                Payment Date <span className="text-red-500">*</span>
+                                            </label>
+                                            <input
+                                                type="date"
+                                                required
+                                                value={eventForm.payment_date}
+                                                onChange={e => setEventForm({ ...eventForm, payment_date: e.target.value })}
+                                                className="w-full rounded-lg border border-amber-200/50 px-4 py-3 bg-white/50 text-gray-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#ae2b2b]/50 focus:border-[#ae2b2b] transition-all"
+                                            />
+                                        </div>
+                                    )}
+                                </div>
                             </div>
 
                             <div className="mt-10 border-t border-gray-100 pt-8">

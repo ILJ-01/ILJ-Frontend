@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
-import { Calendar, User, Phone, MapPin, Image as ImageIcon, Loader2, ChevronDown, ChevronUp, Trash2 } from 'lucide-react';
+import { Calendar, User, Phone, MapPin, Image as ImageIcon, Loader2, ChevronDown, ChevronUp, Trash2, Eye, X } from 'lucide-react';
 
 const AdminEventRegistrations = () => {
     const [registrations, setRegistrations] = useState([]);
+    const [selectedReg, setSelectedReg] = useState(null);
     const [loading, setLoading] = useState(true);
     const [expandedProjects, setExpandedProjects] = useState({});
 
@@ -144,13 +145,18 @@ const AdminEventRegistrations = () => {
                                             </thead>
                                             <tbody className="divide-y divide-gray-100">
                                                 {registrations.map((reg) => (
-                                                    <tr key={reg.id} className="hover:bg-gray-50/50 transition-colors">
+                                                    <tr 
+                                                        key={reg.id} 
+                                                        className="hover:bg-blue-50/50 transition-colors cursor-pointer"
+                                                        onClick={() => setSelectedReg(reg)}
+                                                    >
                                                         <td className="p-3 whitespace-nowrap text-gray-500">
                                                             {new Date(reg.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
                                                         </td>
                                                         <td className="p-3">
                                                             <div className="font-medium text-gray-900">{reg.full_name}</div>
                                                             {reg.age && <div className="text-xs text-gray-500">Age: {reg.age}</div>}
+                                                            {reg.dob && <div className="text-xs text-gray-500">DOB: {reg.dob}</div>}
                                                         </td>
                                                         <td className="p-3">
                                                             <div className="flex items-center gap-1.5 text-gray-700">
@@ -172,6 +178,7 @@ const AdminEventRegistrations = () => {
                                                                     target="_blank"
                                                                     rel="noopener noreferrer"
                                                                     className="inline-flex items-center gap-1.5 px-2.5 py-1.5 bg-green-50 text-green-700 hover:bg-green-100 rounded border border-green-200 text-xs font-semibold transition-colors"
+                                                                    onClick={(e) => e.stopPropagation()}
                                                                 >
                                                                     <ImageIcon className="h-3.5 w-3.5" /> View Proof
                                                                 </a>
@@ -181,11 +188,14 @@ const AdminEventRegistrations = () => {
                                                         </td>
                                                         <td className="p-3 text-right">
                                                             <button
-                                                                onClick={() => handleDelete(reg.id)}
-                                                                className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    handleDelete(reg.id);
+                                                                }}
+                                                                className="inline-flex items-center gap-1.5 p-1.5 px-3 text-red-600 bg-red-50 hover:bg-red-100 rounded text-xs font-semibold transition-colors"
                                                                 title="Delete Registration"
                                                             >
-                                                                <Trash2 className="h-4 w-4" />
+                                                                <Trash2 className="h-4 w-4" /> Delete
                                                             </button>
                                                         </td>
                                                     </tr>
@@ -197,6 +207,136 @@ const AdminEventRegistrations = () => {
                             )}
                         </div>
                     ))}
+                </div>
+            )}
+
+            {/* Registration Details Modal */}
+            {selectedReg && (
+                <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+                    <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl transform transition-all">
+                        <div className="sticky top-0 bg-white border-b border-gray-100 px-6 py-4 flex justify-between items-center z-10 shadow-sm">
+                            <h3 className="text-xl font-bold text-gray-900 font-serif">Registration Details</h3>
+                            <button
+                                onClick={() => setSelectedReg(null)}
+                                className="text-gray-400 hover:text-red-600 hover:bg-red-50 p-2 rounded-full transition-colors focus:outline-none"
+                            >
+                                <X className="h-6 w-6" />
+                            </button>
+                        </div>
+                        <div className="p-6 space-y-6">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Full Name</p>
+                                    <p className="font-medium text-gray-900 text-lg">{selectedReg.full_name}</p>
+                                </div>
+                                {selectedReg.email && (
+                                    <div>
+                                        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Email</p>
+                                        <p className="font-medium text-gray-900">{selectedReg.email}</p>
+                                    </div>
+                                )}
+                                <div>
+                                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">WhatsApp Number</p>
+                                    <p className="font-medium text-gray-900">{selectedReg.whatsapp_number}</p>
+                                </div>
+                                {selectedReg.mobile_number && (
+                                    <div>
+                                        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Mobile Number</p>
+                                        <p className="font-medium text-gray-900">{selectedReg.mobile_number}</p>
+                                    </div>
+                                )}
+                                {selectedReg.age && (
+                                    <div>
+                                        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Age</p>
+                                        <p className="font-medium text-gray-900">{selectedReg.age}</p>
+                                    </div>
+                                )}
+                                {selectedReg.dob && (
+                                    <div>
+                                        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Date of Birth</p>
+                                        <p className="font-medium text-gray-900">{selectedReg.dob}</p>
+                                    </div>
+                                )}
+                                {selectedReg.sangh_name && (
+                                    <div className="md:col-span-2">
+                                        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Sangh Name</p>
+                                        <p className="font-medium text-gray-900">{selectedReg.sangh_name}</p>
+                                    </div>
+                                )}
+                                {selectedReg.address && (
+                                    <div className="md:col-span-2">
+                                        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Address</p>
+                                        <p className="font-medium text-gray-900">{selectedReg.address}</p>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Extra Veer Vanshaj specific fields */}
+                            {(selectedReg.fathers_name || selectedReg.emergency_contact_name || selectedReg.is_vihar_sevika !== null) && (
+                                <div className="border-t border-gray-100 pt-6">
+                                    <h4 className="text-sm font-bold text-gray-800 mb-4 bg-gray-50 p-2 rounded inline-block">Additional Details</h4>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        {selectedReg.is_vihar_sevika !== null && selectedReg.is_vihar_sevika !== undefined && (
+                                            <div>
+                                                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Active Vihar Sevika?</p>
+                                                <p className="font-medium text-gray-900">{selectedReg.is_vihar_sevika ? 'Yes' : 'No'}</p>
+                                            </div>
+                                        )}
+                                        {selectedReg.fathers_name && (
+                                            <div>
+                                                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Father's Name</p>
+                                                <p className="font-medium text-gray-900">{selectedReg.fathers_name}</p>
+                                            </div>
+                                        )}
+                                        {selectedReg.emergency_contact_name && (
+                                            <div>
+                                                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Emergency Contact</p>
+                                                <p className="font-medium text-gray-900">
+                                                    {selectedReg.emergency_contact_name} ({selectedReg.emergency_contact_relation})
+                                                </p>
+                                                <p className="text-sm text-gray-600 mt-0.5">{selectedReg.emergency_contact_number}</p>
+                                            </div>
+                                        )}
+                                        {selectedReg.payment_date && (
+                                            <div>
+                                                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Payment Date</p>
+                                                <p className="font-medium text-gray-900">{selectedReg.payment_date}</p>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Documents Section */}
+                            {(selectedReg.payment_screenshot_url || selectedReg.photograph_url) && (
+                                <div className="border-t border-gray-100 pt-6">
+                                    <h4 className="text-sm font-bold text-gray-800 mb-4 bg-gray-50 p-2 rounded inline-block">Documents & Proofs</h4>
+                                    <div className="flex flex-wrap gap-3">
+                                        {selectedReg.payment_screenshot_url && (
+                                            <a
+                                                href={selectedReg.payment_screenshot_url}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="inline-flex items-center gap-2 px-4 py-3 bg-green-50 text-green-700 hover:bg-green-100 rounded-lg border border-green-200 text-sm font-bold transition-all hover:shadow-md"
+                                            >
+                                                <ImageIcon className="h-5 w-5" /> View Payment Proof
+                                            </a>
+                                        )}
+                                        {selectedReg.photograph_url && (
+                                            <a
+                                                href={selectedReg.photograph_url}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="inline-flex items-center gap-2 px-4 py-3 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-lg border border-blue-200 text-sm font-bold transition-all hover:shadow-md"
+                                            >
+                                                <ImageIcon className="h-5 w-5" /> View Photograph
+                                            </a>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
                 </div>
             )}
         </div>
