@@ -24,7 +24,9 @@ export default function EventRegistrationPage() {
         emergency_contact_name: '',
         emergency_contact_number: '',
         emergency_contact_relation: '',
-        payment_date: ''
+        payment_date: '',
+        vihar_seva_head_name: '',
+        vihar_seva_head_contact: ''
     });
     const [eventPaymentImage, setEventPaymentImage] = useState(null);
     const [photographFile, setPhotographFile] = useState(null);
@@ -115,7 +117,9 @@ export default function EventRegistrationPage() {
                     emergency_contact_number: eventForm.emergency_contact_number || null,
                     emergency_contact_relation: eventForm.emergency_contact_relation || null,
                     payment_date: eventForm.payment_date || null,
-                    photograph_url: finalPhotographUrl
+                    photograph_url: finalPhotographUrl,
+                    vihar_seva_head_name: eventForm.is_vihar_sevika === 'Yes' ? eventForm.vihar_seva_head_name || null : null,
+                    vihar_seva_head_contact: eventForm.is_vihar_sevika === 'Yes' ? eventForm.vihar_seva_head_contact || null : null
                 });
 
             if (insertError) throw insertError;
@@ -300,6 +304,36 @@ export default function EventRegistrationPage() {
                                                 <option value="Yes">Yes</option>
                                             </select>
                                         </div>
+                                        {eventForm.is_vihar_sevika === 'Yes' && (
+                                            <>
+                                                <div className="space-y-2">
+                                                    <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                                                        <User className="h-4 w-4 text-[#ae2b2b]" /> Name of your Vihar Seva Head <span className="text-red-500">*</span>
+                                                    </label>
+                                                    <input
+                                                        type="text"
+                                                        required
+                                                        placeholder="Vihar Seva Head Name"
+                                                        value={eventForm.vihar_seva_head_name}
+                                                        onChange={e => setEventForm({ ...eventForm, vihar_seva_head_name: e.target.value })}
+                                                        className="w-full rounded-lg border border-gray-300 px-4 py-3 bg-gray-50 text-gray-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#ae2b2b]/50 focus:border-[#ae2b2b] transition-all"
+                                                    />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                                                        <Phone className="h-4 w-4 text-[#ae2b2b]" /> Contact Details of your Vihar Seva Head <span className="text-red-500">*</span>
+                                                    </label>
+                                                    <input
+                                                        type="text"
+                                                        required
+                                                        placeholder="Contact Details"
+                                                        value={eventForm.vihar_seva_head_contact}
+                                                        onChange={e => setEventForm({ ...eventForm, vihar_seva_head_contact: e.target.value })}
+                                                        className="w-full rounded-lg border border-gray-300 px-4 py-3 bg-gray-50 text-gray-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#ae2b2b]/50 focus:border-[#ae2b2b] transition-all"
+                                                    />
+                                                </div>
+                                            </>
+                                        )}
                                         <div className="space-y-2">
                                             <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
                                                 <User className="h-4 w-4 text-[#ae2b2b]" /> Father's Name <span className="text-red-500">*</span>

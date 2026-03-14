@@ -24,6 +24,7 @@ export default function VolunteerDashboard() {
     // Idea states
     const [projects, setProjects] = useState([]);
     const [myIdeas, setMyIdeas] = useState([]);
+    const [assignedProjects, setAssignedProjects] = useState([]);
     const [ideaForm, setIdeaForm] = useState({ title: '', description: '', project_id: '' });
     const [submittingIdea, setSubmittingIdea] = useState(false);
     const [showIdeaForm, setShowIdeaForm] = useState(false);
@@ -114,6 +115,22 @@ export default function VolunteerDashboard() {
                 .eq('submitted_by', user.id)
                 .order('created_at', { ascending: false });
             setMyIdeas(ideasData || []);
+
+            // 9. Fetch assigned projects
+            const { data: assignedProjectsData, error: assignedError } = await supabase
+                .from('project_volunteers')
+                .select('projects(*)')
+                .eq('volunteer_id', user.id);
+            
+            if (assignedError) {
+                console.error("Error fetching assigned projects:", assignedError);
+            }
+            
+            setAssignedProjects(
+                assignedProjectsData
+                    ?.map(ap => ap.projects || ap.project)
+                    .filter(Boolean) || []
+            );
 
         } catch (error) {
             console.error("Dashboard Load Error:", error);
@@ -409,9 +426,11 @@ export default function VolunteerDashboard() {
                     </div>
                 </div>
 
-                {/* My Tasks Column */}
-                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 h-fit">
-                    <div className="flex justify-between items-center mb-6">
+                {/* Right Side Column */}
+                <div className="space-y-6">
+                    {/* My Tasks Column */}
+                    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 h-fit">
+                        <div className="flex justify-between items-center mb-6">
                         <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
                             <CheckCircle className="h-5 w-5 text-[#ae2b2b]" /> My Tasks
                         </h3>
@@ -455,6 +474,43 @@ export default function VolunteerDashboard() {
                         </Link>
                     </div>
                 </div>
+
+                {/* Assigned Projects */}
+                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 h-fit">
+                    <div className="flex justify-between items-center mb-6">
+                        <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+                            <Briefcase className="h-5 w-5 text-[#ae2b2b]" /> Assigned Projects
+                        </h3>
+                        <Link to="/projects" className="text-sm text-[#ae2b2b] hover:underline font-medium">Explore All</Link>
+                    </div>
+
+                    {assignedProjects.length === 0 ? (
+                        <div className="text-center py-8 bg-gray-50 rounded-lg border border-dashed border-gray-200">
+                            <Briefcase className="h-8 w-8 text-gray-300 mx-auto mb-2" />
+                            <p className="text-gray-500 text-sm">You currently aren't assigned to any projects.</p>
+                        </div>
+                    ) : (
+                        <div className="space-y-3">
+                            {assignedProjects.map(project => (
+                                <div key={project.id} className="p-3 bg-white border border-gray-200 hover:border-[#ae2b2b]/50 rounded-lg shadow-sm transition-all group">
+                                    <div className="flex justify-between items-start mb-1">
+                                        <span className="text-xs font-semibold px-2 py-0.5 rounded bg-purple-100 text-purple-700">
+                                            {project.project_code || 'General'}
+                                        </span>
+                                        <span className={`text-[10px] font-bold uppercase tracking-wider
+                                            ${project.status === 'upcoming' ? 'text-amber-600' : (project.status === 'completed' ? 'text-green-600' : 'text-blue-600')}
+                                        `}>
+                                            {project.status ? project.status.replace('_', ' ') : 'Active'}
+                                        </span>
+                                    </div>
+                                    <h4 className="font-bold text-gray-800 text-sm mt-1">{project.title}</h4>
+                                    <p className="text-xs text-gray-500 mt-1 line-clamp-2">{project.description}</p>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            </div>
 
             </div>
 

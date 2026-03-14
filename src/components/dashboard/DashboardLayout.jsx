@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
     Home, Calendar, CheckSquare, Clock, User, LogOut,
-    Menu, X, Bell, Briefcase, FileText, Shield, Heart, Lightbulb, Activity
+    Menu, X, Bell, Briefcase, FileText, Shield, Heart, Lightbulb, Activity, FolderOpen
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/lib/supabase";
@@ -61,6 +61,7 @@ export default function DashboardLayout({ children }) {
 
     const menuItems = [
         { icon: Lightbulb, label: "Share an Idea", path: "/dashboard/share-idea" },
+        { icon: FolderOpen, label: "Assigned Projects", path: "/dashboard/assigned-projects" },
         { icon: Calendar, label: "Events", path: "/dashboard/events" },
         { icon: CheckSquare, label: "Tasks", path: "/dashboard/tasks" },
         { icon: Clock, label: "Timesheet", path: "/dashboard/timesheet" },

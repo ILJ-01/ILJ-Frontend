@@ -147,6 +147,7 @@ export default function ProfilePage() {
     const [saving, setSaving] = useState(false);
     const [stats, setStats] = useState({ totalHours: 0, eventsCount: 0 });
     const [kalyamMitraDetails, setKalyamMitraDetails] = useState(null);
+    const [guidanceLeaders, setGuidanceLeaders] = useState([]);
 
     // Form State
     const [formData, setFormData] = useState({});
@@ -227,10 +228,27 @@ export default function ProfilePage() {
         }
     };
 
+    const fetchGuidanceLeaders = async () => {
+        try {
+            const { data, error } = await supabase
+                .from('volunteers')
+                .select('ilj_id, first_name, last_name, mobile_number, email, secondary_designation')
+                .in('secondary_designation', ['Chair Person', 'Vice Chair Person'])
+                .order('secondary_designation', { ascending: true }); // Chair Person (C) comes before Vice Chair Person (V)
+
+            if (!error && data) {
+                setGuidanceLeaders(data);
+            }
+        } catch (err) {
+            console.error('Guidance leaders fetch error:', err);
+        }
+    };
+
     useEffect(() => {
         if (user) {
             fetchStats();
             fetchKalyanMitraDetails(user.kalyan_mitra);
+            fetchGuidanceLeaders();
             setFormData({
                 // Personal
                 first_name: user.first_name || "",
@@ -699,6 +717,48 @@ export default function ProfilePage() {
                                 </div>
                             </div>
                         </motion.div>
+
+                        {/* For more guidance - CP and VCP */}
+                        {guidanceLeaders.length > 0 && (
+                            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.75, duration: 0.5 }} className="md:col-span-2">
+                                <div className="bg-gradient-to-br from-white to-gray-50 rounded-xl border border-[#ae2b2b]/10 shadow-sm p-6 relative overflow-hidden">
+                                     <div className="absolute top-0 right-0 w-32 h-32 bg-[#ae2b2b]/5 rounded-bl-full -z-0"></div>
+                                    <h3 className="flex items-center gap-2 font-bold text-gray-800 mb-6 border-b pb-3 relative z-10">
+                                        <Sparkles className="h-5 w-5 text-[#ae2b2b]" /> For more guidance
+                                    </h3>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 relative z-10">
+                                        {guidanceLeaders.map((leader, index) => (
+                                            <div key={index} className="bg-white p-5 rounded-lg border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+                                                <div className="flex items-start gap-4">
+                                                    <div className="h-12 w-12 rounded-full bg-[#ae2b2b]/10 flex items-center justify-center font-bold text-[#ae2b2b] text-xl shrink-0">
+                                                        {leader.first_name?.[0]}{leader.last_name?.[0]}
+                                                    </div>
+                                                    <div>
+                                                        <h4 className="font-bold text-gray-900">{leader.first_name} {leader.last_name}</h4>
+                                                        <span className="inline-block mt-0.5 mb-2 text-xs font-semibold px-2 py-0.5 bg-gray-100 text-gray-600 rounded uppercase tracking-wider">
+                                                            {leader.secondary_designation}
+                                                        </span>
+                                                        <div className="space-y-1 mt-1 text-sm text-gray-600">
+                                                            {leader.mobile_number && (
+                                                                <p className="flex items-center gap-2">
+                                                                    <Phone className="h-3.5 w-3.5 text-gray-400" /> {leader.mobile_number}
+                                                                </p>
+                                                            )}
+                                                            {leader.email && (
+                                                                <p className="flex items-center gap-2">
+                                                                    <Mail className="h-3.5 w-3.5 text-gray-400" /> {leader.email}
+                                                                </p>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            </motion.div>
+                        )}
+                        
                     </div>
                 </div>
             </div >

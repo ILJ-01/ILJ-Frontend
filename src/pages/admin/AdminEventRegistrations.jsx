@@ -46,6 +46,42 @@ const AdminEventRegistrations = () => {
         if (!window.confirm("Are you sure you want to delete this registration? This cannot be undone.")) return;
 
         try {
+            // Find the registration to get the URLs for storage deletion
+            const reg = registrations.find(r => r.id === registrationId);
+            if (reg) {
+                const filesToRemove = [];
+                const extractPath = (url) => {
+                    if (!url) return null;
+                    try {
+                        const parts = url.split('/project-gallery/');
+                        if (parts.length > 1) {
+                            // In case of query parameters in URL, remove them
+                            return parts[1].split('?')[0];
+                        }
+                    } catch (e) {
+                        console.error("Error extracting path from URL:", url, e);
+                    }
+                    return null;
+                };
+
+                const paymentPath = extractPath(reg.payment_screenshot_url);
+                if (paymentPath) filesToRemove.push(paymentPath);
+
+                const photoPath = extractPath(reg.photograph_url);
+                if (photoPath) filesToRemove.push(photoPath);
+
+                if (filesToRemove.length > 0) {
+                    const { error: storageError } = await supabase.storage
+                        .from('project-gallery')
+                        .remove(filesToRemove);
+                    
+                    if (storageError) {
+                        console.error("Error deleting files from storage:", storageError);
+                        // We continue with DB deletion even if storage deletion fails
+                    }
+                }
+            }
+
             const { error } = await supabase
                 .from('event_registrations')
                 .delete()
@@ -301,6 +337,18 @@ const AdminEventRegistrations = () => {
                                             <div>
                                                 <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Payment Date</p>
                                                 <p className="font-medium text-gray-900">{selectedReg.payment_date}</p>
+                                            </div>
+                                        )}
+                                        {selectedReg.vihar_seva_head_name && (
+                                            <div>
+                                                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Vihar Seva Head Name</p>
+                                                <p className="font-medium text-gray-900">{selectedReg.vihar_seva_head_name}</p>
+                                            </div>
+                                        )}
+                                        {selectedReg.vihar_seva_head_contact && (
+                                            <div>
+                                                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Vihar Seva Head Contact</p>
+                                                <p className="font-medium text-gray-900">{selectedReg.vihar_seva_head_contact}</p>
                                             </div>
                                         )}
                                     </div>

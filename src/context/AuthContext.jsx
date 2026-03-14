@@ -102,9 +102,18 @@ export function AuthProvider({ children }) {
         if (!currentUser?.id) return;
 
         try {
-            // Re-login silently using stored credentials is not possible without password
-            // Instead, just re-fetch the user data via a simple RPC or direct query
-            // For now, we'll call login_volunteer_by_id if available, or skip refresh
+            // Fetch the updated volunteer profile
+            const { data: updatedUserData, error: userError } = await supabase
+                .from('volunteers')
+                .select('*')
+                .eq('id', currentUser.id)
+                .single();
+
+            if (userError) {
+                console.error("Error fetching updated user data:", userError);
+            }
+
+            const mergedUser = updatedUserData || currentUser;
 
             // Fetch Projects Managed by User (public data, no auth needed)
             const { data: projects, error: projectError } = await supabase
@@ -118,11 +127,11 @@ export function AuthProvider({ children }) {
 
             // Check admin status
             const isManager = projects && projects.length > 0;
-            const isTeamLeader = currentUser.team_leader_for && currentUser.team_leader_for.trim() !== '';
+            const isTeamLeader = mergedUser.team_leader_for && mergedUser.team_leader_for.trim() !== '';
 
 
             // Count if user is kalyan mitra
-            const fullName = `${currentUser.first_name} ${currentUser.last_name}`.trim();
+            const fullName = `${mergedUser.first_name || ''} ${mergedUser.last_name || ''}`.trim();
             const { count: kmCount } = await supabase
                 .from('volunteers')
                 .select('*', { count: 'exact', head: true })
@@ -132,7 +141,7 @@ export function AuthProvider({ children }) {
 
             // Merge: Current details + Managed Projects + Admin flags
             const updatedUser = {
-                ...currentUser,
+                ...mergedUser,
                 managed_projects: projects || currentUser.managed_projects || [],
                 isAdmin: isManager || isTeamLeader,
                 isManager,

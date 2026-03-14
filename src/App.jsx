@@ -35,6 +35,7 @@ import TeamLeaderHub from "./pages/dashboard/TeamLeaderHub";
 import KalyanMitraHub from "./pages/dashboard/KalyanMitraHub";
 import IdeasHub from "./pages/dashboard/IdeasHub";
 import VolunteerSTC from "./pages/dashboard/VolunteerSTC";
+import AssignedProjectsPage from "./pages/dashboard/AssignedProjectsPage";
 
 // Helper components for routing structure
 import { useAuth } from "./context/AuthContext";
@@ -98,6 +99,7 @@ function App() {
             <Route path="/dashboard/kalyan-mitra" element={<ProtectedRoute><DashboardLayout><KalyanMitraHub /></DashboardLayout></ProtectedRoute>} />
             <Route path="/dashboard/ideas" element={<ProtectedRoute><DashboardLayout><IdeasHub /></DashboardLayout></ProtectedRoute>} />
             <Route path="/dashboard/stc" element={<ProtectedRoute><DashboardLayout><VolunteerSTC /></DashboardLayout></ProtectedRoute>} />
+            <Route path="/dashboard/assigned-projects" element={<ProtectedRoute><DashboardLayout><AssignedProjectsPage /></DashboardLayout></ProtectedRoute>} />
 
           </Routes>
         </div>

@@ -247,6 +247,22 @@ const AdminEditProject = () => {
     const handleDeletePhoto = async (photoId) => {
         if (!window.confirm("Delete this photo?")) return;
         try {
+            const photo = galleryPhotos.find(p => p.id === photoId);
+            if (photo && photo.photo_url) {
+                try {
+                    const parts = photo.photo_url.split('/project-gallery/');
+                    if (parts.length > 1) {
+                        const filePath = parts[1].split('?')[0]; // Handle query params if any
+                        const { error: storageError } = await supabase.storage
+                            .from('project-gallery')
+                            .remove([filePath]);
+                        if (storageError) console.error("Error deleting photo from storage:", storageError);
+                    }
+                } catch (e) {
+                    console.error("Error extracting path from URL:", e);
+                }
+            }
+
             await supabase.from('project_photos').delete().eq('id', photoId);
             setGalleryPhotos(prev => prev.filter(p => p.id !== photoId));
         } catch (error) {
