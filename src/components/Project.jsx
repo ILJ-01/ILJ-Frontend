@@ -424,11 +424,19 @@ export default function Project() {
                   <p className="text-sm font-bold text-gray-500 uppercase tracking-widest mb-1">Next Event Date</p>
                   <p className="text-xl font-bold text-gray-900">{project.next_event_date}</p>
                 </div>
-                <Link to={`/projects/${project.id}/event-registration`}>
-                  <Button className="bg-[#ae2b2b] hover:bg-[#8f1f1f] text-white px-8 py-2 border-0">
-                    Click to Register
-                  </Button>
-                </Link>
+                {project.project_code === 'PRJ-002' ? (
+                  <a href="https://docs.google.com/forms/d/e/1FAIpQLSe5cPsvyKeh-h2xLw2j2nThavaQGM_Ov5fYwIHjUphNMemyaA/viewform" target="_blank" rel="noopener noreferrer">
+                    <Button className="bg-[#ae2b2b] hover:bg-[#8f1f1f] text-white px-8 py-2 border-0">
+                      Click to Register
+                    </Button>
+                  </a>
+                ) : (
+                  <Link to={`/projects/${project.id}/event-registration`}>
+                    <Button className="bg-[#ae2b2b] hover:bg-[#8f1f1f] text-white px-8 py-2 border-0">
+                      Click to Register
+                    </Button>
+                  </Link>
+                )}
               </div>
             </div>
           )}

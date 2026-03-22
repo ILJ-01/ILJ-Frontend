@@ -47,6 +47,12 @@ export default function EventRegistrationPage() {
                 // If registration is disabled, kick them out
                 if (!data.is_event_registration_enabled) {
                     navigate(`/project/${data.id}`);
+                    return;
+                }
+
+                if (data.project_code === 'PRJ-002') {
+                    window.location.href = 'https://docs.google.com/forms/d/e/1FAIpQLSe5cPsvyKeh-h2xLw2j2nThavaQGM_Ov5fYwIHjUphNMemyaA/viewform';
+                    return;
                 }
 
                 setProject(data);
