@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
     Home, Calendar, CheckSquare, Clock, User, LogOut,
-    Menu, X, Bell, Briefcase, FileText, Shield, Heart, Lightbulb, Activity, FolderOpen
+    Menu, X, Bell, Briefcase, FileText, Shield, Heart, Lightbulb, Activity, FolderOpen, Users
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/lib/supabase";
@@ -81,6 +81,22 @@ export default function DashboardLayout({ children }) {
 
     if (user?.isKalyanMitra) {
         menuItems.unshift({ icon: Heart, label: "Kalyan Mitra Hub", path: "/dashboard/kalyan-mitra" });
+    }
+
+    if (user?.isPodTeam || user?.isITAdmin) {
+        menuItems.unshift({ icon: Users, label: "Pod Management", path: "/dashboard/pod-management" });
+    }
+
+    if (user?.isOnboardingTeam) {
+        menuItems.unshift({ icon: User, label: "Onboarding", path: "/dashboard/onboarding" });
+    }
+
+    if (user?.isITAdmin) {
+        menuItems.unshift({ icon: Activity, label: "IT Verification", path: "/dashboard/it-admin" });
+    }
+
+    if (user?.isITAdmin || user?.isOnboardingTeam) {
+        menuItems.unshift({ icon: User, label: "Master Sheet", path: "/dashboard/master-sheet" });
     }
 
     // Chair Person / Vice Chair Person can access Ideas Hub

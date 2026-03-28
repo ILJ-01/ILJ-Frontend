@@ -16,22 +16,41 @@ export default function AssignedProjectsPage() {
     const fetchAssignedProjects = async () => {
         setLoading(true);
         try {
-            const { data, error } = await supabase
-                .from('project_volunteers')
-                .select('projects(*)')
-                .eq('volunteer_id', user.id);
+            // 1. Fetch the user's specific assigned pods from the master db (volunteers table)
+            const { data: volunteerData, error: volError } = await supabase
+                .from('volunteers')
+                .select('assigned_pod')
+                .eq('id', user.id)
+                .single();
             
-            if (error) {
-                console.error("Error fetching assigned projects:", error);
+            if (volError) {
+                console.error("Error fetching volunteer record:", volError);
+            }
+
+            const assignedPodString = volunteerData?.assigned_pod || '';
+            
+            if (!assignedPodString.trim()) {
+                setAssignedProjects([]);
+                return;
+            }
+
+            // The assigned_pod is expected to be a string, possibly comma-separated
+            const podNames = assignedPodString.split(',').map(s => s.trim()).filter(Boolean);
+
+            // 2. Fetch the actual project data for those matched pods
+            const { data: projectsData, error: projectsError } = await supabase
+                .from('projects')
+                .select('*')
+                .in('title', podNames);
+
+            if (projectsError) {
+                console.error("Error fetching projects:", projectsError);
             }
             
-            setAssignedProjects(
-                data
-                    ?.map(ap => ap.projects || ap.project)
-                    .filter(Boolean) || []
-            );
+            setAssignedProjects(projectsData || []);
         } catch (error) {
             console.error("Fetch Data Error:", error);
+            setAssignedProjects([]);
         } finally {
             setLoading(false);
         }

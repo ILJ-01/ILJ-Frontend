@@ -125,33 +125,84 @@ const AdminDashboard = () => {
             const XLSX = await import("xlsx");
             const workbook = XLSX.utils.book_new();
 
-            const removeId = (data) => data?.map(({ id, ...rest }) => rest) || [];
-
             // 1. Volunteers
             const { data: volData } = await supabase.from('volunteers').select('*').order('created_at');
-            const volSheet = XLSX.utils.json_to_sheet(removeId(volData));
+            const volSheetData = (volData || []).map(v => ({
+                ILJ_ID: v.ilj_id,
+                First_Name: v.first_name,
+                Last_Name: v.last_name,
+                Email: v.email,
+                Mobile: v.mobile_number,
+                Gender: v.gender,
+                Age: v.age,
+                District: v.district,
+                City: v.city,
+                State: v.state,
+                Sangh_Name: v.sangh_name,
+                Designation: v.designation,
+                Role: v.role,
+                Occupation: v.occupation,
+                Qualification: v.qualification,
+                Skills: v.skills,
+                Volunteering_Pref_1: v.volunteering_preference1,
+                Volunteering_Pref_2: v.volunteering_preference2,
+                Volunteering_Pref_3: v.volunteering_preference3,
+                Kalyan_Mitra: v.kalyan_mitra,
+                Joined_At: v.created_at ? new Date(v.created_at).toLocaleDateString() : 'N/A'
+            }));
+            const volSheet = XLSX.utils.json_to_sheet(volSheetData);
             XLSX.utils.book_append_sheet(workbook, volSheet, "Volunteers");
 
             // 2. Projects
-            const { data: projData } = await supabase.from('projects').select('*').order('created_at');
-            const projSheet = XLSX.utils.json_to_sheet(removeId(projData));
+            const { data: projData } = await supabase.from('projects').select('*, manager:manager_id(first_name, last_name)').order('created_at');
+            const projSheetData = (projData || []).map(p => ({
+                Project_Code: p.project_code,
+                Title: p.title,
+                Status: p.status,
+                Budget: p.budget,
+                Created_At: p.created_at ? new Date(p.created_at).toLocaleDateString() : 'N/A',
+                Manager_Name: p.manager ? `${p.manager.first_name || ''} ${p.manager.last_name || ''}`.trim() : 'Unknown'
+            }));
+            const projSheet = XLSX.utils.json_to_sheet(projSheetData);
             XLSX.utils.book_append_sheet(workbook, projSheet, "Projects");
 
             // 3. Events
             const { data: eventData } = await supabase.from('events').select('*').order('created_at');
-            const eventSheet = XLSX.utils.json_to_sheet(removeId(eventData));
+            const eventSheetData = (eventData || []).map(e => ({
+                Event_Title: e.title,
+                Date: e.date,
+                Location: e.location,
+                Status: e.status,
+                Capacity: e.capacity,
+                Created_At: e.created_at ? new Date(e.created_at).toLocaleDateString() : 'N/A'
+            }));
+            const eventSheet = XLSX.utils.json_to_sheet(eventSheetData);
             XLSX.utils.book_append_sheet(workbook, eventSheet, "Events");
 
             // 4. Tasks
-            const { data: taskData } = await supabase.from('tasks').select('*').order('created_at');
-            const taskSheet = XLSX.utils.json_to_sheet(removeId(taskData));
+            const { data: taskData } = await supabase.from('tasks').select('*, assignee:assignee_id(first_name, last_name, ilj_id), project:project_id(title)').order('created_at');
+            const taskSheetData = (taskData || []).map(t => ({
+                Task_Title: t.title,
+                Project: t.project?.title || 'Unknown',
+                Assignee: t.assignee ? `${t.assignee.first_name || ''} ${t.assignee.last_name || ''} (${t.assignee.ilj_id || 'No ID'})`.trim() : 'Unassigned',
+                Status: t.status,
+                Deadline: t.deadline ? new Date(t.deadline).toLocaleDateString() : 'N/A'
+            }));
+            const taskSheet = XLSX.utils.json_to_sheet(taskSheetData);
             XLSX.utils.book_append_sheet(workbook, taskSheet, "Tasks");
 
             // 5. Timesheets
-            const { data: tsData } = await supabase.from('timesheets').select('*').order('created_at');
-            const tsSheet = XLSX.utils.json_to_sheet(removeId(tsData));
+            const { data: tsData } = await supabase.from('timesheets').select('*, volunteer:volunteer_id(first_name, last_name, ilj_id), project:project_id(title)').order('created_at');
+            const tsSheetData = (tsData || []).map(t => ({
+                Date_Worked: t.date_worked ? new Date(t.date_worked).toLocaleDateString() : 'N/A',
+                Volunteer: t.volunteer ? `${t.volunteer.first_name || ''} ${t.volunteer.last_name || ''} (${t.volunteer.ilj_id || 'No ID'})`.trim() : 'Unknown',
+                Project: t.project?.title || 'Unknown',
+                Role: t.role,
+                Hours: t.hours,
+                Status: t.status
+            }));
+            const tsSheet = XLSX.utils.json_to_sheet(tsSheetData);
             XLSX.utils.book_append_sheet(workbook, tsSheet, "Timesheets");
-
 
             XLSX.writeFile(workbook, "ILJ_Admin_Data.xlsx");
         } catch (error) {
@@ -1017,6 +1068,104 @@ const AdminDashboard = () => {
                                             </div>
                                         </div>
                                     </div>
+                                    {/* System Roles Section */}
+                                    <div className="space-y-6 md:col-span-2">
+                                        <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
+                                            <h4 className="text-sm font-bold text-gray-700 uppercase tracking-wider flex items-center gap-2 mb-4">
+                                                <Activity className="h-4 w-4 text-purple-600" />
+                                                System Roles
+                                            </h4>
+                                            <div className="flex flex-col sm:flex-row flex-wrap gap-6">
+                                                {/* IT Admin Toggle */}
+                                                <label className="flex items-center gap-3 cursor-pointer">
+                                                    <div className="relative">
+                                                        <input 
+                                                            type="checkbox" 
+                                                            className="sr-only peer"
+                                                            checked={selectedVolunteer.is_it_admin || false}
+                                                            onChange={async (e) => {
+                                                                const newVal = e.target.checked;
+                                                                try {
+                                                                    const { error } = await supabase
+                                                                        .from('volunteers')
+                                                                        .update({ is_it_admin: newVal })
+                                                                        .eq('id', selectedVolunteer.id);
+                                                                    if (error) throw error;
+                                                                    
+                                                                    const updated = { ...selectedVolunteer, is_it_admin: newVal };
+                                                                    setSelectedVolunteer(updated);
+                                                                    setVolunteers(prev => prev.map(vol => vol.id === updated.id ? updated : vol));
+                                                                } catch (err) {
+                                                                    alert(`Error updating IT Admin role: ${err.message}`);
+                                                                }
+                                                            }}
+                                                        />
+                                                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
+                                                    </div>
+                                                    <span className="text-sm font-medium text-gray-900">IT Admin (Master DB)</span>
+                                                </label>
+
+                                                {/* Onboarding Team Toggle */}
+                                                <label className="flex items-center gap-3 cursor-pointer">
+                                                    <div className="relative">
+                                                        <input 
+                                                            type="checkbox" 
+                                                            className="sr-only peer"
+                                                            checked={selectedVolunteer.is_onboarding_team || false}
+                                                            onChange={async (e) => {
+                                                                const newVal = e.target.checked;
+                                                                try {
+                                                                    const { error } = await supabase
+                                                                        .from('volunteers')
+                                                                        .update({ is_onboarding_team: newVal })
+                                                                        .eq('id', selectedVolunteer.id);
+                                                                    if (error) throw error;
+                                                                    
+                                                                    const updated = { ...selectedVolunteer, is_onboarding_team: newVal };
+                                                                    setSelectedVolunteer(updated);
+                                                                    setVolunteers(prev => prev.map(vol => vol.id === updated.id ? updated : vol));
+                                                                } catch (err) {
+                                                                    alert(`Error updating Onboarding Team role: ${err.message}`);
+                                                                }
+                                                            }}
+                                                        />
+                                                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                                                    </div>
+                                                    <span className="text-sm font-medium text-gray-900">Onboarding Team</span>
+                                                </label>
+
+                                                {/* Pod Manager Toggle */}
+                                                <label className="flex items-center gap-3 cursor-pointer">
+                                                    <div className="relative">
+                                                        <input 
+                                                            type="checkbox" 
+                                                            className="sr-only peer"
+                                                            checked={selectedVolunteer.is_pod_team || false}
+                                                            onChange={async (e) => {
+                                                                const newVal = e.target.checked;
+                                                                try {
+                                                                    const { error } = await supabase
+                                                                        .from('volunteers')
+                                                                        .update({ is_pod_team: newVal })
+                                                                        .eq('id', selectedVolunteer.id);
+                                                                    if (error) throw error;
+                                                                    
+                                                                    const updated = { ...selectedVolunteer, is_pod_team: newVal };
+                                                                    setSelectedVolunteer(updated);
+                                                                    setVolunteers(prev => prev.map(vol => vol.id === updated.id ? updated : vol));
+                                                                } catch (err) {
+                                                                    alert(`Error updating Pod Manager role: ${err.message}`);
+                                                                }
+                                                            }}
+                                                        />
+                                                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
+                                                    </div>
+                                                    <span className="text-sm font-medium text-gray-900">Pod Manager Hub</span>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+
                                 </div>
                             </section>
 

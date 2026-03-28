@@ -221,10 +221,23 @@ export default function TeamLeaderHub() {
 
     const handleExportVolunteers = () => {
         const dataToExport = filteredVolunteers.map(v => {
-            const { id, ...rest } = v;
             const level = getPreferenceLevel(v, activeTeam);
             return {
-                ...rest,
+                ILJ_ID: v.ilj_id,
+                First_Name: v.first_name,
+                Last_Name: v.last_name,
+                Email: v.email,
+                Mobile: v.mobile_number,
+                Gender: v.gender,
+                Age: v.age,
+                District: v.district,
+                City: v.city,
+                State: v.state,
+                Sangh_Name: v.sangh_name,
+                Designation: v.designation,
+                Role: v.role,
+                Occupation: v.occupation,
+                Qualification: v.qualification,
                 Preference_Ranking: level,
                 Context_Team: activeTeam
             };

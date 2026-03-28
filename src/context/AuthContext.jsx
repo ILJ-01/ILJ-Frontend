@@ -47,13 +47,20 @@ export function AuthProvider({ children }) {
 
             const isKalyanMitra = kmCount > 0;
 
+            const isITAdmin = Boolean(userData.is_it_admin);
+            const isOnboardingTeam = Boolean(userData.is_onboarding_team);
+            const isPodTeam = Boolean(userData.is_pod_team);
+
             const userWithProjects = {
                 ...userData,
                 managed_projects: userData.managed_projects || [],
                 isAdmin: isManager || isTeamLeader,
                 isManager,
                 isTeamLeader,
-                isKalyanMitra
+                isKalyanMitra,
+                isITAdmin,
+                isOnboardingTeam,
+                isPodTeam
             };
 
             setUser(userWithProjects);
@@ -139,6 +146,10 @@ export function AuthProvider({ children }) {
 
             const isKalyanMitra = kmCount > 0;
 
+            const isITAdmin = Boolean(mergedUser.is_it_admin);
+            const isOnboardingTeam = Boolean(mergedUser.is_onboarding_team);
+            const isPodTeam = Boolean(mergedUser.is_pod_team);
+
             // Merge: Current details + Managed Projects + Admin flags
             const updatedUser = {
                 ...mergedUser,
@@ -146,7 +157,10 @@ export function AuthProvider({ children }) {
                 isAdmin: isManager || isTeamLeader,
                 isManager,
                 isTeamLeader,
-                isKalyanMitra
+                isKalyanMitra,
+                isITAdmin,
+                isOnboardingTeam,
+                isPodTeam
             };
 
             setUser(updatedUser);
@@ -176,7 +190,10 @@ export function AuthProvider({ children }) {
             isAdmin: user?.isAdmin || false,
             isManager: user?.isManager || false,
             isTeamLeader: user?.isTeamLeader || false,
-            isKalyanMitra: user?.isKalyanMitra || false
+            isKalyanMitra: user?.isKalyanMitra || false,
+            isITAdmin: user?.isITAdmin || false,
+            isOnboardingTeam: user?.isOnboardingTeam || false,
+            isPodTeam: user?.isPodTeam || false
         }}>
             {children}
         </AuthContext.Provider>

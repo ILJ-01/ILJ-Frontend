@@ -47,10 +47,25 @@ export default function KalyanMitraHub() {
     };
 
     const handleExport = () => {
-        const exportData = volunteers.map(vol => {
-            const { id, ...rest } = vol;
-            return rest;
-        });
+        const exportData = volunteers.map(vol => ({
+            ILJ_ID: vol.ilj_id,
+            First_Name: vol.first_name,
+            Last_Name: vol.last_name,
+            Email: vol.email,
+            Mobile: vol.mobile_number,
+            Gender: vol.gender,
+            Age: vol.age,
+            District: vol.district,
+            City: vol.city,
+            State: vol.state,
+            Sangh_Name: vol.sangh_name,
+            Designation: vol.designation,
+            Role: vol.role,
+            Occupation: vol.occupation,
+            Qualification: vol.qualification,
+            Skills: vol.skills,
+            Joined_At: vol.created_at ? new Date(vol.created_at).toLocaleDateString() : 'N/A'
+        }));
 
         const ws = XLSX.utils.json_to_sheet(exportData);
         const wb = XLSX.utils.book_new();

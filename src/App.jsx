@@ -36,6 +36,10 @@ import KalyanMitraHub from "./pages/dashboard/KalyanMitraHub";
 import IdeasHub from "./pages/dashboard/IdeasHub";
 import VolunteerSTC from "./pages/dashboard/VolunteerSTC";
 import AssignedProjectsPage from "./pages/dashboard/AssignedProjectsPage";
+import ItAdminHub from "./pages/dashboard/ItAdminHub";
+import OnboardingHub from "./pages/dashboard/OnboardingHub";
+import MasterSheet from "./pages/dashboard/MasterSheet";
+import PodManagementHub from "./pages/dashboard/PodManagementHub";
 
 // Helper components for routing structure
 import { useAuth } from "./context/AuthContext";
@@ -100,6 +104,10 @@ function App() {
             <Route path="/dashboard/ideas" element={<ProtectedRoute><DashboardLayout><IdeasHub /></DashboardLayout></ProtectedRoute>} />
             <Route path="/dashboard/stc" element={<ProtectedRoute><DashboardLayout><VolunteerSTC /></DashboardLayout></ProtectedRoute>} />
             <Route path="/dashboard/assigned-projects" element={<ProtectedRoute><DashboardLayout><AssignedProjectsPage /></DashboardLayout></ProtectedRoute>} />
+            <Route path="/dashboard/it-admin" element={<ProtectedRoute><DashboardLayout><ItAdminHub /></DashboardLayout></ProtectedRoute>} />
+            <Route path="/dashboard/onboarding" element={<ProtectedRoute><DashboardLayout><OnboardingHub /></DashboardLayout></ProtectedRoute>} />
+            <Route path="/dashboard/master-sheet" element={<ProtectedRoute><DashboardLayout><MasterSheet /></DashboardLayout></ProtectedRoute>} />
+            <Route path="/dashboard/pod-management" element={<ProtectedRoute><DashboardLayout><PodManagementHub /></DashboardLayout></ProtectedRoute>} />
 
           </Routes>
         </div>

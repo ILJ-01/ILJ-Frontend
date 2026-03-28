@@ -62,11 +62,24 @@ export default function AdminInquiries() {
 
     const handleExport = () => {
         const exportData = data.map(item => {
-            const { id, project_id, ...rest } = item;
-            return {
-                Project: projects[project_id] || 'Unknown',
-                ...rest
-            };
+            if (activeTab === 'inquiries') {
+                return {
+                    Project: projects[item.project_id] || 'Unknown',
+                    Name: item.name,
+                    Email: item.email,
+                    Mobile: item.mobile,
+                    Message: item.message,
+                    Created_At: new Date(item.created_at).toLocaleString()
+                };
+            } else {
+                return {
+                    Project: projects[item.project_id] || 'Unknown',
+                    Rating: item.rating,
+                    Comments: item.comments,
+                    Is_Anonymous: item.is_anonymous ? 'Yes' : 'No',
+                    Created_At: new Date(item.created_at).toLocaleString()
+                };
+            }
         });
 
         const ws = XLSX.utils.json_to_sheet(exportData);

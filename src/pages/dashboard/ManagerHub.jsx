@@ -87,13 +87,18 @@ export default function ManagerHub() {
                 .select(`
                     id,
                     project_id,
+                    status,
                     volunteer:volunteers(id, first_name, last_name, ilj_id, email, designation, secondary_designation)
                 `)
                 .eq('project_id', projId);
 
             if (error) throw error;
-            // Filter out any entries where volunteer relation returned null (e.g. deleted/RLS hidden)
-            setTeamMembers(data?.map(d => d.volunteer).filter(Boolean) || []);
+            // Attach project_volunteers.status as engagement_status, and the junction id as pv_id
+            setTeamMembers(data?.filter(d => Boolean(d.volunteer)).map(d => ({ 
+                ...d.volunteer, 
+                engagement_status: d.status,
+                pv_id: d.id
+            })) || []);
         } catch (error) {
             console.error("Fetch Team Error:", error);
         }
@@ -170,6 +175,22 @@ export default function ManagerHub() {
         } catch (error) {
             console.error("Remove Team Error:", error);
             alert("Failed to remove member.");
+        }
+    };
+
+    const handleUpdateEngagementStatus = async (pvId, newStatus) => {
+        try {
+            const { error } = await supabase
+                .from('project_volunteers')
+                .update({ status: newStatus })
+                .eq('id', pvId);
+
+            if (error) throw error;
+
+            setTeamMembers(prev => prev.map(m => m.pv_id === pvId ? { ...m, engagement_status: newStatus } : m));
+        } catch (error) {
+            console.error("Update Engagement Error:", error);
+            alert("Failed to update engagement status.");
         }
     };
 
@@ -314,12 +335,16 @@ export default function ManagerHub() {
 
     const handleExportTimesheets = () => {
         const dataToExport = [...pendingTimesheets, ...historyTimesheets].map(t => {
-            const { id, volunteer, project, ...rest } = t;
             return {
-                ...rest,
-                Volunteer_Name: `${volunteer?.first_name || ''} ${volunteer?.last_name || ''}`.trim(),
-                ILJ_ID: volunteer?.ilj_id,
-                Project_Name: project?.title
+                Date_Worked: t.date_worked ? new Date(t.date_worked).toLocaleDateString() : 'N/A',
+                ILJ_ID: t.volunteer?.ilj_id || 'N/A',
+                Volunteer_Name: `${t.volunteer?.first_name || ''} ${t.volunteer?.last_name || ''}`.trim(),
+                Project_Name: t.project?.title || 'Unknown',
+                Hours: t.hours,
+                Role: t.role,
+                Work_Mode: t.work_mode,
+                Status: t.status,
+                Description: t.description
             };
         });
         exportToExcel(dataToExport, `Timesheets_Report_${new Date().toLocaleDateString().replace(/\//g, '-')}`);
@@ -327,8 +352,14 @@ export default function ManagerHub() {
 
     const handleExportTeam = () => {
         const dataToExport = teamMembers.map(m => {
-            const { id, ...rest } = m;
-            return rest;
+            return {
+                ILJ_ID: m.ilj_id,
+                First_Name: m.first_name,
+                Last_Name: m.last_name,
+                Email: m.email,
+                Designation: m.designation,
+                Secondary_Designation: m.secondary_designation
+            };
         });
         exportToExcel(dataToExport, `Team_List_${new Date().toLocaleDateString().replace(/\//g, '-')}`);
     };
@@ -756,14 +787,29 @@ export default function ManagerHub() {
                                             </div>
                                         </div>
                                     </div>
-                                    <button
-                                        onClick={() => handleRemoveFromTeam(member.id)}
-                                        className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors md:opacity-0 md:group-hover:opacity-100"
-                                        title="Remove from team"
-                                    >
-                                        <Trash2 className="h-4 w-4 block md:hidden" />
-                                        <X className="h-4 w-4 hidden md:block" />
-                                    </button>
+                                    <div className="flex flex-col items-end gap-2">
+                                        <select
+                                            value={member.engagement_status || 'active'}
+                                            onChange={(e) => handleUpdateEngagementStatus(member.pv_id, e.target.value)}
+                                            className={`text-xs px-2 py-1 rounded font-medium border appearance-none focus:outline-none focus:ring-1 focus:ring-[#ae2b2b] ${
+                                                member.engagement_status === 'engaged' ? 'bg-green-50 text-green-700 border-green-200' :
+                                                member.engagement_status === 'inactive' ? 'bg-gray-50 text-gray-600 border-gray-200' :
+                                                'bg-[#ae2b2b]/10 text-[#ae2b2b] border-[#ae2b2b]/20'
+                                            }`}
+                                        >
+                                            <option value="active">Active (Pending)</option>
+                                            <option value="engaged">Engaged</option>
+                                            <option value="inactive">Inactive</option>
+                                        </select>
+                                        <button
+                                            onClick={() => handleRemoveFromTeam(member.id)}
+                                            className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors md:opacity-0 md:group-hover:opacity-100"
+                                            title="Remove from team"
+                                        >
+                                            <Trash2 className="h-4 w-4 block md:hidden" />
+                                            <X className="h-4 w-4 hidden md:block" />
+                                        </button>
+                                    </div>
                                 </div>
                             )
                         })}
