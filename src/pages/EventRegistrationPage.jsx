@@ -26,7 +26,13 @@ export default function EventRegistrationPage() {
         emergency_contact_relation: '',
         payment_date: '',
         vihar_seva_head_name: '',
-        vihar_seva_head_contact: ''
+        vihar_seva_head_contact: '',
+        mothers_name: '',
+        contact_no_3: '',
+        education_details: '',
+        dharmik_education: '',
+        hobbies: '',
+        medical_information: ''
     });
     const [eventPaymentImage, setEventPaymentImage] = useState(null);
     const [photographFile, setPhotographFile] = useState(null);
@@ -125,20 +131,27 @@ export default function EventRegistrationPage() {
                     payment_date: eventForm.payment_date || null,
                     photograph_url: finalPhotographUrl,
                     vihar_seva_head_name: eventForm.is_vihar_sevika === 'Yes' ? eventForm.vihar_seva_head_name || null : null,
-                    vihar_seva_head_contact: eventForm.is_vihar_sevika === 'Yes' ? eventForm.vihar_seva_head_contact || null : null
+                    vihar_seva_head_contact: eventForm.is_vihar_sevika === 'Yes' ? eventForm.vihar_seva_head_contact || null : null,
+                    mothers_name: eventForm.mothers_name || null,
+                    contact_no_3: eventForm.contact_no_3 || null,
+                    education_details: eventForm.education_details || null,
+                    dharmik_education: eventForm.dharmik_education || null,
+                    hobbies: eventForm.hobbies || null,
+                    medical_information: eventForm.medical_information || null
                 });
 
             if (insertError) throw insertError;
 
             // Send Email Confirmation directly via our new edge function if an email is provided
-            if (eventForm.email && project.project_code === 'PRJ-002') {
+            if (eventForm.email && (project.project_code === 'PRJ-002' || project.project_code === 'PRJ-008')) {
                 try {
                     const { data, error } = await supabase.functions.invoke('send-event-registration-email', {
                         body: {
                             to: eventForm.email,
                             applicant_name: eventForm.full_name,
                             project_title: project.title,
-                            event_date: project.next_event_date
+                            event_date: project.next_event_date,
+                            whatsapp_link: project.project_code === 'PRJ-008' ? 'https://chat.whatsapp.com/Eh5vnYfP6dUKPn2wkE1wzk?mode=gi_t' : undefined
                         }
                     });
                     console.log("Edge function invocation:", { data, error });
@@ -172,10 +185,26 @@ export default function EventRegistrationPage() {
                         <Calendar className="h-10 w-10 text-green-600" />
                     </div>
                     <h2 className="text-3xl font-bold text-gray-900 mb-2 font-serif">Registration Confirmed!</h2>
-                    <p className="text-gray-600 mb-8">
+                    <p className="text-gray-600 mb-6">
                         Thank you for registering for <span className="font-semibold text-gray-900">{project.title}</span>.
                         {eventForm.email ? " A confirmation email has been sent to your inbox." : " We look forward to seeing you!"}
                     </p>
+                    
+                    {project.project_code === 'PRJ-008' && (
+                        <div className="bg-emerald-50 border border-emerald-200 p-5 rounded-xl mb-6 text-left">
+                            <h3 className="text-emerald-800 font-bold mb-1 text-md text-center">Important Next Step</h3>
+                            <p className="text-emerald-700 text-sm mb-4 text-center">Please join the official WhatsApp group for Shibir updates and confirmation!</p>
+                            <a
+                                href="https://chat.whatsapp.com/Eh5vnYfP6dUKPn2wkE1wzk?mode=gi_t"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-bold text-white bg-[#25D366] hover:bg-[#128C7E] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#25D366] transition-all"
+                            >
+                                Join WhatsApp Group
+                            </a>
+                        </div>
+                    )}
+
                     <button
                         onClick={() => navigate(`/project/${project.id}`)}
                         className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-md text-sm font-semibold text-white bg-[#ae2b2b] hover:bg-[#8f1f1f] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#ae2b2b] transition-all"
@@ -223,260 +252,441 @@ export default function EventRegistrationPage() {
                     </div>
 
                     <div className="p-8 md:p-10">
+                        {project.project_code === 'PRJ-008' && (
+                            <div className="mb-8 prose prose-amber max-w-none bg-[#fff6ed] rounded-xl p-6 border border-amber-200/60 shadow-sm">
+                                <h3 className="text-center text-[#ae2b2b] font-bold text-sm mb-2 tracking-[0.2em] font-sans">I LOVE JINSHASAN PRESENTS</h3>
+                                <h4 className="text-center text-gray-900 font-serif font-bold text-2xl mb-2">Reconnect with </h4>
+                                <h4 className="text-center text-amber-600 font-serif font-bold text-xl mb-4 italic">Soul . Shasan . Nature</h4>
+                                <p className="text-center font-semibold text-gray-800 mb-6 text-sm">A 3 days religious residential Shibir</p>
+                                
+                                <div className="grid md:grid-cols-2 gap-4 mb-6">
+                                    <div className="bg-white p-4 rounded-xl shadow-sm border border-amber-100">
+                                        <h5 className="font-bold text-gray-900 border-b border-amber-100 pb-2 mb-3 text-sm flex items-center justify-center bg-amber-50 rounded px-2">Dates</h5>
+                                        <p className="text-sm text-center text-gray-700">31st December 2026 –<br/>1st January –<br/>2nd January 2027<br/><span className="text-amber-800 font-semibold mt-1 block text-xs">(For Boys only – Age: 12 yrs to 18 yrs)</span></p>
+                                    </div>
+                                    <div className="bg-white p-4 rounded-xl shadow-sm border border-amber-100">
+                                        <h5 className="font-bold text-gray-900 border-b border-amber-100 pb-2 mb-3 text-sm flex items-center justify-center bg-amber-50 rounded px-2">Venue</h5>
+                                        <p className="text-sm text-center text-gray-700"><strong>Piyushpani Tirth</strong><br/>Ghodbunder Road, Vassova Village,<br/>Mira Road, Dist. Thane – 401107 (Mumbai)</p>
+                                    </div>
+                                </div>
+                                
+                                <div className="bg-white p-5 rounded-xl shadow-sm border border-amber-100 mb-6">
+                                    <h5 className="font-bold text-gray-900 mb-3 text-sm flex items-center bg-amber-50 inline-block px-3 py-1 rounded">Notes</h5>
+                                    <ul className="list-decimal pl-5 text-sm space-y-2.5 text-gray-700 leading-relaxed marker:text-amber-600 marker:font-bold">
+                                        <li>Form will be accepted with completion of registration fees of <strong>₹100 only</strong>.</li>
+                                        <li>Shibirarthi boys have to reach venue on the evening of <strong>30th December, Wednesday by 4:00 PM</strong>.<br/>And departure has to be done on <strong>2nd January 2027 morning</strong> after Navkarshi.</li>
+                                        <li>Scan the QR code to make payment and attach the payment details with this duly filled form.</li>
+                                    </ul>
+                                </div>
+
+                                <div className="grid md:grid-cols-2 gap-4 text-sm text-gray-800 text-center mb-6">
+                                    <div className="bg-gradient-to-br from-amber-50 to-white p-4 rounded-xl shadow-sm border border-amber-100">
+                                        <span className="block font-bold text-amber-900 mb-2 border-b border-amber-100 pb-2 text-xs uppercase tracking-wide">Blessings and Divine Presence</span>
+                                        <span className="font-semibold text-gray-800">Saral Swabhavi Param Pujya Acharya Shree VimalKirtisuri Maharaj Saheb</span>
+                                    </div>
+                                    <div className="bg-gradient-to-br from-amber-50 to-white p-4 rounded-xl shadow-sm border border-amber-100">
+                                        <span className="block font-bold text-amber-900 mb-2 border-b border-amber-100 pb-2 text-xs uppercase tracking-wide">Guidance</span>
+                                        <span className="font-semibold text-gray-800">Param Pujya Muniraj Shree Muktimandan Vijayji Maharaj Saheb</span>
+                                    </div>
+                                </div>
+
+                                <div className="text-sm text-gray-700 bg-white p-4 rounded-xl shadow-sm border border-amber-100 mb-6 text-center">
+                                    <span className="font-bold text-amber-900 border-b border-amber-100 pb-1 inline-block mb-3 text-xs uppercase tracking-wide">Transport</span>
+                                    <p className="font-medium text-gray-800">Pickup & drop facilities will be available by bus from Mulund or Borivali <span className="text-gray-500 font-normal">(Details will be shared later)</span>.</p>
+                                </div>
+
+                                <div className="text-center bg-gray-900 text-white p-4 rounded-xl shadow-lg mt-6">
+                                    <p className="text-amber-400 font-bold text-xs uppercase tracking-widest mb-1.5">For Further Queries or Assistance Call:</p>
+                                    <div className="flex justify-center items-center gap-6 font-mono font-bold text-lg">
+                                        <span>📞 999999999999</span>
+                                        <span className="text-gray-500 hidden sm:inline">|</span>
+                                        <span>📞 999999999991</span>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
                         <h3 className="text-xl font-semibold text-gray-800 mb-8 border-b border-gray-100 pb-4">Participant Details</h3>
 
                         <form onSubmit={handleEventFormSubmit} className="space-y-8">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                <div className="space-y-2">
-                                    <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                                        <User className="h-4 w-4 text-[#ae2b2b]" /> Full Name <span className="text-red-500">*</span>
-                                    </label>
-                                    <input
-                                        type="text"
-                                        required
-                                        placeholder="Enter your full name"
-                                        value={eventForm.full_name}
-                                        onChange={e => setEventForm({ ...eventForm, full_name: e.target.value })}
-                                        className="w-full rounded-lg border border-gray-300 px-4 py-3 bg-gray-50 text-gray-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#ae2b2b]/50 focus:border-[#ae2b2b] transition-all"
-                                    />
+                            
+                            {/* SECTION 1: Personal & Contact Information */}
+                            <div className="bg-white p-6 md:p-8 rounded-2xl border border-gray-100 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] relative overflow-hidden group hover:border-[#ae2b2b]/20 transition-colors">
+                                <div className="absolute top-0 left-0 w-1.5 h-full bg-[#ae2b2b] opacity-80"></div>
+                                <div className="flex items-center gap-3 mb-8 border-b border-gray-50 pb-4">
+                                    <div className="bg-red-50 p-2.5 rounded-xl text-[#ae2b2b]">
+                                        <User className="h-5 w-5" />
+                                    </div>
+                                    <h3 className="text-xl font-bold text-gray-900 font-serif">Personal & Contact Details</h3>
                                 </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-bold text-gray-700 tracking-wide flex items-center gap-2">
+                                            Full Name <span className="text-[#ae2b2b]">*</span>
+                                        </label>
+                                        <input
+                                            type="text"
+                                            required
+                                            placeholder="Enter your full name"
+                                            value={eventForm.full_name}
+                                            onChange={e => setEventForm({ ...eventForm, full_name: e.target.value })}
+                                            className="w-full rounded-xl border border-gray-200 px-4 py-3 bg-gray-50/50 text-gray-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#ae2b2b]/20 focus:border-[#ae2b2b] transition-all shadow-sm placeholder:text-gray-400 font-medium"
+                                        />
+                                    </div>
 
-                                <div className="space-y-2">
-                                    <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                                        <Phone className="h-4 w-4 text-[#ae2b2b]" /> WhatsApp Number <span className="text-red-500">*</span>
-                                    </label>
-                                    <input
-                                        type="tel"
-                                        required
-                                        placeholder="+91 XXXXX XXXXX"
-                                        value={eventForm.whatsapp_number}
-                                        onChange={e => setEventForm({ ...eventForm, whatsapp_number: e.target.value })}
-                                        className="w-full rounded-lg border border-gray-300 px-4 py-3 bg-gray-50 text-gray-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#ae2b2b]/50 focus:border-[#ae2b2b] transition-all"
-                                    />
-                                </div>
-
-                                <div className="space-y-2">
-                                    <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                                        <Mail className="h-4 w-4 text-[#ae2b2b]" /> Email Address <span className="text-red-500">*</span>
-                                    </label>
-                                    <input
-                                        type="email"
-                                        required
-                                        placeholder="you@example.com"
-                                        value={eventForm.email}
-                                        onChange={e => setEventForm({ ...eventForm, email: e.target.value })}
-                                        className="w-full rounded-lg border border-gray-300 px-4 py-3 bg-gray-50 text-gray-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#ae2b2b]/50 focus:border-[#ae2b2b] transition-all"
-                                    />
-                                </div>
-
-                                {project.project_code === 'PRJ-002' && (
-                                    <>
-                                        <div className="space-y-2">
-                                            <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                                                <User className="h-4 w-4 text-[#ae2b2b]" /> Date of Birth <span className="text-red-500">*</span>
-                                            </label>
-                                            <input
-                                                type="date"
-                                                required
-                                                value={eventForm.dob}
-                                                onChange={e => setEventForm({ ...eventForm, dob: e.target.value })}
-                                                className="w-full rounded-lg border border-gray-300 px-4 py-3 bg-gray-50 text-gray-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#ae2b2b]/50 focus:border-[#ae2b2b] transition-all"
-                                            />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                                                <Phone className="h-4 w-4 text-[#ae2b2b]" /> Mobile Number <span className="text-red-500">*</span>
-                                            </label>
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-bold text-gray-700 tracking-wide flex items-center gap-2">
+                                            WhatsApp Number <span className="text-[#ae2b2b]">*</span>
+                                        </label>
+                                        <div className="relative">
+                                            <Phone className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                                             <input
                                                 type="tel"
                                                 required
                                                 placeholder="+91 XXXXX XXXXX"
-                                                value={eventForm.mobile_number}
-                                                onChange={e => setEventForm({ ...eventForm, mobile_number: e.target.value })}
-                                                className="w-full rounded-lg border border-gray-300 px-4 py-3 bg-gray-50 text-gray-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#ae2b2b]/50 focus:border-[#ae2b2b] transition-all"
+                                                value={eventForm.whatsapp_number}
+                                                onChange={e => setEventForm({ ...eventForm, whatsapp_number: e.target.value })}
+                                                className="w-full rounded-xl border border-gray-200 pl-10 pr-4 py-3 bg-gray-50/50 text-gray-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#ae2b2b]/20 focus:border-[#ae2b2b] transition-all shadow-sm placeholder:text-gray-400 font-medium"
                                             />
                                         </div>
-                                        <div className="space-y-2">
-                                            <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                                                <span className="h-4 w-4 text-[#ae2b2b] flex items-center justify-center font-bold text-xs uppercase">V</span> Are you an active Vihar Sevika? <span className="text-red-500">*</span>
-                                            </label>
-                                            <select
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-bold text-gray-700 tracking-wide flex items-center gap-2">
+                                            Email Address <span className="text-[#ae2b2b]">*</span>
+                                        </label>
+                                        <div className="relative">
+                                            <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                                            <input
+                                                type="email"
                                                 required
-                                                value={eventForm.is_vihar_sevika}
-                                                onChange={e => setEventForm({ ...eventForm, is_vihar_sevika: e.target.value })}
-                                                className="w-full rounded-lg border border-gray-300 px-4 py-3 bg-gray-50 text-gray-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#ae2b2b]/50 focus:border-[#ae2b2b] transition-all"
-                                            >
-                                                <option value="No">No</option>
-                                                <option value="Yes">Yes</option>
-                                            </select>
+                                                placeholder="you@example.com"
+                                                value={eventForm.email}
+                                                onChange={e => setEventForm({ ...eventForm, email: e.target.value })}
+                                                className="w-full rounded-xl border border-gray-200 pl-10 pr-4 py-3 bg-gray-50/50 text-gray-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#ae2b2b]/20 focus:border-[#ae2b2b] transition-all shadow-sm placeholder:text-gray-400 font-medium"
+                                            />
                                         </div>
-                                        {eventForm.is_vihar_sevika === 'Yes' && (
+                                    </div>
+
+                                    {project.project_code !== 'PRJ-002' && (
+                                        <div className="space-y-2">
+                                            <label className="text-sm font-bold text-gray-700 tracking-wide flex items-center gap-2">
+                                                Age <span className="text-[#ae2b2b]">*</span>
+                                            </label>
+                                            <input
+                                                type="number"
+                                                required
+                                                placeholder="Your age"
+                                                value={eventForm.age}
+                                                onChange={e => setEventForm({ ...eventForm, age: e.target.value })}
+                                                className="w-full rounded-xl border border-gray-200 px-4 py-3 bg-gray-50/50 text-gray-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#ae2b2b]/20 focus:border-[#ae2b2b] transition-all shadow-sm placeholder:text-gray-400 font-medium"
+                                            />
+                                        </div>
+                                    )}
+
+                                    {(project.project_code === 'PRJ-002' || project.project_code === 'PRJ-008') && (
+                                        <>
+                                            <div className="space-y-2">
+                                                <label className="text-sm font-bold text-gray-700 tracking-wide flex items-center gap-2">
+                                                    Date of Birth <span className="text-[#ae2b2b]">*</span>
+                                                </label>
+                                                <input
+                                                    type="date"
+                                                    required
+                                                    value={eventForm.dob}
+                                                    onChange={e => setEventForm({ ...eventForm, dob: e.target.value })}
+                                                    className="w-full rounded-xl border border-gray-200 px-4 py-3 bg-gray-50/50 text-gray-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#ae2b2b]/20 focus:border-[#ae2b2b] transition-all shadow-sm font-medium"
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <label className="text-sm font-bold text-gray-700 tracking-wide flex items-center gap-2">
+                                                    Alternate Contact No. <span className="text-[#ae2b2b]">{project.project_code === 'PRJ-008' ? '' : '*'}</span>
+                                                </label>
+                                                <div className="relative">
+                                                    <Phone className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                                                    <input
+                                                        type="tel"
+                                                        required={project.project_code !== 'PRJ-008'}
+                                                        placeholder="+91 XXXXX XXXXX"
+                                                        value={eventForm.mobile_number}
+                                                        onChange={e => setEventForm({ ...eventForm, mobile_number: e.target.value })}
+                                                        className="w-full rounded-xl border border-gray-200 pl-10 pr-4 py-3 bg-gray-50/50 text-gray-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#ae2b2b]/20 focus:border-[#ae2b2b] transition-all shadow-sm placeholder:text-gray-400 font-medium"
+                                                    />
+                                                </div>
+                                            </div>
+                                        </>
+                                    )}
+
+                                    {project.project_code !== 'PRJ-002' && project.project_code !== 'PRJ-008' && (
+                                        <div className="space-y-2 md:col-span-2">
+                                            <label className="text-sm font-bold text-gray-700 tracking-wide flex items-center gap-2">
+                                                Sangh Name <span className="text-[#ae2b2b]">*</span>
+                                            </label>
+                                            <input
+                                                type="text"
+                                                required
+                                                placeholder="Your Sangh Name"
+                                                value={eventForm.sangh_name}
+                                                onChange={e => setEventForm({ ...eventForm, sangh_name: e.target.value })}
+                                                className="w-full rounded-xl border border-gray-200 px-4 py-3 bg-gray-50/50 text-gray-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#ae2b2b]/20 focus:border-[#ae2b2b] transition-all shadow-sm placeholder:text-gray-400 font-medium"
+                                            />
+                                        </div>
+                                    )}
+
+                                    <div className="space-y-2 md:col-span-2">
+                                        <label className="text-sm font-bold text-gray-700 tracking-wide flex items-center gap-2">
+                                            Residential Address <span className="text-[#ae2b2b]">*</span>
+                                        </label>
+                                        <div className="relative">
+                                            <MapPin className="absolute left-4 top-4 h-4 w-4 text-gray-400" />
+                                            <textarea
+                                                required
+                                                rows="3"
+                                                placeholder="Street, City, State, Pincode"
+                                                value={eventForm.address}
+                                                onChange={e => setEventForm({ ...eventForm, address: e.target.value })}
+                                                className="w-full rounded-xl border border-gray-200 pl-10 pr-4 py-3 bg-gray-50/50 text-gray-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#ae2b2b]/20 focus:border-[#ae2b2b] transition-all shadow-sm placeholder:text-gray-400 font-medium resize-none"
+                                            ></textarea>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* SECTION 2: Family & Event Specific Details */}
+                            {(project.project_code === 'PRJ-002' || project.project_code === 'PRJ-008') && (
+                                <div className="bg-white p-6 md:p-8 rounded-2xl border border-gray-100 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] relative overflow-hidden group hover:border-[#ae2b2b]/20 transition-colors">
+                                    <div className="absolute top-0 left-0 w-1.5 h-full bg-indigo-500 opacity-80"></div>
+                                    <div className="flex items-center gap-3 mb-8 border-b border-gray-50 pb-4">
+                                        <div className="bg-indigo-50 p-2.5 rounded-xl text-indigo-600">
+                                            <Users className="h-5 w-5" />
+                                        </div>
+                                        <h3 className="text-xl font-bold text-gray-900 font-serif">Additional Details</h3>
+                                    </div>
+                                    
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+                                        <div className="space-y-2">
+                                            <label className="text-sm font-bold text-gray-700 tracking-wide flex items-center gap-2">
+                                                Father's Name <span className="text-[#ae2b2b]">*</span>
+                                            </label>
+                                            <input
+                                                type="text"
+                                                required
+                                                placeholder="Father's full name"
+                                                value={eventForm.fathers_name}
+                                                onChange={e => setEventForm({ ...eventForm, fathers_name: e.target.value })}
+                                                className="w-full rounded-xl border border-gray-200 px-4 py-3 bg-gray-50/50 text-gray-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#ae2b2b]/20 focus:border-[#ae2b2b] transition-all shadow-sm placeholder:text-gray-400 font-medium"
+                                            />
+                                        </div>
+
+                                        {project.project_code === 'PRJ-008' && (
                                             <>
                                                 <div className="space-y-2">
-                                                    <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                                                        <User className="h-4 w-4 text-[#ae2b2b]" /> Name of your Vihar Seva Head <span className="text-red-500">*</span>
+                                                    <label className="text-sm font-bold text-gray-700 tracking-wide flex items-center gap-2">
+                                                        Mother's Name <span className="text-[#ae2b2b]">*</span>
                                                     </label>
                                                     <input
                                                         type="text"
                                                         required
-                                                        placeholder="Vihar Seva Head Name"
-                                                        value={eventForm.vihar_seva_head_name}
-                                                        onChange={e => setEventForm({ ...eventForm, vihar_seva_head_name: e.target.value })}
-                                                        className="w-full rounded-lg border border-gray-300 px-4 py-3 bg-gray-50 text-gray-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#ae2b2b]/50 focus:border-[#ae2b2b] transition-all"
+                                                        placeholder="Mother's full name"
+                                                        value={eventForm.mothers_name}
+                                                        onChange={e => setEventForm({ ...eventForm, mothers_name: e.target.value })}
+                                                        className="w-full rounded-xl border border-gray-200 px-4 py-3 bg-gray-50/50 text-gray-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#ae2b2b]/20 focus:border-[#ae2b2b] transition-all shadow-sm placeholder:text-gray-400 font-medium"
                                                     />
                                                 </div>
                                                 <div className="space-y-2">
-                                                    <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                                                        <Phone className="h-4 w-4 text-[#ae2b2b]" /> Contact Details of your Vihar Seva Head <span className="text-red-500">*</span>
+                                                    
+                                              
+                                                </div>
+                                                <div className="space-y-2 md:col-span-2">
+                                                    <label className="text-sm font-bold text-gray-700 tracking-wide flex items-center gap-2">
+                                                        Education Details <span className="text-[#ae2b2b]">*</span>
                                                     </label>
                                                     <input
                                                         type="text"
                                                         required
-                                                        placeholder="Contact Details"
-                                                        value={eventForm.vihar_seva_head_contact}
-                                                        onChange={e => setEventForm({ ...eventForm, vihar_seva_head_contact: e.target.value })}
-                                                        className="w-full rounded-lg border border-gray-300 px-4 py-3 bg-gray-50 text-gray-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#ae2b2b]/50 focus:border-[#ae2b2b] transition-all"
+                                                        placeholder="e.g. B.Com, Engineering, School Student"
+                                                        value={eventForm.education_details}
+                                                        onChange={e => setEventForm({ ...eventForm, education_details: e.target.value })}
+                                                        className="w-full rounded-xl border border-gray-200 px-4 py-3 bg-gray-50/50 text-gray-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#ae2b2b]/20 focus:border-[#ae2b2b] transition-all shadow-sm placeholder:text-gray-400 font-medium"
+                                                    />
+                                                </div>
+                                                <div className="space-y-2 md:col-span-2">
+                                                    <label className="text-sm font-bold text-gray-700 tracking-wide flex items-center gap-2">
+                                                        Dharmik Education (Religious) <span className="text-[#ae2b2b]">*</span>
+                                                    </label>
+                                                    <input
+                                                        type="text"
+                                                        required
+                                                        placeholder="e.g. Jainism courses, Pathshala details"
+                                                        value={eventForm.dharmik_education}
+                                                        onChange={e => setEventForm({ ...eventForm, dharmik_education: e.target.value })}
+                                                        className="w-full rounded-xl border border-gray-200 px-4 py-3 bg-gray-50/50 text-gray-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#ae2b2b]/20 focus:border-[#ae2b2b] transition-all shadow-sm placeholder:text-gray-400 font-medium"
+                                                    />
+                                                </div>
+                                                <div className="space-y-2 md:col-span-2">
+                                                    <label className="text-sm font-bold text-gray-700 tracking-wide flex items-center gap-2">
+                                                        Hobbies / Skills
+                                                    </label>
+                                                    <input
+                                                        type="text"
+                                                        placeholder="Your hobbies and interests"
+                                                        value={eventForm.hobbies}
+                                                        onChange={e => setEventForm({ ...eventForm, hobbies: e.target.value })}
+                                                        className="w-full rounded-xl border border-gray-200 px-4 py-3 bg-gray-50/50 text-gray-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#ae2b2b]/20 focus:border-[#ae2b2b] transition-all shadow-sm placeholder:text-gray-400 font-medium"
+                                                    />
+                                                </div>
+                                                <div className="space-y-2 md:col-span-2">
+                                                    <label className="text-sm font-bold text-gray-700 tracking-wide flex items-center gap-2">
+                                                        Any Medical Condition <span className="text-[#ae2b2b]">*</span>
+                                                    </label>
+                                                    <input
+                                                        type="text"
+                                                        required
+                                                        placeholder="State 'None' or describe securely"
+                                                        value={eventForm.medical_information}
+                                                        onChange={e => setEventForm({ ...eventForm, medical_information: e.target.value })}
+                                                        className="w-full rounded-xl border border-gray-200 px-4 py-3 bg-gray-50/50 text-gray-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#ae2b2b]/20 focus:border-[#ae2b2b] transition-all shadow-sm placeholder:text-gray-400 font-medium"
                                                     />
                                                 </div>
                                             </>
                                         )}
-                                        <div className="space-y-2">
-                                            <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                                                <User className="h-4 w-4 text-[#ae2b2b]" /> Father's Name <span className="text-red-500">*</span>
-                                            </label>
-                                            <input
-                                                type="text"
-                                                required
-                                                placeholder="Father's name"
-                                                value={eventForm.fathers_name}
-                                                onChange={e => setEventForm({ ...eventForm, fathers_name: e.target.value })}
-                                                className="w-full rounded-lg border border-gray-300 px-4 py-3 bg-gray-50 text-gray-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#ae2b2b]/50 focus:border-[#ae2b2b] transition-all"
-                                            />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                                                <User className="h-4 w-4 text-[#ae2b2b]" /> Emergency Contact Name <span className="text-red-500">*</span>
-                                            </label>
-                                            <input
-                                                type="text"
-                                                required
-                                                placeholder="Emergency contact name"
-                                                value={eventForm.emergency_contact_name}
-                                                onChange={e => setEventForm({ ...eventForm, emergency_contact_name: e.target.value })}
-                                                className="w-full rounded-lg border border-gray-300 px-4 py-3 bg-gray-50 text-gray-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#ae2b2b]/50 focus:border-[#ae2b2b] transition-all"
-                                            />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                                                <Phone className="h-4 w-4 text-[#ae2b2b]" /> Emergency Contact Number <span className="text-red-500">*</span>
-                                            </label>
-                                            <input
-                                                type="tel"
-                                                required
-                                                placeholder="Emergency contact number"
-                                                value={eventForm.emergency_contact_number}
-                                                onChange={e => setEventForm({ ...eventForm, emergency_contact_number: e.target.value })}
-                                                className="w-full rounded-lg border border-gray-300 px-4 py-3 bg-gray-50 text-gray-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#ae2b2b]/50 focus:border-[#ae2b2b] transition-all"
-                                            />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                                                <Users className="h-4 w-4 text-[#ae2b2b]" /> Relation to Emergency Contact <span className="text-red-500">*</span>
-                                            </label>
-                                            <input
-                                                type="text"
-                                                required
-                                                placeholder="e.g., Mother, Brother, Friend"
-                                                value={eventForm.emergency_contact_relation}
-                                                onChange={e => setEventForm({ ...eventForm, emergency_contact_relation: e.target.value })}
-                                                className="w-full rounded-lg border border-gray-300 px-4 py-3 bg-gray-50 text-gray-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#ae2b2b]/50 focus:border-[#ae2b2b] transition-all"
-                                            />
-                                        </div>
-                                    </>
-                                )}
 
-                                {project.project_code !== 'PRJ-002' && (
-                                    <div className="space-y-2">
-                                        <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                                            <span className="h-4 w-4 text-[#ae2b2b] font-bold text-center leading-4 text-xs">A</span> Age <span className="text-red-500">*</span>
-                                        </label>
-                                        <input
-                                            type="text"
-                                            required
-                                            placeholder="Your age"
-                                            value={eventForm.age}
-                                            onChange={e => setEventForm({ ...eventForm, age: e.target.value })}
-                                            className="w-full rounded-lg border border-gray-300 px-4 py-3 bg-gray-50 text-gray-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#ae2b2b]/50 focus:border-[#ae2b2b] transition-all"
-                                        />
+                                        {project.project_code === 'PRJ-002' && (
+                                            <>
+                                                <div className="space-y-2 md:col-span-2 bg-rose-50/50 p-5 rounded-xl border border-rose-100">
+                                                    <label className="text-sm font-bold text-gray-700 tracking-wide flex items-center gap-2">
+                                                        Are you an active Vihar Sevika? <span className="text-[#ae2b2b]">*</span>
+                                                    </label>
+                                                    <select
+                                                        required
+                                                        value={eventForm.is_vihar_sevika}
+                                                        onChange={e => setEventForm({ ...eventForm, is_vihar_sevika: e.target.value })}
+                                                        className="w-full rounded-xl border border-gray-300 px-4 py-3 bg-white text-gray-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#ae2b2b]/20 focus:border-[#ae2b2b] transition-all shadow-sm font-medium mt-2"
+                                                    >
+                                                        <option value="No">No</option>
+                                                        <option value="Yes">Yes</option>
+                                                    </select>
+                                                </div>
+                                                
+                                                {eventForm.is_vihar_sevika === 'Yes' && (
+                                                    <>
+                                                        <div className="space-y-2">
+                                                            <label className="text-sm font-bold text-gray-700 tracking-wide flex items-center gap-2">
+                                                                Name of your Vihar Seva Head <span className="text-[#ae2b2b]">*</span>
+                                                            </label>
+                                                            <input
+                                                                type="text"
+                                                                required
+                                                                placeholder="Vihar Seva Head Name"
+                                                                value={eventForm.vihar_seva_head_name}
+                                                                onChange={e => setEventForm({ ...eventForm, vihar_seva_head_name: e.target.value })}
+                                                                className="w-full rounded-xl border border-gray-200 px-4 py-3 bg-gray-50/50 text-gray-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#ae2b2b]/20 focus:border-[#ae2b2b] transition-all shadow-sm placeholder:text-gray-400 font-medium"
+                                                            />
+                                                        </div>
+                                                        <div className="space-y-2">
+                                                            <label className="text-sm font-bold text-gray-700 tracking-wide flex items-center gap-2">
+                                                                Contact Details of your Head <span className="text-[#ae2b2b]">*</span>
+                                                            </label>
+                                                            <input
+                                                                type="text"
+                                                                required
+                                                                placeholder="Contact Details"
+                                                                value={eventForm.vihar_seva_head_contact}
+                                                                onChange={e => setEventForm({ ...eventForm, vihar_seva_head_contact: e.target.value })}
+                                                                className="w-full rounded-xl border border-gray-200 px-4 py-3 bg-gray-50/50 text-gray-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#ae2b2b]/20 focus:border-[#ae2b2b] transition-all shadow-sm placeholder:text-gray-400 font-medium"
+                                                            />
+                                                        </div>
+                                                    </>
+                                                )}
+                                                
+                                                <div className="w-full h-px bg-gray-100 md:col-span-2 my-2"></div>
+                                                
+                                                <div className="space-y-2">
+                                                    <label className="text-sm font-bold text-gray-700 tracking-wide flex items-center gap-2">
+                                                        Emergency Contact Name <span className="text-[#ae2b2b]">*</span>
+                                                    </label>
+                                                    <input
+                                                        type="text"
+                                                        required
+                                                        placeholder="Who to contact in emergency"
+                                                        value={eventForm.emergency_contact_name}
+                                                        onChange={e => setEventForm({ ...eventForm, emergency_contact_name: e.target.value })}
+                                                        className="w-full rounded-xl border border-gray-200 px-4 py-3 bg-gray-50/50 text-gray-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#ae2b2b]/20 focus:border-[#ae2b2b] transition-all shadow-sm placeholder:text-gray-400 font-medium"
+                                                    />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <label className="text-sm font-bold text-gray-700 tracking-wide flex items-center gap-2">
+                                                        Emergency Contact Number <span className="text-[#ae2b2b]">*</span>
+                                                    </label>
+                                                    <input
+                                                        type="tel"
+                                                        required
+                                                        placeholder="Emergency contact number"
+                                                        value={eventForm.emergency_contact_number}
+                                                        onChange={e => setEventForm({ ...eventForm, emergency_contact_number: e.target.value })}
+                                                        className="w-full rounded-xl border border-gray-200 px-4 py-3 bg-gray-50/50 text-gray-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#ae2b2b]/20 focus:border-[#ae2b2b] transition-all shadow-sm placeholder:text-gray-400 font-medium"
+                                                    />
+                                                </div>
+                                                <div className="space-y-2 md:col-span-2">
+                                                    <label className="text-sm font-bold text-gray-700 tracking-wide flex items-center gap-2">
+                                                        Relation to Emergency Contact <span className="text-[#ae2b2b]">*</span>
+                                                    </label>
+                                                    <input
+                                                        type="text"
+                                                        required
+                                                        placeholder="e.g., Mother, Brother, Friend"
+                                                        value={eventForm.emergency_contact_relation}
+                                                        onChange={e => setEventForm({ ...eventForm, emergency_contact_relation: e.target.value })}
+                                                        className="w-full rounded-xl border border-gray-200 px-4 py-3 bg-gray-50/50 text-gray-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#ae2b2b]/20 focus:border-[#ae2b2b] transition-all shadow-sm placeholder:text-gray-400 font-medium"
+                                                    />
+                                                </div>
+                                            </>
+                                        )}
                                     </div>
-                                )}
-
-                                {project.project_code !== 'PRJ-002' && (
-                                    <div className="space-y-2 md:col-span-2">
-                                        <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                                            <span className="h-4 w-4 text-[#ae2b2b] flex items-center justify-center font-bold text-xs uppercase">S</span> Sangh Name <span className="text-red-500">*</span>
-                                        </label>
-                                        <input
-                                            type="text"
-                                            required
-                                            placeholder="Your Sangh Name"
-                                            value={eventForm.sangh_name}
-                                            onChange={e => setEventForm({ ...eventForm, sangh_name: e.target.value })}
-                                            className="w-full rounded-lg border border-gray-300 px-4 py-3 bg-gray-50 text-gray-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#ae2b2b]/50 focus:border-[#ae2b2b] transition-all"
-                                        />
-                                    </div>
-                                )}
-
-                                <div className="space-y-2 md:col-span-2">
-                                    <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                                        <MapPin className="h-4 w-4 text-[#ae2b2b]" /> Address <span className="text-red-500">*</span>
-                                    </label>
-                                    <textarea
-                                        required
-                                        rows="3"
-                                        placeholder="Street, City, State, Pincode"
-                                        value={eventForm.address}
-                                        onChange={e => setEventForm({ ...eventForm, address: e.target.value })}
-                                        className="w-full rounded-lg border border-gray-300 px-4 py-3 bg-gray-50 text-gray-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#ae2b2b]/50 focus:border-[#ae2b2b] transition-all resize-none"
-                                    ></textarea>
                                 </div>
-                            </div>
+                            )}
 
-                            {project.project_code === 'PRJ-002' && (
-                                <div className="mt-8">
-                                    <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm max-w-md">
-                                        <label className="text-sm font-semibold text-gray-900 flex items-center gap-2 mb-2">
-                                            <Upload className="h-5 w-5 text-[#ae2b2b]" /> Upload recent Photograph <span className="text-red-500">*</span>
+                            {/* SECTION 3: Required Uploads and Payments */}
+                            <div className="bg-gradient-to-br from-[#fffcfb] to-[#fff5f5] p-6 md:p-8 rounded-2xl border border-[#ae2b2b]/20 shadow-[0_4px_20px_-4px_rgba(174,43,43,0.1)] relative overflow-hidden">
+                                <div className="flex items-center gap-3 mb-6 border-b border-[#ae2b2b]/10 pb-4">
+                                    <div className="bg-[#ae2b2b] p-2.5 rounded-xl text-white">
+                                        <Upload className="h-5 w-5" />
+                                    </div>
+                                    <h3 className="text-xl font-bold text-gray-900 font-serif">Verification & Payment</h3>
+                                </div>
+
+                                {(project.project_code === 'PRJ-002' || project.project_code === 'PRJ-008') && (
+                                    <div className="mb-8 p-6 bg-white rounded-xl border border-gray-200 shadow-sm">
+                                        <label className="text-sm font-bold text-gray-900 tracking-wide flex items-center gap-2 mb-3">
+                                            Upload Recent Photograph <span className="text-[#ae2b2b]">*</span>
                                         </label>
                                         <input
                                             type="file"
                                             required
                                             accept="image/*"
                                             onChange={e => setPhotographFile(e.target.files[0])}
-                                            className="block w-full text-sm text-gray-600 file:mr-4 file:py-3 file:px-6 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-[#ae2b2b]/10 file:text-[#ae2b2b] hover:file:bg-[#ae2b2b]/20 file:cursor-pointer file:shadow-sm cursor-pointer border border-gray-200 rounded-lg p-2 bg-gray-50 mt-3"
+                                            className="block w-full text-sm text-gray-600 file:mr-4 file:py-3 file:px-6 file:rounded-xl file:border-0 file:text-sm file:font-bold file:bg-[#ae2b2b]/10 file:text-[#ae2b2b] hover:file:bg-[#ae2b2b]/20 file:cursor-pointer file:shadow-sm cursor-pointer border border-gray-200 rounded-xl p-2 bg-gray-50"
                                         />
+                                        <p className="text-xs text-gray-500 mt-2">Provides us with a clear image for ID verification purposes.</p>
                                     </div>
-                                </div>
-                            )}
+                                )}
 
-                            <div className="bg-amber-50 p-6 rounded-xl border border-amber-200 shadow-sm mt-8">
-                                <label className="text-sm font-semibold text-amber-900 flex items-center gap-2 mb-2">
-                                    <Upload className="h-5 w-5 text-amber-600" /> Payment Screenshot <span className="text-amber-700 font-normal"></span>
-                                </label>
-                                <div className="mb-6 flex flex-col md:flex-row items-center gap-8 bg-white p-6 rounded-xl border border-amber-100 shadow-sm">
-                                    <div className="bg-white p-2 rounded-xl border border-gray-200 shadow-sm shrink-0">
-                                        <img src="/paymentqr.jpeg" alt="Payment QR Code" className="w-56 h-56 sm:w-64 sm:h-64 object-contain rounded-lg" />
+                                <div className="mb-6 flex flex-col md:flex-row items-center gap-8 bg-white p-6 rounded-xl border border-[#ae2b2b]/10 shadow-sm">
+                                    <div className="bg-white p-3 rounded-2xl border border-gray-100 shadow-sm shrink-0">
+                                        <img src="/paymentqr.jpeg" alt="Payment QR Code" className="w-56 h-56 sm:w-60 sm:h-60 object-contain rounded-xl" />
                                     </div>
-                                    <div className="text-sm text-gray-600 text-center md:text-left">
-                                        <p className="font-bold text-gray-900 text-lg mb-2">Scan to Pay</p>
-                                        <p className="text-base mb-2">Please use this QR code to complete your event registration payment.</p>
-                                        <p className="text-[#ae2b2b] mt-3 font-semibold text-base bg-red-50 p-3 rounded-lg border border-red-100">After successful payment, please upload the screenshot below.</p>
+                                    <div className="text-center md:text-left space-y-3">
+                                        <h4 className="font-bold text-gray-900 text-xl font-serif">Scan to Pay</h4>
+                                        <p className="text-gray-600 leading-relaxed text-sm">Please use any UPI app to scan this QR code and complete your event registration payment of <span className="font-bold text-gray-900">₹100</span>.</p>
+                                        <div className="bg-red-50 text-[#ae2b2b] p-4 rounded-xl border border-red-100 inline-block">
+                                            <p className="font-bold text-sm tracking-wide">After successful payment, please upload the screenshot below.</p>
+                                        </div>
                                     </div>
                                 </div>
-                                <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <div>
-                                        <label className="block text-sm font-medium text-amber-900 mb-1">
-                                            Attach screenshot of the payment <span className="text-red-500">*</span>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-bold text-gray-700 tracking-wide flex items-center gap-2">
+                                            Payment Screenshot <span className="text-[#ae2b2b]">*</span>
                                         </label>
                                         <input
                                             id="event-payment-upload"
@@ -484,40 +694,42 @@ export default function EventRegistrationPage() {
                                             required
                                             accept="image/*"
                                             onChange={e => setEventPaymentImage(e.target.files[0])}
-                                            className="block w-full text-sm text-gray-600 file:mr-4 file:py-3 file:px-6 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-white file:text-amber-700 hover:file:bg-gray-50 file:cursor-pointer file:shadow-sm cursor-pointer border border-amber-200/50 rounded-lg p-2 bg-white/50"
+                                            className="block w-full text-sm text-gray-600 file:mr-4 file:py-3 file:px-6 file:rounded-xl file:border-0 file:text-sm file:font-bold file:bg-[#ae2b2b]/10 file:text-[#ae2b2b] hover:file:bg-[#ae2b2b]/20 file:cursor-pointer file:shadow-sm cursor-pointer border border-gray-200 rounded-xl p-2 bg-gray-50 flex-1"
                                         />
                                     </div>
-                                    {project.project_code === 'PRJ-002' && (
-                                        <div>
-                                            <label className="block text-sm font-medium text-amber-900 mb-1">
-                                                Payment Date <span className="text-red-500">*</span>
+                                    
+                                    {(project.project_code === 'PRJ-002' || project.project_code === 'PRJ-008') && (
+                                        <div className="space-y-2">
+                                            <label className="text-sm font-bold text-gray-700 tracking-wide flex items-center gap-2">
+                                                Payment Date <span className="text-[#ae2b2b]">*</span>
                                             </label>
                                             <input
                                                 type="date"
                                                 required
                                                 value={eventForm.payment_date}
                                                 onChange={e => setEventForm({ ...eventForm, payment_date: e.target.value })}
-                                                className="w-full rounded-lg border border-amber-200/50 px-4 py-3 bg-white/50 text-gray-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#ae2b2b]/50 focus:border-[#ae2b2b] transition-all"
+                                                className="w-full rounded-xl border border-gray-200 px-4 py-3 h-[60px] bg-gray-50/50 text-gray-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#ae2b2b]/20 focus:border-[#ae2b2b] transition-all shadow-sm font-medium"
                                             />
                                         </div>
                                     )}
                                 </div>
                             </div>
 
-                            <div className="mt-10 border-t border-gray-100 pt-8">
+                            <div className="mt-10 pt-4">
                                 <button
                                     type="submit"
                                     disabled={isEventSubmitting}
-                                    className="w-full flex justify-center py-4 px-4 border border-transparent rounded-xl shadow-lg text-lg font-bold text-white bg-gradient-to-r from-[#5c1212] to-[#ae2b2b] hover:from-[#4a0e0e] hover:to-[#8f1f1f] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#ae2b2b] transition-all disabled:opacity-70 disabled:cursor-not-allowed"
+                                    className="w-full flex justify-center py-4 px-4 rounded-xl shadow-lg shadow-[#ae2b2b]/20 text-lg font-bold text-white bg-gradient-to-r from-[#8f1f1f] to-[#ae2b2b] hover:from-[#5c1212] hover:to-[#8f1f1f] focus:outline-none focus:ring-4 focus:ring-[#ae2b2b]/30 transition-all hover:-translate-y-1 hover:shadow-xl disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none"
                                 >
                                     {isEventSubmitting ? (
-                                        <span className="flex items-center gap-2">
-                                            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div> Processing...
+                                        <span className="flex items-center gap-3">
+                                            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white"></div> Processing...
                                         </span>
                                     ) : (
-                                        'Submit Registration'
+                                        'Submit Secure Registration'
                                     )}
                                 </button>
+                                <p className="text-center text-sm text-gray-500 mt-4 font-medium flex justify-center gap-2"><MapPin className="w-4 h-4" /> Your information is securely transmitted</p>
                             </div>
                         </form>
                     </div>

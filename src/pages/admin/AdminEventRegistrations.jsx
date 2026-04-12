@@ -307,8 +307,8 @@ const AdminEventRegistrations = () => {
                                 )}
                             </div>
 
-                            {/* Extra Veer Vanshaj specific fields */}
-                            {(selectedReg.fathers_name || selectedReg.emergency_contact_name || selectedReg.is_vihar_sevika !== null) && (
+                            {/* Extra specific details */}
+                            {(selectedReg.fathers_name || selectedReg.emergency_contact_name || selectedReg.is_vihar_sevika !== null || selectedReg.mothers_name || selectedReg.contact_no_3 || selectedReg.education_details || selectedReg.dharmik_education || selectedReg.hobbies || selectedReg.medical_information) && (
                                 <div className="border-t border-gray-100 pt-6">
                                     <h4 className="text-sm font-bold text-gray-800 mb-4 bg-gray-50 p-2 rounded inline-block">Additional Details</h4>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -349,6 +349,42 @@ const AdminEventRegistrations = () => {
                                             <div>
                                                 <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Vihar Seva Head Contact</p>
                                                 <p className="font-medium text-gray-900">{selectedReg.vihar_seva_head_contact}</p>
+                                            </div>
+                                        )}
+                                        {selectedReg.mothers_name && (
+                                            <div>
+                                                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Mother's Name</p>
+                                                <p className="font-medium text-gray-900">{selectedReg.mothers_name}</p>
+                                            </div>
+                                        )}
+                                        {selectedReg.contact_no_3 && (
+                                            <div>
+                                                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Contact No. 3</p>
+                                                <p className="font-medium text-gray-900">{selectedReg.contact_no_3}</p>
+                                            </div>
+                                        )}
+                                        {selectedReg.education_details && (
+                                            <div className="md:col-span-2">
+                                                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Education</p>
+                                                <p className="font-medium text-gray-900">{selectedReg.education_details}</p>
+                                            </div>
+                                        )}
+                                        {selectedReg.dharmik_education && (
+                                            <div className="md:col-span-2">
+                                                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Dharmik Education</p>
+                                                <p className="font-medium text-gray-900">{selectedReg.dharmik_education}</p>
+                                            </div>
+                                        )}
+                                        {selectedReg.hobbies && (
+                                            <div className="md:col-span-2">
+                                                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Hobbies</p>
+                                                <p className="font-medium text-gray-900">{selectedReg.hobbies}</p>
+                                            </div>
+                                        )}
+                                        {selectedReg.medical_information && (
+                                            <div className="md:col-span-2">
+                                                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Medical Condition</p>
+                                                <p className="font-medium text-gray-900">{selectedReg.medical_information}</p>
                                             </div>
                                         )}
                                     </div>

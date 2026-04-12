@@ -143,7 +143,7 @@ const AdminEditProject = () => {
             if (feedback) setTestimonials(feedback);
 
             // 6. Get Event Registrations (for PRJ-002 mainly)
-            if (project.project_code === 'PRJ-002') {
+            if (project.project_code === 'PRJ-002' || project.project_code === 'PRJ-008') {
                 const { data: registrations } = await supabase
                     .from('event_registrations')
                     .select('*')
@@ -523,7 +523,7 @@ const AdminEditProject = () => {
                                     </div>
                                 </div>
 
-                                {formData.project_code === 'PRJ-002' && (
+                                {(formData.project_code === 'PRJ-002' || formData.project_code === 'PRJ-008') && (
                                     <div className="space-y-4">
                                         <div>
                                             <label className="block text-sm font-medium text-gray-700 mb-1">Next Event Date (e.g. 24th March, 4PM)</label>
@@ -783,7 +783,7 @@ const AdminEditProject = () => {
                         </div>
 
                         {/* 5. Event Registrations (PRJ-002 specifically) */}
-                        {formData.project_code === 'PRJ-002' && (
+                        {(formData.project_code === 'PRJ-002' || formData.project_code === 'PRJ-008') && (
                             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
                                 <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
                                     <User className="h-5 w-5 text-amber-600" /> Event Registrations ({eventRegistrations.length})
