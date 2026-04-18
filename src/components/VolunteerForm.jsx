@@ -78,6 +78,11 @@ const formSchema = z.object({
 
     // 11. Pathshala Specific
     pathshalaRole: z.string().optional(),
+
+    // 12. Privacy Policy Consent
+    agreedToPrivacyPolicy: z.boolean().refine(val => val === true, {
+        message: "You must agree to the Privacy Policy and Terms & Conditions to register."
+    }),
 });
 
 const volunteeringOptions = [
@@ -1101,6 +1106,35 @@ export default function VolunteerForm() {
                         )}
                     </div>
                 )}
+                
+                {/* Privacy Policy Checkbox */}
+                <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
+                    <FormField
+                        control={form.control}
+                        name="agreedToPrivacyPolicy"
+                        render={({ field }) => (
+                            <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                                <FormControl>
+                                    <Checkbox
+                                        checked={field.value}
+                                        onCheckedChange={field.onChange}
+                                        className="mt-1 data-[state=checked]:bg-[#ae2b2b] data-[state=checked]:border-[#ae2b2b]"
+                                    />
+                                </FormControl>
+                                <div className="space-y-1 leading-none">
+                                    <FormLabel className="font-normal text-sm text-gray-700 cursor-pointer">
+                                        I have read and agree to the{" "}
+                                        <a href="/privacy-policy" target="_blank" className="font-bold text-[#ae2b2b] hover:underline">Privacy Policy</a>
+                                        {" "}and{" "}
+                                        <a href="/terms" target="_blank" className="font-bold text-[#ae2b2b] hover:underline">Terms & Conditions</a>.
+                                        I consent to the collection and processing of my personal data for volunteer management purposes in accordance with India's DPDP Act, 2023.
+                                    </FormLabel>
+                                    <FormMessage />
+                                </div>
+                            </FormItem>
+                        )}
+                    />
+                </div>
 
                 {/* Submit Button - Hidden if successful */}
                 {(!submitResult || !submitResult.success) && (

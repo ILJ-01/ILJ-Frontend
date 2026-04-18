@@ -189,7 +189,7 @@ export default function EventRegistrationPage() {
                         Thank you for registering for <span className="font-semibold text-gray-900">{project.title}</span>.
                         {eventForm.email ? " A confirmation email has been sent to your inbox." : " We look forward to seeing you!"}
                     </p>
-                    
+
                     {project.project_code === 'PRJ-008' && (
                         <div className="bg-emerald-50 border border-emerald-200 p-5 rounded-xl mb-6 text-left">
                             <h3 className="text-emerald-800 font-bold mb-1 text-md text-center">Important Next Step</h3>
@@ -258,23 +258,23 @@ export default function EventRegistrationPage() {
                                 <h4 className="text-center text-gray-900 font-serif font-bold text-2xl mb-2">Reconnect with </h4>
                                 <h4 className="text-center text-amber-600 font-serif font-bold text-xl mb-4 italic">Soul . Shasan . Nature</h4>
                                 <p className="text-center font-semibold text-gray-800 mb-6 text-sm">A 3 days religious residential Shibir</p>
-                                
+
                                 <div className="grid md:grid-cols-2 gap-4 mb-6">
                                     <div className="bg-white p-4 rounded-xl shadow-sm border border-amber-100">
                                         <h5 className="font-bold text-gray-900 border-b border-amber-100 pb-2 mb-3 text-sm flex items-center justify-center bg-amber-50 rounded px-2">Dates</h5>
-                                        <p className="text-sm text-center text-gray-700">31st December 2026 –<br/>1st January –<br/>2nd January 2027<br/><span className="text-amber-800 font-semibold mt-1 block text-xs">(For Boys only – Age: 12 yrs to 18 yrs)</span></p>
+                                        <p className="text-sm text-center text-gray-700">31st December 2026 –<br />1st January –<br />2nd January 2027<br /><span className="text-amber-800 font-semibold mt-1 block text-xs">(For Boys only – Age: 12 yrs to 18 yrs)</span></p>
                                     </div>
                                     <div className="bg-white p-4 rounded-xl shadow-sm border border-amber-100">
                                         <h5 className="font-bold text-gray-900 border-b border-amber-100 pb-2 mb-3 text-sm flex items-center justify-center bg-amber-50 rounded px-2">Venue</h5>
-                                        <p className="text-sm text-center text-gray-700"><strong>Piyushpani Tirth</strong><br/>Ghodbunder Road, Vassova Village,<br/>Mira Road, Dist. Thane – 401107 (Mumbai)</p>
+                                        <p className="text-sm text-center text-gray-700"><strong>Piyushpani Tirth</strong><br />Ghodbunder Road, Vassova Village,<br />Mira Road, Dist. Thane – 401107 (Mumbai)</p>
                                     </div>
                                 </div>
-                                
+
                                 <div className="bg-white p-5 rounded-xl shadow-sm border border-amber-100 mb-6">
                                     <h5 className="font-bold text-gray-900 mb-3 text-sm flex items-center bg-amber-50 inline-block px-3 py-1 rounded">Notes</h5>
                                     <ul className="list-decimal pl-5 text-sm space-y-2.5 text-gray-700 leading-relaxed marker:text-amber-600 marker:font-bold">
                                         <li>Form will be accepted with completion of registration fees of <strong>₹100 only</strong>.</li>
-                                        <li>Shibirarthi boys have to reach venue on the evening of <strong>30th December, Wednesday by 4:00 PM</strong>.<br/>And departure has to be done on <strong>2nd January 2027 morning</strong> after Navkarshi.</li>
+                                        <li>Shibirarthi boys have to reach venue on the evening of <strong>30th December, Wednesday by 4:00 PM</strong>.<br />And departure has to be done on <strong>2nd January 2027 morning</strong> after Navkarshi.</li>
                                         <li>Scan the QR code to make payment and attach the payment details with this duly filled form.</li>
                                     </ul>
                                 </div>
@@ -282,7 +282,7 @@ export default function EventRegistrationPage() {
                                 <div className="grid md:grid-cols-2 gap-4 text-sm text-gray-800 text-center mb-6">
                                     <div className="bg-gradient-to-br from-amber-50 to-white p-4 rounded-xl shadow-sm border border-amber-100">
                                         <span className="block font-bold text-amber-900 mb-2 border-b border-amber-100 pb-2 text-xs uppercase tracking-wide">Blessings and Divine Presence</span>
-                                        <span className="font-semibold text-gray-800">Saral Swabhavi Param Pujya Acharya Shree VimalKirtisuri Maharaj Saheb</span>
+                                        <span className="font-semibold text-gray-800">Saral Swabhavi Param Pujya Acharya <br /> Shree VimalKirtisuri Maharaj Saheb</span>
                                     </div>
                                     <div className="bg-gradient-to-br from-amber-50 to-white p-4 rounded-xl shadow-sm border border-amber-100">
                                         <span className="block font-bold text-amber-900 mb-2 border-b border-amber-100 pb-2 text-xs uppercase tracking-wide">Guidance</span>
@@ -298,9 +298,10 @@ export default function EventRegistrationPage() {
                                 <div className="text-center bg-gray-900 text-white p-4 rounded-xl shadow-lg mt-6">
                                     <p className="text-amber-400 font-bold text-xs uppercase tracking-widest mb-1.5">For Further Queries or Assistance Call:</p>
                                     <div className="flex justify-center items-center gap-6 font-mono font-bold text-lg">
-                                        <span>📞 999999999999</span>
+                                        <span>Hardik Shah :</span>
+                                        <span>📞  9930409832</span>
                                         <span className="text-gray-500 hidden sm:inline">|</span>
-                                        <span>📞 999999999991</span>
+                                        <span>📞 7021376402</span>
                                     </div>
                                 </div>
                             </div>
@@ -308,7 +309,7 @@ export default function EventRegistrationPage() {
                         <h3 className="text-xl font-semibold text-gray-800 mb-8 border-b border-gray-100 pb-4">Participant Details</h3>
 
                         <form onSubmit={handleEventFormSubmit} className="space-y-8">
-                            
+
                             {/* SECTION 1: Personal & Contact Information */}
                             <div className="bg-white p-6 md:p-8 rounded-2xl border border-gray-100 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] relative overflow-hidden group hover:border-[#ae2b2b]/20 transition-colors">
                                 <div className="absolute top-0 left-0 w-1.5 h-full bg-[#ae2b2b] opacity-80"></div>
@@ -461,7 +462,7 @@ export default function EventRegistrationPage() {
                                         </div>
                                         <h3 className="text-xl font-bold text-gray-900 font-serif">Additional Details</h3>
                                     </div>
-                                    
+
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
                                         <div className="space-y-2">
                                             <label className="text-sm font-bold text-gray-700 tracking-wide flex items-center gap-2">
@@ -493,8 +494,8 @@ export default function EventRegistrationPage() {
                                                     />
                                                 </div>
                                                 <div className="space-y-2">
-                                                    
-                                              
+
+
                                                 </div>
                                                 <div className="space-y-2 md:col-span-2">
                                                     <label className="text-sm font-bold text-gray-700 tracking-wide flex items-center gap-2">
@@ -566,7 +567,7 @@ export default function EventRegistrationPage() {
                                                         <option value="Yes">Yes</option>
                                                     </select>
                                                 </div>
-                                                
+
                                                 {eventForm.is_vihar_sevika === 'Yes' && (
                                                     <>
                                                         <div className="space-y-2">
@@ -597,9 +598,9 @@ export default function EventRegistrationPage() {
                                                         </div>
                                                     </>
                                                 )}
-                                                
+
                                                 <div className="w-full h-px bg-gray-100 md:col-span-2 my-2"></div>
-                                                
+
                                                 <div className="space-y-2">
                                                     <label className="text-sm font-bold text-gray-700 tracking-wide flex items-center gap-2">
                                                         Emergency Contact Name <span className="text-[#ae2b2b]">*</span>
@@ -697,7 +698,7 @@ export default function EventRegistrationPage() {
                                             className="block w-full text-sm text-gray-600 file:mr-4 file:py-3 file:px-6 file:rounded-xl file:border-0 file:text-sm file:font-bold file:bg-[#ae2b2b]/10 file:text-[#ae2b2b] hover:file:bg-[#ae2b2b]/20 file:cursor-pointer file:shadow-sm cursor-pointer border border-gray-200 rounded-xl p-2 bg-gray-50 flex-1"
                                         />
                                     </div>
-                                    
+
                                     {(project.project_code === 'PRJ-002' || project.project_code === 'PRJ-008') && (
                                         <div className="space-y-2">
                                             <label className="text-sm font-bold text-gray-700 tracking-wide flex items-center gap-2">

@@ -82,8 +82,13 @@ export default function Footer() {
 
       </div>
 
-      <div className="border-t border-white/20 mt-10 pt-6 text-center text-sm text-gray-300">
+      <div className="border-t border-white/20 mt-10 pt-6 flex flex-col md:flex-row justify-between items-center text-sm text-gray-300 gap-4">
         <p>&copy; {currentYear} I Love Jinshasan. All rights reserved.</p>
+        <div className="flex gap-4">
+            <Link to="/privacy-policy" className="hover:text-white transition">Privacy Policy</Link>
+            <span className="text-gray-500">|</span>
+            <Link to="/terms" className="hover:text-white transition">Terms & Conditions</Link>
+        </div>
       </div>
     </footer>
   );

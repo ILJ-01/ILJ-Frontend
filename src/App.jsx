@@ -17,6 +17,8 @@ import AdminAddProject from "./pages/AdminAddProject";
 import AdminEditProject from "./pages/AdminEditProject";
 import AdminInquiries from "./pages/admin/AdminInquiries";
 import InterestsPage from "./pages/InterestsPage";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import TermsOfService from "./pages/TermsOfService";
 import "./styles/global.css";
 
 // Dashboard Imports
@@ -82,6 +84,8 @@ function App() {
             <Route path="/volunteer-registration" element={<MainLayout><VolunteerRegistration /></MainLayout>} />
             <Route path="/policies" element={<MainLayout><div className="bg-[#f8f9fa] pt-8 pb-16"><PoliciesPage /></div></MainLayout>} />
             <Route path="/interests" element={<MainLayout><InterestsPage /></MainLayout>} />
+            <Route path="/privacy-policy" element={<MainLayout><PrivacyPolicy /></MainLayout>} />
+            <Route path="/terms" element={<MainLayout><TermsOfService /></MainLayout>} />
 
             {/* Admin Routes */}
             <Route path="/admin" element={<AdminLogin />} />

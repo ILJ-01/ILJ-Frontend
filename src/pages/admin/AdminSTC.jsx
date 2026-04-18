@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import {
-    Activity, Plus, Search, Users, CheckCircle, Search as SearchIcon, X, CheckSquare, Clock, Edit2, Trash2
+    Activity, Plus, Search, Users, CheckCircle, Search as SearchIcon, X, CheckSquare, Clock, Edit2, Trash2, PieChart, ChevronDown, ChevronUp
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import ErrorBoundary from '../../components/ErrorBoundary';
@@ -28,9 +28,17 @@ export default function AdminSTC() {
     const [completions, setCompletions] = useState([]);
     const [completionsLoading, setCompletionsLoading] = useState(false);
 
+    // Summary View State
+    const [activeTab, setActiveTab] = useState('tasks'); // 'tasks' or 'summary'
+    const [globalAssignments, setGlobalAssignments] = useState([]);
+    const [summaryLoading, setSummaryLoading] = useState(false);
+    const [expandedSummaryVol, setExpandedSummaryVol] = useState(null);
+    const [expandedSummaryTask, setExpandedSummaryTask] = useState(null);
+
     useEffect(() => {
         fetchTasks();
         fetchVolunteers();
+        fetchAllAssignments();
     }, []);
 
     const fetchTasks = async () => {
@@ -59,6 +67,25 @@ export default function AdminSTC() {
             .select('id, first_name, last_name, ilj_id, designation')
             .order('first_name', { ascending: true });
         if (data) setAllVolunteers(data);
+    };
+
+    const fetchAllAssignments = async () => {
+        try {
+            setSummaryLoading(true);
+            const { data, error } = await supabase
+                .from('spiritual_task_assignments')
+                .select(`
+                    id, status,
+                    task:spiritual_tasks(id, title),
+                    volunteer:volunteers(id, first_name, last_name, ilj_id)
+                `);
+            if (error) throw error;
+            setGlobalAssignments(data || []);
+        } catch (err) {
+            console.error('Error fetching global assignments:', err);
+        } finally {
+            setSummaryLoading(false);
+        }
     };
 
     const handleCreateTask = async (e) => {
@@ -197,6 +224,52 @@ export default function AdminSTC() {
         );
     }
 
+    // Compute Summaries
+    const volunteerStats = {};
+    const taskStats = {};
+
+    globalAssignments.forEach(a => {
+        if (!a.volunteer || !a.task) return;
+        
+        // Vol stats
+        const vId = a.volunteer.id;
+        if (!volunteerStats[vId]) {
+            volunteerStats[vId] = {
+                id: vId,
+                ilj_id: a.volunteer.ilj_id,
+                name: `${a.volunteer.first_name || ''} ${a.volunteer.last_name || ''}`.trim(),
+                completedCount: 0,
+                completedTasks: []
+            };
+        }
+        
+        // Task stats
+        const tId = a.task.id;
+        if (!taskStats[tId]) {
+            taskStats[tId] = {
+                id: tId,
+                title: a.task.title,
+                completedCount: 0,
+                completedBy: []
+            };
+        }
+
+        if (a.status === 'completed') {
+            volunteerStats[vId].completedCount += 1;
+            volunteerStats[vId].completedTasks.push(a.task.title);
+
+            taskStats[tId].completedCount += 1;
+            taskStats[tId].completedBy.push({
+                name: `${a.volunteer.first_name || ''} ${a.volunteer.last_name || ''}`.trim() || 'Unknown',
+                ilj_id: a.volunteer.ilj_id || 'N/A'
+            });
+        }
+    });
+
+    const volunteerList = Object.values(volunteerStats).sort((a,b) => b.completedCount - a.completedCount);
+    // You could filter volunteerList to only show those > 0: .filter(v => v.completedCount > 0)
+    const taskList = Object.values(taskStats).sort((a,b) => b.completedCount - a.completedCount);
+
     return (
         <div className="space-y-6">
             {/* Header */}
@@ -205,15 +278,41 @@ export default function AdminSTC() {
                     <Activity className="h-6 w-6 text-[#ae2b2b]" />
                     <h2 className="text-xl font-bold text-gray-900">Spiritual Tasks (STC)</h2>
                 </div>
-                <button
-                    onClick={() => setShowCreateModal(true)}
-                    className="flex items-center gap-2 bg-[#ae2b2b] text-white px-4 py-2 rounded-lg hover:bg-[#8b1e1e] transition-all shadow-md font-semibold text-sm"
-                >
-                    <Plus className="h-4 w-4" /> Create STC Task
-                </button>
+                <div className="flex gap-2 w-full sm:w-auto">
+                    <div className="flex bg-gray-100 p-1 rounded-lg">
+                        <button 
+                            onClick={() => setActiveTab('tasks')}
+                            className={`px-4 py-2 text-sm font-bold rounded-md transition-colors ${activeTab === 'tasks' ? 'bg-white text-[#ae2b2b] shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}
+                        >
+                            <CheckSquare className="h-4 w-4 inline-block mr-1" /> Tasks
+                        </button>
+                        <button 
+                            onClick={() => setActiveTab('vol_summary')}
+                            className={`px-4 py-2 text-sm font-bold rounded-md transition-colors ${activeTab === 'vol_summary' ? 'bg-white text-[#ae2b2b] shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}
+                        >
+                            <Users className="h-4 w-4 inline-block mr-1" /> Vol Summary
+                        </button>
+                        <button 
+                            onClick={() => setActiveTab('task_summary')}
+                            className={`px-4 py-2 text-sm font-bold rounded-md transition-colors ${activeTab === 'task_summary' ? 'bg-white text-[#ae2b2b] shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}
+                        >
+                            <PieChart className="h-4 w-4 inline-block mr-1" /> Task Summary
+                        </button>
+                    </div>
+                </div>
+                {activeTab === 'tasks' && (
+                    <button
+                        onClick={() => setShowCreateModal(true)}
+                        className="flex items-center justify-center gap-2 bg-[#ae2b2b] text-white px-4 py-2 rounded-lg hover:bg-[#8b1e1e] transition-all shadow-md font-semibold text-sm w-full sm:w-auto"
+                    >
+                        <Plus className="h-4 w-4" /> Create STC Task
+                    </button>
+                )}
             </div>
 
-            {/* Search */}
+            {activeTab === 'tasks' ? (
+                <>
+                    {/* Search */}
             <div className="relative">
                 <SearchIcon className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
                 <input
@@ -335,6 +434,145 @@ export default function AdminSTC() {
                             </div>
                         );
                     })}
+                </div>
+            )}
+            </>
+            ) : (
+                <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2">
+                    {summaryLoading ? (
+                        <div className="flex justify-center items-center h-32">
+                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-500"></div>
+                        </div>
+                    ) : (
+                        <>
+                            {/* Volunteer Wise Table */}
+                            {activeTab === 'vol_summary' && (
+                                <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                                    <div className="bg-gray-50 border-b border-gray-200 px-6 py-4">
+                                        <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                                            <Users className="h-5 w-5 text-[#ae2b2b]" /> Volunteer Wise ST Summary
+                                        </h3>
+                                    </div>
+                                    <div className="overflow-x-auto">
+                                    <table className="w-full text-left text-sm cursor-default">
+                                        <thead className="bg-gray-50/50 text-gray-500 font-bold uppercase tracking-wider text-xs">
+                                            <tr>
+                                                <th className="px-6 py-3 border-b border-gray-100">ID</th>
+                                                <th className="px-6 py-3 border-b border-gray-100">Name</th>
+                                                <th className="px-6 py-3 border-b border-gray-100 text-center">No. of Tasks Completed</th>
+                                                <th className="px-6 py-3 border-b border-gray-100 text-center">Score</th>
+                                                <th className="px-6 py-3 border-b border-gray-100 w-10"></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-gray-100">
+                                            {volunteerList.map(v => (
+                                                <React.Fragment key={v.id}>
+                                                    <tr 
+                                                        className="hover:bg-gray-50/80 transition-colors cursor-pointer"
+                                                        onClick={() => setExpandedSummaryVol(expandedSummaryVol === v.id ? null : v.id)}
+                                                    >
+                                                        <td className="px-6 py-4 text-gray-500 font-mono text-xs">{v.ilj_id || 'N/A'}</td>
+                                                        <td className="px-6 py-4 font-bold text-gray-900">{v.name}</td>
+                                                        <td className="px-6 py-4 text-center font-bold text-[#ae2b2b]">{v.completedCount}</td>
+                                                        <td className="px-6 py-4 text-center">
+                                                            <span className="bg-amber-100 text-amber-800 px-2 py-1 rounded font-bold text-xs">{v.completedCount} pts</span>
+                                                        </td>
+                                                        <td className="px-6 py-4 text-right text-gray-400">
+                                                            {expandedSummaryVol === v.id ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                                                        </td>
+                                                    </tr>
+                                                    {expandedSummaryVol === v.id && (
+                                                        <tr className="bg-gray-50/50">
+                                                            <td colSpan={5} className="px-6 py-4">
+                                                                <div className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2 border-b border-gray-200 pb-1">Tasks Completed by {v.name}</div>
+                                                                {v.completedTasks.length > 0 ? (
+                                                                    <ul className="list-disc pl-5 space-y-1 text-gray-700">
+                                                                        {v.completedTasks.map((t, i) => (
+                                                                            <li key={i}>{t}</li>
+                                                                        ))}
+                                                                    </ul>
+                                                                ) : (
+                                                                    <p className="text-gray-400 italic">No tasks completed yet.</p>
+                                                                )}
+                                                            </td>
+                                                        </tr>
+                                                    )}
+                                                </React.Fragment>
+                                            ))}
+                                            {volunteerList.length === 0 && (
+                                                <tr><td colSpan={5} className="px-6 py-8 text-center text-gray-500">No Volunteer Data Available.</td></tr>
+                                            )}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            )}
+                            
+                            {/* Task Wise Table */}
+                            {activeTab === 'task_summary' && (
+                            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                                <div className="bg-gray-50 border-b border-gray-200 px-6 py-4">
+                                    <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                                        <CheckSquare className="h-5 w-5 text-[#ae2b2b]" /> Task Wise ST Summary
+                                    </h3>
+                                </div>
+                                <div className="overflow-x-auto">
+                                    <table className="w-full text-left text-sm cursor-default">
+                                        <thead className="bg-gray-50/50 text-gray-500 font-bold uppercase tracking-wider text-xs">
+                                            <tr>
+                                                <th className="px-6 py-3 border-b border-gray-100 w-16 text-center">No.</th>
+                                                <th className="px-6 py-3 border-b border-gray-100">Task Title</th>
+                                                <th className="px-6 py-3 border-b border-gray-100 text-center">Completed By (Volunteers)</th>
+                                                <th className="px-6 py-3 border-b border-gray-100 w-10"></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-gray-100">
+                                            {taskList.map((t, index) => (
+                                                <React.Fragment key={t.id}>
+                                                    <tr 
+                                                        className="hover:bg-gray-50/80 transition-colors cursor-pointer"
+                                                        onClick={() => setExpandedSummaryTask(expandedSummaryTask === t.id ? null : t.id)}
+                                                    >
+                                                        <td className="px-6 py-4 text-center font-bold text-gray-400">{index + 1}</td>
+                                                        <td className="px-6 py-4 font-bold text-gray-900">{t.title}</td>
+                                                        <td className="px-6 py-4 text-center">
+                                                            <span className="bg-green-50 text-green-700 px-3 py-1 rounded-full font-bold text-xs border border-green-100">{t.completedCount} Volunteers</span>
+                                                        </td>
+                                                        <td className="px-6 py-4 text-right text-gray-400">
+                                                            {expandedSummaryTask === t.id ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                                                        </td>
+                                                    </tr>
+                                                    {expandedSummaryTask === t.id && (
+                                                        <tr className="bg-gray-50/50">
+                                                            <td colSpan={4} className="px-6 py-4">
+                                                                <div className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2 border-b border-gray-200 pb-1">Volunteers who completed '{t.title}'</div>
+                                                                {t.completedBy.length > 0 ? (
+                                                                    <div className="flex flex-wrap gap-2 mt-2">
+                                                                        {t.completedBy.map((v, i) => (
+                                                                            <span key={i} className="bg-white border border-gray-200 text-gray-700 px-2.5 py-1 rounded text-xs shadow-sm font-medium flex items-center gap-1">
+                                                                                <CheckCircle className="h-3 w-3 text-green-500" /> 
+                                                                                {v.name} <span className="text-gray-400 font-mono">({v.ilj_id})</span>
+                                                                            </span>
+                                                                        ))}
+                                                                    </div>
+                                                                ) : (
+                                                                    <p className="text-gray-400 italic">No volunteers have completed this task yet.</p>
+                                                                )}
+                                                            </td>
+                                                        </tr>
+                                                    )}
+                                                </React.Fragment>
+                                            ))}
+                                            {taskList.length === 0 && (
+                                                <tr><td colSpan={4} className="px-6 py-8 text-center text-gray-500">No Task Data Available.</td></tr>
+                                            )}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            )}
+                        </>
+                    )}
                 </div>
             )}
 
