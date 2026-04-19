@@ -217,7 +217,7 @@ export default function EventRegistrationPage() {
     }
 
     return (
-        <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8 font-sans">
+        <div className="min-h-screen bg-gray-50 py-8 sm:py-12 px-3 sm:px-6 lg:px-8 font-sans">
             <div className="max-w-3xl mx-auto">
                 <button
                     onClick={() => navigate(-1)}
@@ -229,7 +229,7 @@ export default function EventRegistrationPage() {
                 <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden animate-in fade-in slide-in-from-bottom-8 duration-500">
 
                     {/* Banner Header */}
-                    <div className="bg-gradient-to-r from-[#5c1212] to-[#ae2b2b] p-8 text-white relative overflow-hidden">
+                    <div className="bg-gradient-to-r from-[#5c1212] to-[#ae2b2b] p-6 sm:p-8 text-white relative overflow-hidden">
                         <div className="absolute top-0 right-0 -mr-8 -mt-8 opacity-20">
                             <Calendar size={150} />
                         </div>
@@ -251,9 +251,9 @@ export default function EventRegistrationPage() {
                         </div>
                     </div>
 
-                    <div className="p-8 md:p-10">
+                    <div className="p-4 sm:p-6 md:p-10">
                         {project.project_code === 'PRJ-008' && (
-                            <div className="mb-8 prose prose-amber max-w-none bg-[#fff6ed] rounded-xl p-6 border border-amber-200/60 shadow-sm">
+                            <div className="mb-8 prose prose-amber max-w-none bg-[#fff6ed] rounded-xl p-4 sm:p-6 border border-amber-200/60 shadow-sm">
                                 <h3 className="text-center text-[#ae2b2b] font-bold text-sm mb-2 tracking-[0.2em] font-sans">I LOVE JINSHASAN PRESENTS</h3>
                                 <h4 className="text-center text-gray-900 font-serif font-bold text-2xl mb-2">Reconnect with </h4>
                                 <h4 className="text-center text-amber-600 font-serif font-bold text-xl mb-4 italic">Soul . Shasan . Nature</h4>
@@ -313,9 +313,9 @@ export default function EventRegistrationPage() {
                         <form onSubmit={handleEventFormSubmit} className="space-y-8">
 
                             {/* SECTION 1: Personal & Contact Information */}
-                            <div className="bg-white p-6 md:p-8 rounded-2xl border border-gray-100 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] relative overflow-hidden group hover:border-[#ae2b2b]/20 transition-colors">
+                            <div className="bg-white p-5 sm:p-6 md:p-8 rounded-2xl border border-gray-100 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] relative overflow-hidden group hover:border-[#ae2b2b]/20 transition-colors">
                                 <div className="absolute top-0 left-0 w-1.5 h-full bg-[#ae2b2b] opacity-80"></div>
-                                <div className="flex items-center gap-3 mb-8 border-b border-gray-50 pb-4">
+                                <div className="flex items-center gap-3 mb-6 sm:mb-8 border-b border-gray-50 pb-4">
                                     <div className="bg-red-50 p-2.5 rounded-xl text-[#ae2b2b]">
                                         <User className="h-5 w-5" />
                                     </div>
@@ -456,9 +456,9 @@ export default function EventRegistrationPage() {
 
                             {/* SECTION 2: Family & Event Specific Details */}
                             {(project.project_code === 'PRJ-002' || project.project_code === 'PRJ-008') && (
-                                <div className="bg-white p-6 md:p-8 rounded-2xl border border-gray-100 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] relative overflow-hidden group hover:border-[#ae2b2b]/20 transition-colors">
+                                <div className="bg-white p-5 sm:p-6 md:p-8 rounded-2xl border border-gray-100 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] relative overflow-hidden group hover:border-[#ae2b2b]/20 transition-colors">
                                     <div className="absolute top-0 left-0 w-1.5 h-full bg-indigo-500 opacity-80"></div>
-                                    <div className="flex items-center gap-3 mb-8 border-b border-gray-50 pb-4">
+                                    <div className="flex items-center gap-3 mb-6 sm:mb-8 border-b border-gray-50 pb-4">
                                         <div className="bg-indigo-50 p-2.5 rounded-xl text-indigo-600">
                                             <Users className="h-5 w-5" />
                                         </div>
@@ -495,9 +495,11 @@ export default function EventRegistrationPage() {
                                                         className="w-full rounded-xl border border-gray-200 px-4 py-3 bg-gray-50/50 text-gray-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#ae2b2b]/20 focus:border-[#ae2b2b] transition-all shadow-sm placeholder:text-gray-400 font-medium"
                                                     />
                                                 </div>
-                                                <div className="space-y-2">
-
-
+                                                <div className="md:col-span-2 mt-4 mb-2 flex items-center gap-3 border-b border-gray-50 pb-2">
+                                                    <div className="bg-amber-50 p-2 rounded-lg text-amber-600">
+                                                        <User className="h-4 w-4" />
+                                                    </div>
+                                                    <h4 className="text-lg font-bold text-gray-900 font-serif">Shibirarthi Details</h4>
                                                 </div>
                                                 <div className="space-y-2 md:col-span-2">
                                                     <label className="text-sm font-bold text-gray-700 tracking-wide flex items-center gap-2">
@@ -649,7 +651,7 @@ export default function EventRegistrationPage() {
                             )}
 
                             {/* SECTION 3: Required Uploads and Payments */}
-                            <div className="bg-gradient-to-br from-[#fffcfb] to-[#fff5f5] p-6 md:p-8 rounded-2xl border border-[#ae2b2b]/20 shadow-[0_4px_20px_-4px_rgba(174,43,43,0.1)] relative overflow-hidden">
+                            <div className="bg-gradient-to-br from-[#fffcfb] to-[#fff5f5] p-5 sm:p-6 md:p-8 rounded-2xl border border-[#ae2b2b]/20 shadow-[0_4px_20px_-4px_rgba(174,43,43,0.1)] relative overflow-hidden">
                                 <div className="flex items-center gap-3 mb-6 border-b border-[#ae2b2b]/10 pb-4">
                                     <div className="bg-[#ae2b2b] p-2.5 rounded-xl text-white">
                                         <Upload className="h-5 w-5" />
@@ -658,7 +660,7 @@ export default function EventRegistrationPage() {
                                 </div>
 
                                 {(project.project_code === 'PRJ-002' || project.project_code === 'PRJ-008') && (
-                                    <div className="mb-8 p-6 bg-white rounded-xl border border-gray-200 shadow-sm">
+                                    <div className="mb-6 sm:mb-8 p-4 sm:p-6 bg-white rounded-xl border border-gray-200 shadow-sm">
                                         <label className="text-sm font-bold text-gray-900 tracking-wide flex items-center gap-2 mb-3">
                                             Upload Recent Photograph <span className="text-[#ae2b2b]">*</span>
                                         </label>
@@ -673,8 +675,8 @@ export default function EventRegistrationPage() {
                                     </div>
                                 )}
 
-                                <div className="mb-6 flex flex-col md:flex-row items-center gap-8 bg-white p-6 rounded-xl border border-[#ae2b2b]/10 shadow-sm">
-                                    <div className="bg-white p-3 rounded-2xl border border-gray-100 shadow-sm shrink-0">
+                                <div className="mb-6 flex flex-col md:flex-row items-center gap-6 sm:gap-8 bg-white p-4 sm:p-6 rounded-xl border border-[#ae2b2b]/10 shadow-sm">
+                                    <div className="bg-white p-2 sm:p-3 rounded-2xl border border-gray-100 shadow-sm shrink-0">
                                         <img src="/paymentqr.jpeg" alt="Payment QR Code" className="w-56 h-56 sm:w-60 sm:h-60 object-contain rounded-xl" />
                                     </div>
                                     <div className="text-center md:text-left space-y-3">
@@ -686,7 +688,7 @@ export default function EventRegistrationPage() {
                                     </div>
                                 </div>
 
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 bg-white p-4 sm:p-6 rounded-xl border border-gray-200 shadow-sm">
                                     <div className="space-y-2">
                                         <label className="text-sm font-bold text-gray-700 tracking-wide flex items-center gap-2">
                                             Payment Screenshot <span className="text-[#ae2b2b]">*</span>
