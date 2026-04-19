@@ -295,13 +295,15 @@ export default function EventRegistrationPage() {
                                     <p className="font-medium text-gray-800">Pickup & drop facilities will be available by bus from Mulund or Borivali <span className="text-gray-500 font-normal">(Details will be shared later)</span>.</p>
                                 </div>
 
-                                <div className="text-center bg-gray-900 text-white p-4 rounded-xl shadow-lg mt-6">
-                                    <p className="text-amber-400 font-bold text-xs uppercase tracking-widest mb-1.5">For Further Queries or Assistance Call:</p>
-                                    <div className="flex justify-center items-center gap-6 font-mono font-bold text-lg">
-                                        <span>Hardik Shah :</span>
-                                        <span>📞  9930409832</span>
-                                        <span className="text-gray-500 hidden sm:inline">|</span>
-                                        <span>📞 7021376402</span>
+                                <div className="text-center bg-gray-900 text-white p-4 sm:p-5 rounded-xl shadow-lg mt-6 w-full overflow-hidden">
+                                    <p className="text-amber-400 font-bold text-xs uppercase tracking-widest mb-2 sm:mb-1.5">For Further Queries or Assistance Call:</p>
+                                    <div className="flex flex-col sm:flex-row justify-center items-center gap-2 sm:gap-6 font-mono font-bold text-base sm:text-lg">
+                                        <span className="whitespace-nowrap">Hardik Shah :</span>
+                                        <div className="flex flex-wrap justify-center items-center gap-3 sm:gap-6">
+                                            <span className="whitespace-nowrap">📞 9930409832</span>
+                                            <span className="text-gray-500 hidden sm:inline">|</span>
+                                            <span className="whitespace-nowrap">📞 7021376402</span>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
