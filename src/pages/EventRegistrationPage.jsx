@@ -255,7 +255,7 @@ export default function EventRegistrationPage() {
                         {project.project_code === 'PRJ-008' && (
                             <div className="mb-8 prose prose-amber max-w-none bg-[#fff6ed] rounded-xl p-4 sm:p-6 border border-amber-200/60 shadow-sm">
                                 <h3 className="text-center text-[#ae2b2b] font-bold text-sm mb-2 tracking-[0.2em] font-sans">I LOVE JINSHASAN PRESENTS</h3>
-                                <h4 className="text-center text-gray-900 font-serif font-bold text-2xl mb-2">Reconnect with </h4>
+                                <h4 className="text-center text-gray-900 font-serif font-bold text-2xl mb-2">Reconnect </h4>
                                 <h4 className="text-center text-amber-600 font-serif font-bold text-xl mb-4 italic">Soul . Shasan . Nature</h4>
                                 <p className="text-center font-semibold text-gray-800 mb-6 text-sm">A 3 days religious residential Shibir</p>
 
@@ -266,17 +266,8 @@ export default function EventRegistrationPage() {
                                     </div>
                                     <div className="bg-white p-4 rounded-xl shadow-sm border border-amber-100">
                                         <h5 className="font-bold text-gray-900 border-b border-amber-100 pb-2 mb-3 text-sm flex items-center justify-center bg-amber-50 rounded px-2">Venue</h5>
-                                        <p className="text-sm text-center text-gray-700"><strong>Piyushpani Tirth</strong><br />Ghodbunder Road, Vassova Village,<br />Mira Road, Dist. Thane – 401107 (Mumbai)</p>
+                                        <p className="text-sm text-center text-gray-700"><strong>Piyushpani Tirth</strong><br />Ghodbunder Road, Varsova Village,<br />Mira Road, Dist. Thane – 401107 (Mumbai)</p>
                                     </div>
-                                </div>
-
-                                <div className="bg-white p-5 rounded-xl shadow-sm border border-amber-100 mb-6">
-                                    <h5 className="font-bold text-gray-900 mb-3 text-sm flex items-center bg-amber-50 inline-block px-3 py-1 rounded">Notes</h5>
-                                    <ul className="list-decimal pl-5 text-sm space-y-2.5 text-gray-700 leading-relaxed marker:text-amber-600 marker:font-bold">
-                                        <li>Form will be accepted with completion of registration fees of <strong>₹100 only</strong>.</li>
-                                        <li>Shibirarthi boys have to reach venue on the evening of <strong>30th December, Wednesday by 4:00 PM</strong>.<br />And departure has to be done on <strong>2nd January 2027 morning</strong> after Navkarshi.</li>
-                                        <li>Scan the QR code to make payment and attach the payment details with this duly filled form.</li>
-                                    </ul>
                                 </div>
 
                                 <div className="grid md:grid-cols-2 gap-4 text-sm text-gray-800 text-center mb-6">
@@ -288,6 +279,15 @@ export default function EventRegistrationPage() {
                                         <span className="block font-bold text-amber-900 mb-2 border-b border-amber-100 pb-2 text-xs uppercase tracking-wide">Guidance</span>
                                         <span className="font-semibold text-gray-800">Param Pujya Muniraj Shree Muktimandan Vijayji Maharaj Saheb</span>
                                     </div>
+                                </div>
+
+                                <div className="bg-white p-5 rounded-xl shadow-sm border border-amber-100 mb-6">
+                                    <h5 className="font-bold text-gray-900 mb-3 text-sm flex items-center bg-amber-50 inline-block px-3 py-1 rounded">Notes</h5>
+                                    <ul className="list-decimal pl-5 text-sm space-y-2.5 text-gray-700 leading-relaxed marker:text-amber-600 marker:font-bold">
+                                        <li>Form will be accepted with completion of registration fees of <strong>₹100 only</strong>.</li>
+                                        <li>Shibirarthi boys have to reach venue on the evening of <strong>30th December, Wednesday by 4:00 PM</strong>.<br />And departure has to be done on <strong>2nd January 2027 morning</strong> after Navkarshi.</li>
+                                        <li>Scan the QR code to make payment and attach the payment details with this duly filled form.</li>
+                                    </ul>
                                 </div>
 
                                 <div className="text-sm text-gray-700 bg-white p-4 rounded-xl shadow-sm border border-amber-100 mb-6 text-center">
