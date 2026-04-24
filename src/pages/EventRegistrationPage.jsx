@@ -240,7 +240,7 @@ export default function EventRegistrationPage() {
                             {project.project_code === 'PRJ-008' ? (
                                 <>
                                     <h1 className="text-3xl sm:text-4xl font-bold font-serif leading-tight mb-2">
-                                        Reconnect with Soul . Shasan . Nature
+                                        Reconnect <br/> with Soul . Shasan . Nature
                                     </h1>
                                     <p className="text-white/90 text-lg">A 3 days religious residential Shibir</p>
                                 </>
