@@ -300,6 +300,7 @@ const AdminDashboard = () => {
                         <div className="flex-1 overflow-y-auto py-4 px-3 space-y-1">
                             {[
                                 { id: 'volunteers', label: 'Volunteers', icon: Users },
+                                { id: 'kalyan_mitras', label: 'Kalyan Mitras', icon: Users },
                                 { id: 'projects', label: 'Projects', icon: LayoutGrid },
                                 { id: 'events', label: 'Events', icon: Calendar },
                                 { id: 'event-registrations', label: 'Event Registrations', icon: Ticket },
@@ -366,6 +367,9 @@ const AdminDashboard = () => {
                         <div className="hidden md:flex bg-gray-200 p-1 rounded-lg items-center overflow-x-auto max-w-full">
                             <button onClick={() => setActiveTab('volunteers')} className={`flex items-center gap-2 px-3 py-2 rounded-md font-medium text-sm whitespace-nowrap transition-all ${activeTab === 'volunteers' ? 'bg-white text-[#ae2b2b] shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}>
                                 <Users className="h-4 w-4" /> Volunteers
+                            </button>
+                            <button onClick={() => setActiveTab('kalyan_mitras')} className={`flex items-center gap-2 px-3 py-2 rounded-md font-medium text-sm whitespace-nowrap transition-all ${activeTab === 'kalyan_mitras' ? 'bg-white text-[#ae2b2b] shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}>
+                                <Users className="h-4 w-4" /> Kalyan Mitras
                             </button>
                             <button onClick={() => setActiveTab('projects')} className={`flex items-center gap-2 px-3 py-2 rounded-md font-medium text-sm whitespace-nowrap transition-all ${activeTab === 'projects' ? 'bg-white text-[#ae2b2b] shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}>
                                 <LayoutGrid className="h-4 w-4" /> Projects
@@ -1172,9 +1176,14 @@ const AdminDashboard = () => {
                         </div>
                         <div className="bg-gray-50 px-6 py-4 border-t border-gray-200 flex justify-end"><button onClick={() => setSelectedVolunteer(null)} className="px-6 py-2 bg-white border rounded hover:bg-gray-50">Close</button></div>
                     </div>
-                </div >
+                </div>
             )}
-        </div >
+            
+            {/* --- TAB CONTENT: KALYAN MITRAS --- */}
+            {activeTab === 'kalyan_mitras' && (
+                <AdminKalyanMitras volunteers={volunteers} />
+            )}
+        </div>
     );
 };
 

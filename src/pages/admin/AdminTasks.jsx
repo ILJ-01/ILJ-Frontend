@@ -8,7 +8,7 @@ export default function AdminTasks() {
     const [volunteers, setVolunteers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
-    const [showArchived, setShowArchived] = useState(false);
+    const [activeStatusTab, setActiveStatusTab] = useState('pending'); // pending, completed, reviewed, archived, projectwise
 
     // Search State
     const [assigneeSearch, setAssigneeSearch] = useState('');
@@ -139,20 +139,127 @@ export default function AdminTasks() {
         }
     };
 
+    const renderTaskRow = (task) => (
+        <div key={task.id} className="border-b border-gray-100 last:border-b-0">
+            <div
+                onClick={() => setExpandedTaskId(expandedTaskId === task.id ? null : task.id)}
+                className={`p-4 hover:bg-gray-50 flex flex-col sm:flex-row sm:items-center justify-between group cursor-pointer transition-colors ${task.status === 'archived' ? 'bg-gray-50/50' : ''}`}>
+                <div className="flex-1 min-w-0 pr-4">
+                    <div className="flex items-center gap-2 mb-1">
+                        <span className={`text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded border
+                        ${task.status === 'completed' ? 'bg-green-50 text-green-700 border-green-200' :
+                                task.status === 'archived' ? 'bg-gray-100 text-gray-700 border-gray-200' :
+                                    'bg-[#ae2b2b]/5 text-[#ae2b2b] border-[#ae2b2b]/20'}`}>
+                            {task.status} {task.rating ? '(Reviewed)' : ''}
+                        </span>
+                        {task.project && <span className="text-xs text-gray-500">• {task.project.title}</span>}
+                    </div>
+                    <h3 className={`font-bold text-gray-900 truncate ${task.status === 'archived' ? 'text-gray-500' : ''}`}>{task.title}</h3>
+                    <div className="flex items-center gap-4 mt-1 text-sm text-gray-500">
+                        <div className="flex items-center gap-1">
+                            <User className="h-3 w-3" />
+                            <span className="truncate max-w-[150px]">
+                                {task.assignee ? `${task.assignee.first_name} ${task.assignee.last_name}` : 'Unassigned'}
+                            </span>
+                        </div>
+                        {task.deadline && (
+                            <div className="flex items-center gap-1 text-red-400">
+                                <Clock className="h-3 w-3" />
+                                <span>{new Date(task.deadline).toLocaleDateString()}</span>
+                            </div>
+                        )}
+                    </div>
+                </div>
+                <div className="flex items-center gap-2 mt-3 sm:mt-0">
+                    <button
+                        onClick={(e) => { e.stopPropagation(); handleArchive(task.id, task.status); }}
+                        className="text-gray-400 hover:text-amber-600 p-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                        title={task.status === 'archived' ? "Unarchive" : "Archive"}
+                    >
+                        <Archive className="h-5 w-5" />
+                    </button>
+                    <button onClick={(e) => { e.stopPropagation(); handleDelete(task.id); }} className="text-gray-400 hover:text-red-500 p-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Trash2 className="h-5 w-5" />
+                    </button>
+                    {task.status === 'completed' && (
+                        <button
+                            onClick={(e) => { e.stopPropagation(); setSelectedTaskForFeedback(task); }}
+                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all shadow-sm
+                            ${task.rating
+                                    ? 'bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100'
+                                    : 'bg-blue-600 text-white hover:bg-blue-700'
+                                }`}
+                        >
+                            <Star className={`h-3.5 w-3.5 ${task.rating ? 'fill-amber-500' : ''}`} />
+                            {task.rating ? `${task.rating} Stars` : 'Add Feedback'}
+                        </button>
+                    )}
+                </div>
+            </div>
+            {expandedTaskId === task.id && (
+                <div className="px-4 pb-4 animate-in slide-in-from-top-2 duration-300">
+                    <div className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm relative overflow-hidden">
+                        <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#ae2b2b]"></div>
+                        
+                        {task.status === 'pending' && (
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4 pb-4 border-b border-gray-100">
+                                <div>
+                                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-1">Assigned By</span>
+                                    <span className="text-sm font-medium text-gray-800">Admin</span>
+                                </div>
+                                <div>
+                                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-1">Assigned To</span>
+                                    <span className="text-sm font-medium text-gray-800">{task.assignee ? `${task.assignee.first_name} ${task.assignee.last_name}` : 'Unassigned'}</span>
+                                </div>
+                                <div>
+                                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-1">Date of Assigning</span>
+                                    <span className="text-sm font-medium text-gray-800">{new Date(task.created_at).toLocaleDateString()}</span>
+                                </div>
+                                <div>
+                                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-1">Deadline</span>
+                                    <span className={`text-sm font-medium ${new Date(task.deadline) < new Date() ? 'text-red-600' : 'text-gray-800'}`}>
+                                        {task.deadline ? new Date(task.deadline).toLocaleDateString() : 'No Deadline'}
+                                    </span>
+                                </div>
+                            </div>
+                        )}
+
+                        <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Task Description</h4>
+                        <p className="text-sm text-gray-700 whitespace-pre-line leading-relaxed">
+                            {task.description || "No description provided by the assigner."}
+                        </p>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+
     return (
         <div className="space-y-6">
-            <div className="flex justify-between items-center">
-                <h2 className="text-xl font-bold text-gray-800">Task Management</h2>
-                <div className="flex items-center gap-3">
-                    <button
-                        onClick={() => setShowArchived(!showArchived)}
-                        className={`px-4 py-2 rounded-lg border text-sm font-medium transition-all ${showArchived ? 'bg-amber-100 border-amber-300 text-amber-700' : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'}`}
-                    >
-                        {showArchived ? 'Show Active' : 'Show Archived'}
-                    </button>
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <h2 className="text-xl font-bold text-gray-800 shrink-0">Task Management</h2>
+                
+                <div className="flex flex-col xl:flex-row items-start xl:items-center gap-3 w-full xl:w-auto overflow-hidden">
+                    {/* Tabs */}
+                    <div className="flex bg-gray-100 p-1 rounded-lg overflow-x-auto w-full xl:w-auto text-sm no-scrollbar">
+                        {['pending', 'completed', 'reviewed', 'archived', 'projectwise'].map(tab => (
+                            <button
+                                key={tab}
+                                onClick={() => setActiveStatusTab(tab)}
+                                className={`px-3 py-1.5 rounded-md font-medium whitespace-nowrap transition-colors ${
+                                    activeStatusTab === tab 
+                                    ? 'bg-white text-[#ae2b2b] shadow-sm' 
+                                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-200/50'
+                                }`}
+                            >
+                                {tab.charAt(0).toUpperCase() + tab.slice(1)} {tab === 'projectwise' ? 'Tasks' : ''}
+                            </button>
+                        ))}
+                    </div>
+
                     <button
                         onClick={handleCreate}
-                        className="flex items-center gap-2 bg-[#ae2b2b] text-white px-4 py-2 rounded-lg hover:bg-[#8b1e1e] transition shadow-sm font-medium"
+                        className="flex items-center gap-2 bg-[#ae2b2b] text-white px-4 py-2 rounded-lg hover:bg-[#8b1e1e] transition shadow-sm font-medium shrink-0"
                     >
                         <Plus className="h-4 w-4" /> Assign Task
                     </button>
@@ -164,77 +271,43 @@ export default function AdminTasks() {
             ) : (
                 <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
                     <div className="divide-y divide-gray-100">
-                        {tasks.filter(t => showArchived ? t.status === 'archived' : t.status !== 'archived').map(task => (
-                            <div key={task.id} className="border-b border-gray-100 last:border-b-0">
-                                <div
-                                    onClick={() => setExpandedTaskId(expandedTaskId === task.id ? null : task.id)}
-                                    className={`p-4 hover:bg-gray-50 flex items-center justify-between group cursor-pointer transition-colors ${task.status === 'archived' ? 'bg-gray-50/50' : ''}`}>
-                                    <div className="flex-1 min-w-0 pr-4">
-                                        <div className="flex items-center gap-2 mb-1">
-                                            <span className={`text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded border
-                                            ${task.status === 'completed' ? 'bg-green-50 text-green-700 border-green-200' :
-                                                    task.status === 'archived' ? 'bg-gray-100 text-gray-700 border-gray-200' :
-                                                        'bg-[#ae2b2b]/5 text-[#ae2b2b] border-[#ae2b2b]/20'}`}>
-                                                {task.status}
-                                            </span>
-                                            {task.project && <span className="text-xs text-gray-500">• {task.project.title}</span>}
+                        {(() => {
+                            let filteredTasks = tasks;
+                            if (activeStatusTab === 'reviewed') {
+                                filteredTasks = tasks.filter(t => t.status === 'completed' && t.rating);
+                            } else if (activeStatusTab === 'completed') {
+                                filteredTasks = tasks.filter(t => t.status === 'completed' && !t.rating);
+                            } else if (activeStatusTab !== 'projectwise') {
+                                filteredTasks = tasks.filter(t => t.status === activeStatusTab);
+                            }
+
+                            if (activeStatusTab === 'projectwise') {
+                                const grouped = tasks.reduce((acc, t) => {
+                                    const pTitle = t.project ? t.project.title : 'General / No Project';
+                                    if (!acc[pTitle]) acc[pTitle] = [];
+                                    acc[pTitle].push(t);
+                                    return acc;
+                                }, {});
+                                
+                                return Object.entries(grouped).map(([project, projTasks]) => (
+                                    <div key={project} className="border-b border-gray-200 last:border-b-0">
+                                        <div className="bg-gray-50 px-4 py-3 font-bold text-gray-800 border-b border-gray-200 flex items-center justify-between">
+                                            <span>{project}</span>
+                                            <span className="text-xs font-normal bg-white px-2 py-1 rounded shadow-sm text-gray-600">{projTasks.length} tasks</span>
                                         </div>
-                                        <h3 className={`font-bold text-gray-900 truncate ${task.status === 'archived' ? 'text-gray-500' : ''}`}>{task.title}</h3>
-                                        <div className="flex items-center gap-4 mt-1 text-sm text-gray-500">
-                                            <div className="flex items-center gap-1">
-                                                <User className="h-3 w-3" />
-                                                <span className="truncate max-w-[150px]">
-                                                    {task.assignee ? `${task.assignee.first_name} ${task.assignee.last_name}` : 'Unassigned'}
-                                                </span>
-                                            </div>
-                                            {task.deadline && (
-                                                <div className="flex items-center gap-1 text-red-400">
-                                                    <Clock className="h-3 w-3" />
-                                                    <span>{new Date(task.deadline).toLocaleDateString()}</span>
-                                                </div>
-                                            )}
+                                        <div className="divide-y divide-gray-100">
+                                            {projTasks.map(task => renderTaskRow(task))}
                                         </div>
                                     </div>
-                                    <div className="flex items-center gap-2">
-                                        <button
-                                            onClick={(e) => { e.stopPropagation(); handleArchive(task.id, task.status); }}
-                                            className="text-gray-400 hover:text-amber-600 p-2 opacity-0 group-hover:opacity-100 transition-opacity"
-                                            title={task.status === 'archived' ? "Unarchive" : "Archive"}
-                                        >
-                                            <Archive className="h-5 w-5" />
-                                        </button>
-                                        <button onClick={(e) => { e.stopPropagation(); handleDelete(task.id); }} className="text-gray-400 hover:text-red-500 p-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                            <Trash2 className="h-5 w-5" />
-                                        </button>
-                                        {task.status === 'completed' && (
-                                            <button
-                                                onClick={(e) => { e.stopPropagation(); setSelectedTaskForFeedback(task); }}
-                                                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all shadow-sm
-                                                ${task.rating
-                                                        ? 'bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100'
-                                                        : 'bg-blue-600 text-white hover:bg-blue-700'
-                                                    }`}
-                                            >
-                                                <Star className={`h-3.5 w-3.5 ${task.rating ? 'fill-amber-500' : ''}`} />
-                                                {task.rating ? `${task.rating} Stars` : 'Add Feedback'}
-                                            </button>
-                                        )}
-                                    </div>
-                                </div>
-                                {expandedTaskId === task.id && (
-                                    <div className="px-4 pb-4 animate-in slide-in-from-top-2 duration-300">
-                                        <div className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm relative overflow-hidden">
-                                            <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#ae2b2b]"></div>
-                                            <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Task Description</h4>
-                                            <p className="text-sm text-gray-700 whitespace-pre-line leading-relaxed">
-                                                {task.description || "No description provided by the assigner."}
-                                            </p>
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-                        ))}
-                        {tasks.length === 0 && <p className="text-gray-500 text-center py-8">No tasks found.</p>}
+                                ));
+                            }
+
+                            if (filteredTasks.length === 0) {
+                                return <p className="text-gray-500 text-center py-8">No tasks found in this category.</p>;
+                            }
+
+                            return filteredTasks.map(task => renderTaskRow(task));
+                        })()}
                     </div>
                 </div>
             )}
