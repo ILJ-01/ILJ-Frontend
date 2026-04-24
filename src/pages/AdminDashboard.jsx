@@ -15,6 +15,7 @@ import AdminInquiries from './admin/AdminInquiries';
 import AdminEventRegistrations from './admin/AdminEventRegistrations';
 import AdminIdeas from './admin/AdminIdeas';
 import AdminSTC from './admin/AdminSTC';
+import AdminKalyanMitras from './admin/AdminKalyanMitras';
 
 const RANKS = [
     { title: "Intern", minHours: 0, order: 0 },

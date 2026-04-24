@@ -266,7 +266,12 @@ export default function EventRegistrationPage() {
                                     </div>
                                     <div className="bg-white p-4 rounded-xl shadow-sm border border-amber-100">
                                         <h5 className="font-bold text-gray-900 border-b border-amber-100 pb-2 mb-3 text-sm flex items-center justify-center bg-amber-50 rounded px-2">Venue</h5>
-                                        <p className="text-sm text-center text-gray-700"><strong>Piyushpani Tirth</strong><br />Ghodbunder Road, Varsova Village,<br />Mira Road, Dist. Thane – 401107 (Mumbai)</p>
+                                        <p className="text-sm text-center text-gray-700">
+                                            <a href="https://maps.app.goo.gl/WJ2kFGtr21hmVW6M8" target="_blank" rel="noopener noreferrer" className="font-bold text-[#ae2b2b] hover:underline">
+                                                Piyushpani Tirth
+                                            </a>
+                                            <br />Ghodbunder Road, Varsova Village,<br />Mira Road, Dist. Thane – 401107 (Mumbai)
+                                        </p>
                                     </div>
                                 </div>
 

@@ -425,7 +425,9 @@ export default function Project() {
                     <div>
                       <div className="flex items-center gap-2 text-gray-700 mt-2">
                         <MapPin className="w-5 h-5 text-[#ae2b2b]" />
-                        <span className="font-medium">Piyushpani Parshvnath Jain Temple</span>
+                        <a href="https://maps.app.goo.gl/WJ2kFGtr21hmVW6M8" target="_blank" rel="noopener noreferrer" className="font-medium hover:text-[#ae2b2b] hover:underline transition-colors">
+                          Piyushpani Parshvnath Jain Temple
+                        </a>
                       </div>
                     </div>
                   )}
