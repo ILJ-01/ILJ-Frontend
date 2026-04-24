@@ -237,16 +237,27 @@ export default function EventRegistrationPage() {
                             <span className="uppercase tracking-widest text-xs font-bold text-white/80 bg-black/20 px-3 py-1 rounded inline-block mb-3">
                                 {project.project_code}
                             </span>
-                            <h1 className="text-4xl font-bold font-serif leading-tight mb-2">
-                                Event Registration
-                            </h1>
-                            <p className="text-white/90 text-lg">{project.title}</p>
-
-                            {project.next_event_date && (
-                                <div className="inline-flex items-center gap-2 bg-white/10 mt-4 px-4 py-2 rounded-lg backdrop-blur-sm border border-white/20">
-                                    <Calendar className="h-5 w-5 text-amber-300" />
-                                    <span className="font-medium tracking-wide">{project.next_event_date}</span>
-                                </div>
+                            {project.project_code === 'PRJ-008' ? (
+                                <>
+                                    <h1 className="text-3xl sm:text-4xl font-bold font-serif leading-tight mb-2">
+                                        Reconnect with Soul . Shasan . Nature
+                                    </h1>
+                                    <p className="text-white/90 text-lg">A 3 days religious residential Shibir</p>
+                                </>
+                            ) : (
+                                <>
+                                    <h1 className="text-4xl font-bold font-serif leading-tight mb-2">
+                                        Event Registration
+                                    </h1>
+                                    <p className="text-white/90 text-lg">{project.title}</p>
+                                    
+                                    {project.next_event_date && (
+                                        <div className="inline-flex items-center gap-2 bg-white/10 mt-4 px-4 py-2 rounded-lg backdrop-blur-sm border border-white/20">
+                                            <Calendar className="h-5 w-5 text-amber-300" />
+                                            <span className="font-medium tracking-wide">{project.next_event_date}</span>
+                                        </div>
+                                    )}
+                                </>
                             )}
                         </div>
                     </div>
@@ -254,10 +265,7 @@ export default function EventRegistrationPage() {
                     <div className="p-4 sm:p-6 md:p-10">
                         {project.project_code === 'PRJ-008' && (
                             <div className="mb-8 prose prose-amber max-w-none bg-[#fff6ed] rounded-xl p-4 sm:p-6 border border-amber-200/60 shadow-sm">
-                                <h3 className="text-center text-[#ae2b2b] font-bold text-sm mb-2 tracking-[0.2em] font-sans">I LOVE JINSHASAN PRESENTS</h3>
-                                <h4 className="text-center text-gray-900 font-serif font-bold text-2xl mb-2">Reconnect </h4>
-                                <h4 className="text-center text-amber-600 font-serif font-bold text-xl mb-4 italic">Soul . Shasan . Nature</h4>
-                                <p className="text-center font-semibold text-gray-800 mb-6 text-sm">A 3 days religious residential Shibir</p>
+                                <h3 className="text-center text-[#ae2b2b] font-bold text-sm mb-6 tracking-[0.2em] font-sans">I LOVE JINSHASAN PRESENTS</h3>
 
                                 <div className="grid md:grid-cols-2 gap-4 mb-6">
                                     <div className="bg-white p-4 rounded-xl shadow-sm border border-amber-100">
