@@ -114,15 +114,12 @@ export default function PoliciesPage() {
                         "The team will follow a merit-based hierarchy. Promotions are primarily triggered by the cumulative hours contributed (verified via timesheets) and performance quality."
                     ],
                     table: {
-                        headers: ["Title", "Required contribution (cumulative hours)"],
+                        headers: ["Level", "Required Contribution"],
                         rows: [
-                            ["Intern", "Entry level"],
-                            ["Associate", "20 hours"],
-                            ["Assistant Manager", "100 hours"],
-                            ["Manager", "500 hours"],
-                            ["Senior Manager", "1000 hours"],
-                            ["Associate Director", "2000 hours"],
-                            ["Director", "4000 hours"]
+                            ["ILJ Elite Volunteer", "100 hours + 25 STC"],
+                            ["ILJ Premier Volunteer", "750 hours + 100 STC"],
+                            ["ILJ Prestige Volunteer", "1750 hours + 150 STC"],
+                            ["ILJ Legacy Volunteer", "3000 hours + 250 STC"]
                         ]
                     },
                     extraContent: [

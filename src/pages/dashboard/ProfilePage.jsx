@@ -295,7 +295,7 @@ export default function ProfilePage() {
                 participation_mode: user.participation_mode || "",
                 kalyan_mitra: user.kalyan_mitra || "",
                 time_commitment: user.time_commitment || "",
-                rank: user.rank || "Intern",
+                rank: user.rank || "Volunteer",
                 additional_areas: user.additional_areas || [],
             });
         }
@@ -439,7 +439,7 @@ export default function ProfilePage() {
                                     className="bg-amber-50 text-amber-700 px-3 py-1 rounded-full border border-amber-200 text-xs font-bold uppercase tracking-widest flex items-center gap-1 shadow-sm mt-1"
                                 >
                                     <Award className="h-3.5 w-3.5 text-amber-600" />
-                                    {user.rank || 'Intern'}
+                                    {user.rank || 'Volunteer'}
                                 </motion.div>
                                 {user.designation && (
                                     <motion.div

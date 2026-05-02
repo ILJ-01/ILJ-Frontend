@@ -68,7 +68,7 @@ export default function DashboardLayout({ children }) {
         { icon: Activity, label: "Spiritual Tasks", path: "/dashboard/stc" },
         { icon: User, label: "My Profile", path: "/dashboard/profile" },
         { icon: FileText, label: "Policies", path: "/dashboard/policies" },
-
+        { icon: Home, label: "Go to Website", path: "/" },
     ];
 
     if (user?.managed_projects?.length > 0) {

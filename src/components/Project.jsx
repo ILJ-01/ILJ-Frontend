@@ -26,6 +26,7 @@ import {
   CardFooter,
 } from "@/components/ui/card";
 import Autoplay from "embla-carousel-autoplay";
+import Instagram from "./Instagram";
 
 const projectThumbs = import.meta.glob(
   "../assets/projects/*.{png,jpg,jpeg,webp}",
@@ -285,7 +286,7 @@ export default function Project() {
   };
 
   if (loading) return <LoadingSpinner />;
-  if (!project) return <div className="p-10 text-center">Project not found</div>;
+  if (!project) return <div className="p-10 text-center">Pod not found</div>;
 
   // --- RENDER FOR STATIC JSON PROJECTS ---
   if (project.type === 'static') {
@@ -323,7 +324,7 @@ export default function Project() {
 
         {gallery.length > 0 && (
           <>
-            <h2 className="mt-16 mb-6 text-2xl font-bold text-[#ae2b2b]">Project Gallery</h2>
+            <h2 className="mt-16 mb-6 text-2xl font-bold text-[#ae2b2b]">Pod Gallery</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
               {gallery.map((img, i) => (
                 <img key={i} src={img} className="rounded-xl object-cover h-48 w-full shadow hover:scale-105 transition duration-300" alt="Gallery" />
@@ -341,7 +342,7 @@ export default function Project() {
       {/* Hero Banner */}
       <div className="max-w-7xl mx-auto px-6 py-8">
         <button onClick={() => navigate('/projects')} className="text-[#ae2b2b] mb-6 font-semibold hover:underline flex items-center gap-2">
-          <ArrowLeft size={18} /> Back to Projects
+          <ArrowLeft size={18} /> Back to Pods
         </button>
 
         {/* Simple Banner Image */}
@@ -380,7 +381,7 @@ export default function Project() {
         {/* Left Column: Details */}
         <div className="lg:col-span-2 space-y-8">
           <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100">
-            <h2 className="text-2xl font-bold text-gray-800 mb-4 font-serif">About Project</h2>
+            <h2 className="text-2xl font-bold text-gray-800 mb-4 font-serif">About Pod</h2>
             <div className="prose prose-red max-w-none text-gray-600 leading-relaxed whitespace-pre-line">
               {project.description}
             </div>
@@ -502,7 +503,7 @@ export default function Project() {
                 ) : (
                   <div className="space-y-3">
                     <p className="text-sm text-gray-600 mb-4">
-                      Ready to contribute? Click below to request to join this project team.
+                      Ready to contribute? Click below to request to join this pod team.
                     </p>
                     <Button
                       onClick={handleApply}
@@ -546,7 +547,7 @@ export default function Project() {
       <div className="max-w-7xl mx-auto px-6 mt-12 grid grid-cols-1 gap-12">
         {dbGallery.length > 0 && (
           <div className="w-full relative px-2 sm:px-6 md:px-12">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6 font-serif border-b pb-4">Project Gallery</h2>
+            <h2 className="text-2xl font-bold text-gray-900 mb-6 font-serif border-b pb-4">Pod Gallery</h2>
             <Carousel
               opts={{
                 align: "start",
@@ -614,6 +615,15 @@ export default function Project() {
         )}
       </div>
 
+      {project.project_code === 'PRJ-001' && (
+        <div className="mt-12 w-full max-w-7xl mx-auto px-6">
+           <h2 className="text-2xl font-bold text-gray-900 mb-6 font-serif border-b pb-4">Instagram Reels</h2>
+           <div className="bg-white rounded-2xl p-6 shadow-sm">
+             <Instagram />
+           </div>
+        </div>
+      )}
+
       {/* Inquiry Modal */}
       {
         isInquiryOpen && (
@@ -622,8 +632,8 @@ export default function Project() {
               <button onClick={() => setIsInquiryOpen(false)} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
                 <X className="h-5 w-5" />
               </button>
-              <h3 className="text-xl font-bold text-gray-900 mb-1">Organize Project</h3>
-              <p className="text-sm text-gray-500 mb-4">Interested in bringing this project to your area? Let us know!</p>
+              <h3 className="text-xl font-bold text-gray-900 mb-1">Organize Pod</h3>
+              <p className="text-sm text-gray-500 mb-4">Interested in bringing this pod to your area? Let us know!</p>
 
               <form onSubmit={handleInquirySubmit} className="space-y-4">
                 <input
@@ -700,7 +710,7 @@ export default function Project() {
                 <X className="h-5 w-5" />
               </button>
               <h3 className="text-xl font-bold text-gray-900 mb-1">Share Feedback</h3>
-              <p className="text-sm text-gray-500 mb-4">Help us improve this project.</p>
+              <p className="text-sm text-gray-500 mb-4">Help us improve this pod.</p>
 
               <form onSubmit={handleFeedbackSubmit} className="space-y-4">
                 <div>

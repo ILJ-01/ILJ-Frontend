@@ -24,6 +24,12 @@ export default function TeamLeaderHub() {
     const [activeTab, setActiveTab] = useState("overview");
     const [assignmentType, setAssignmentType] = useState('volunteer'); // 'volunteer' or 'team'
     const [targetTeam, setTargetTeam] = useState("All");
+    
+    // Meetings State
+    const [meetings, setMeetings] = useState([]);
+    const [meetingForm, setMeetingForm] = useState({ title: "", team_name: "All", meeting_date: "", meeting_link: "", minutes: "" });
+    const [creatingMeeting, setCreatingMeeting] = useState(false);
+    const [editingMeeting, setEditingMeeting] = useState(null);
     const [creating, setCreating] = useState(false);
 
     const [taskForm, setTaskForm] = useState({
@@ -173,6 +179,59 @@ export default function TeamLeaderHub() {
             fetchInterestedVolunteers(parsedTeams);
         }
     }, [user]);
+
+    const fetchMeetings = async () => {
+        if (!user?.id) return;
+        try {
+            const { data, error } = await supabase
+                .from('team_meetings')
+                .select('*')
+                .eq('team_leader_id', user.id)
+                .order('meeting_date', { ascending: false });
+            if (!error) setMeetings(data || []);
+        } catch(e) {}
+    };
+
+    useEffect(() => {
+        if (user?.id) fetchMeetings();
+    }, [user]);
+
+    const handleCreateMeeting = async (e) => {
+        e.preventDefault();
+        setCreatingMeeting(true);
+        try {
+            if (editingMeeting) {
+                const { error } = await supabase.from('team_meetings').update({
+                    title: meetingForm.title,
+                    team_name: meetingForm.team_name,
+                    meeting_date: meetingForm.meeting_date,
+                    meeting_link: meetingForm.meeting_link,
+                    minutes: meetingForm.minutes
+                }).eq('id', editingMeeting.id);
+                if (error) throw error;
+                alert("Meeting updated!");
+            } else {
+                const { error } = await supabase.from('team_meetings').insert({
+                    team_leader_id: user.id,
+                    title: meetingForm.title,
+                    team_name: meetingForm.team_name,
+                    meeting_date: meetingForm.meeting_date,
+                    meeting_link: meetingForm.meeting_link,
+                    minutes: meetingForm.minutes
+                });
+                if (error) throw error;
+                alert("Meeting scheduled!");
+            }
+            setMeetingForm({ title: "", team_name: "All", meeting_date: "", meeting_link: "", minutes: "" });
+            setEditingMeeting(null);
+            fetchMeetings();
+        } catch (error) {
+            console.error("Meeting Error:", error);
+            alert("Failed to save meeting.");
+        } finally {
+            setCreatingMeeting(false);
+        }
+    };
 
     const fetchInterestedVolunteers = async (teamList) => {
         setLoading(true);
@@ -520,6 +579,88 @@ export default function TeamLeaderHub() {
                 )
             }
 
+            
+            {activeTab === "meetings" && (
+                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+                    <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-8">
+                        <h2 className="text-2xl font-serif font-bold text-gray-900 mb-6">{editingMeeting ? 'Edit Meeting' : 'Schedule Meeting'}</h2>
+                        <form onSubmit={handleCreateMeeting} className="space-y-4 max-w-2xl">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm font-bold text-gray-700 mb-1">Meeting Title</label>
+                                    <input type="text" required className="w-full p-3 bg-white border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-[#ae2b2b]" value={meetingForm.title} onChange={e => setMeetingForm({ ...meetingForm, title: e.target.value })} placeholder="e.g. Weekly Sync" />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-bold text-gray-700 mb-1">Team</label>
+                                    <select className="w-full p-3 bg-white border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-[#ae2b2b]" value={meetingForm.team_name} onChange={e => setMeetingForm({ ...meetingForm, team_name: e.target.value })}>
+                                        <option value="All">All Teams</option>
+                                        {teams.map(t => <option key={t} value={t}>{t}</option>)}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-bold text-gray-700 mb-1">Date & Time</label>
+                                    <input type="datetime-local" required className="w-full p-3 bg-white border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-[#ae2b2b]" value={meetingForm.meeting_date} onChange={e => setMeetingForm({ ...meetingForm, meeting_date: e.target.value })} />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-bold text-gray-700 mb-1">Meeting Link / Location</label>
+                                    <input type="text" className="w-full p-3 bg-white border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-[#ae2b2b]" value={meetingForm.meeting_link} onChange={e => setMeetingForm({ ...meetingForm, meeting_link: e.target.value })} placeholder="Zoom link or Room" />
+                                </div>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-bold text-gray-700 mb-1">Minutes of Meeting</label>
+                                <textarea rows="4" className="w-full p-3 bg-white border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-[#ae2b2b]" value={meetingForm.minutes} onChange={e => setMeetingForm({ ...meetingForm, minutes: e.target.value })} placeholder="Record minutes here after the meeting..."></textarea>
+                            </div>
+                            <div className="flex gap-3 pt-2">
+                                {editingMeeting && (
+                                    <button type="button" onClick={() => { setEditingMeeting(null); setMeetingForm({ title: "", team_name: "All", meeting_date: "", meeting_link: "", minutes: "" }); }} className="px-6 py-3 bg-gray-100 text-gray-700 rounded-xl font-bold hover:bg-gray-200 transition-all">Cancel Edit</button>
+                                )}
+                                <button type="submit" disabled={creatingMeeting} className="flex-1 py-3 bg-[#ae2b2b] text-white rounded-xl font-bold shadow-md hover:bg-[#902424] transition-all flex items-center justify-center gap-2">
+                                    {creatingMeeting ? <Loader2 className="h-5 w-5 animate-spin" /> : <Calendar className="h-5 w-5" />}
+                                    {editingMeeting ? 'Update Meeting' : 'Schedule Meeting'}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
+                        {meetings.map(m => (
+                            <div key={m.id} className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+                                <div className="flex justify-between items-start mb-4">
+                                    <div>
+                                        <h3 className="font-bold text-gray-900 text-lg">{m.title}</h3>
+                                        <p className="text-xs text-[#ae2b2b] font-bold uppercase tracking-wider">{m.team_name}</p>
+                                    </div>
+                                    <button onClick={() => {
+                                        setEditingMeeting(m);
+                                        setMeetingForm({
+                                            title: m.title,
+                                            team_name: m.team_name,
+                                            meeting_date: new Date(m.meeting_date).toISOString().slice(0, 16),
+                                            meeting_link: m.meeting_link || "",
+                                            minutes: m.minutes || ""
+                                        });
+                                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                                    }} className="text-gray-400 hover:text-[#ae2b2b]"><FileText className="h-4 w-4" /></button>
+                                </div>
+                                <div className="space-y-2 text-sm text-gray-600 mb-4">
+                                    <div className="flex items-center gap-2"><Calendar className="h-4 w-4" /> {new Date(m.meeting_date).toLocaleString()}</div>
+                                    {m.meeting_link && <div className="flex items-center gap-2"><MapPin className="h-4 w-4" /> <a href={m.meeting_link} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline truncate">{m.meeting_link}</a></div>}
+                                </div>
+                                {m.minutes ? (
+                                    <div className="bg-gray-50 p-3 rounded-lg text-xs text-gray-600 border border-gray-100 max-h-32 overflow-y-auto">
+                                        <p className="font-bold mb-1 text-gray-700">Minutes:</p>
+                                        <p className="whitespace-pre-wrap">{m.minutes}</p>
+                                    </div>
+                                ) : (
+                                    <div className="bg-amber-50 p-3 rounded-lg text-xs text-amber-700 border border-amber-100">
+                                        No minutes recorded yet.
+                                    </div>
+                                )}
+                            </div>
+                        ))}
+                    </div>
+                </motion.div>
+            )}
             {/* Details Modal (Fixed UI Placement) */}
             <AnimatePresence>
                 {selectedVolunteer && (

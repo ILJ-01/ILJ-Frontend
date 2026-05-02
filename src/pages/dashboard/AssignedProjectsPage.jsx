@@ -2,8 +2,8 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/lib/supabase";
-import { Briefcase, Calendar, ChevronRight } from "lucide-react";
-
+import { Briefcase, Calendar, ChevronRight, CalendarPlus } from "lucide-react";
+import { downloadICS } from "@/lib/ics";
 export default function AssignedProjectsPage() {
     const { user } = useAuth();
     const [assignedProjects, setAssignedProjects] = useState([]);
@@ -59,7 +59,7 @@ export default function AssignedProjectsPage() {
     return (
         <div className="space-y-6 animate-fade-in">
             <div>
-                <h2 className="text-2xl md:text-3xl font-bold font-serif text-gray-900">Assigned Projects</h2>
+                <h2 className="text-2xl md:text-3xl font-bold font-serif text-gray-900">Assigned Pods</h2>
                 <p className="text-gray-500 mt-2">View and manage the pods you are currently assigned to.</p>
             </div>
 
@@ -112,9 +112,26 @@ export default function AssignedProjectsPage() {
                                 <p className="text-gray-600 text-sm line-clamp-3 mb-6 flex-1">{project.description}</p>
                                 
                                 {project.next_event_date && (
-                                    <div className="flex items-center gap-2 text-sm text-gray-600 mb-6 bg-gray-50/80 p-3 rounded-xl border border-gray-100">
-                                        <Calendar className="h-4 w-4 text-[#ae2b2b]" />
-                                        <span className="font-medium">Next Event: <span className="text-gray-900">{new Date(project.next_event_date).toLocaleDateString()}</span></span>
+                                    <div className="flex items-center justify-between gap-2 text-sm text-gray-600 mb-6 bg-gray-50/80 p-3 rounded-xl border border-gray-100">
+                                        <div className="flex items-center gap-2">
+                                            <Calendar className="h-4 w-4 text-[#ae2b2b]" />
+                                            <span className="font-medium">Next Event: <span className="text-gray-900">{new Date(project.next_event_date).toLocaleDateString()}</span></span>
+                                        </div>
+                                        <button 
+                                            onClick={(e) => {
+                                                e.preventDefault();
+                                                const event = {
+                                                    title: `${project.title} Event`,
+                                                    description: project.description,
+                                                    startTime: new Date(project.next_event_date),
+                                                    endTime: new Date(project.next_event_date)
+                                                };
+                                                downloadICS(event, `${project.title.replace(/\s+/g, '_')}_event.ics`);
+                                            }}
+                                            className="text-xs text-blue-600 hover:text-blue-800 hover:underline flex items-center gap-1 transition-colors"
+                                        >
+                                            <CalendarPlus className="h-3 w-3" /> Add to Calendar
+                                        </button>
                                     </div>
                                 )}
                                 

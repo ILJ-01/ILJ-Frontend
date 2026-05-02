@@ -16,6 +16,8 @@ export default function ManagerHub() {
     const [projects, setProjects] = useState([]);
     const [pendingTimesheets, setPendingTimesheets] = useState([]);
     const [historyTimesheets, setHistoryTimesheets] = useState([]);
+    const [pendingIdeas, setPendingIdeas] = useState([]);
+    const [historyIdeas, setHistoryIdeas] = useState([]);
     const [volunteers, setVolunteers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [selectedTaskForFeedback, setSelectedTaskForFeedback] = useState(null);
@@ -224,6 +226,25 @@ export default function ManagerHub() {
             const projectIds = (user.managed_projects || []).map(p => p.id);
 
             // 1. Fetch ALL Timesheets for these projects (Pending + History)
+            
+            // Fetch Ideas
+            const { data: ideasData, error: ideasError } = await supabase
+                .from('ideas')
+                .select('*, volunteer:volunteers(first_name, last_name, ilj_id), project:projects(title)')
+                .in('project_id', projectIds)
+                .order('created_at', { ascending: false });
+
+            if (ideasError) throw ideasError;
+            
+            const pIdeas = [];
+            const hIdeas = [];
+            (ideasData || []).forEach(idea => {
+                if (idea.status === 'pending') pIdeas.push(idea);
+                else hIdeas.push(idea);
+            });
+            setPendingIdeas(pIdeas);
+            setHistoryIdeas(hIdeas);
+
             const { data: timesheets, error: tsError } = await supabase
                 .from('timesheets')
                 .select(`
@@ -238,10 +259,10 @@ export default function ManagerHub() {
             if (tsError) throw tsError;
 
             // Filter: 
-            // 1. Exclude "Project Manager" designations if any (handled by Admin)
+            // 1. Exclude "Pod Manager" designations if any (handled by Admin)
             // 2. Split into Pending vs History
             const filteredTimesheets = (timesheets || []).filter(t =>
-                t.volunteer?.designation !== 'Project Manager' &&
+                t.volunteer?.designation !== 'Pod Manager' &&
                 t.volunteer?.designation !== 'Director' // Also exclude Director if any
             );
 
@@ -300,6 +321,22 @@ export default function ManagerHub() {
         } catch (error) {
             console.error("Approval Error:", error);
             alert("Action failed.");
+        }
+    };
+
+    const handleIdeaApproval = async (id, status) => {
+        try {
+            const { error } = await supabase.from('ideas').update({ status }).eq('id', id);
+            if (error) throw error;
+            const item = pendingIdeas.find(i => i.id === id);
+            if (item) {
+                setPendingIdeas(prev => prev.filter(i => i.id !== id));
+                setHistoryIdeas(prev => [{ ...item, status }, ...prev]);
+            }
+            alert("Idea status updated!");
+        } catch (error) {
+            console.error(error);
+            alert("Failed to update idea.");
         }
     };
 
@@ -553,9 +590,9 @@ export default function ManagerHub() {
             {/* Tabs */}
             <div className="flex flex-wrap gap-2 md:gap-0 border-b-0 md:border-b border-gray-200">
                 {[
-                    { id: "projects", label: "My Projects", icon: Briefcase },
+                    { id: "projects", label: "My Pods", icon: Briefcase },
                     { id: "team", label: "My Team", icon: Users },
-                    { id: "approvals", label: "Approvals", icon: Clock, count: pendingTimesheets.length },
+                    { id: "approvals", label: "Approvals", icon: Clock, count: pendingTimesheets.length + pendingIdeas.length },
                     { id: "history", label: "History", icon: History },
                     { id: "tasks", label: "Assign Tasks", icon: CheckSquare },
                     { id: "opportunities", label: "Opportunities", icon: Award }
@@ -617,7 +654,7 @@ export default function ManagerHub() {
                                             <p className="font-mono text-sm">{new Date(project.created_at).toLocaleDateString()}</p>
                                         </div>
                                         <div>
-                                            <p className="text-xs text-gray-500 uppercase tracking-wider">Project Code</p>
+                                            <p className="text-xs text-gray-500 uppercase tracking-wider">Pod Code</p>
                                             <p className="font-mono text-sm">{project.project_code}</p>
                                         </div>
                                     </div>
@@ -642,7 +679,7 @@ export default function ManagerHub() {
                                 </div>
                                 <form onSubmit={handleUpdateProject} className="p-6 space-y-4">
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">Project Title</label>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Pod Title</label>
                                         <input
                                             type="text"
                                             className="w-full border-gray-300 rounded-lg shadow-sm focus:ring-[#ae2b2b] focus:border-[#ae2b2b] p-2.5 border"
@@ -858,7 +895,7 @@ export default function ManagerHub() {
 
                         {teamTasks.filter(t => showArchivedTasks ? t.status === 'archived' : t.status !== 'archived').length === 0 ? (
                             <div className="text-center py-8 text-gray-400 border border-dashed rounded-lg">
-                                {showArchivedTasks ? 'No archived tasks found.' : 'No tasks found for this project.'}
+                                {showArchivedTasks ? 'No archived tasks found.' : 'No tasks found for this pod.'}
                             </div>
                         ) : (
                             <div className="overflow-x-auto">
@@ -990,7 +1027,7 @@ export default function ManagerHub() {
                                         </div>
                                         <div>
                                             <h4 className="font-bold text-gray-900">{ts.volunteer?.first_name} {ts.volunteer?.last_name}</h4>
-                                            <p className="text-xs text-gray-500">{ts.project?.title} • {new Date(ts.date_worked).toLocaleDateString()}</p>
+                                            <p className="text-xs text-gray-500">{new Date(ts.date_worked).toLocaleDateString()}</p>
                                             <p className="text-sm mt-1 text-gray-700 bg-gray-50 p-2 rounded border border-gray-100 italic">"{ts.description}"</p>
                                         </div>
                                     </div>
@@ -1049,7 +1086,7 @@ export default function ManagerHub() {
                                         <tr>
                                             <th className="px-6 py-4">Volunteer</th>
                                             <th className="px-6 py-4">Date</th>
-                                            <th className="px-6 py-4">Project</th>
+                                            <th className="px-6 py-4">Pod</th>
                                             <th className="px-6 py-4">Hours</th>
                                             <th className="px-6 py-4">Status</th>
                                             <th className="px-6 py-4 text-right">Action</th>
@@ -1117,7 +1154,7 @@ export default function ManagerHub() {
                                         <tr>
                                             <th className="px-6 py-4">Volunteer</th>
                                             <th className="px-6 py-4">Date</th>
-                                            <th className="px-6 py-4">Project</th>
+                                            <th className="px-6 py-4">Pod</th>
                                             <th className="px-6 py-4">Hours</th>
                                             <th className="px-6 py-4">Status</th>
                                             <th className="px-6 py-4 text-right">Action</th>
@@ -1165,36 +1202,10 @@ export default function ManagerHub() {
                         <h2 className="text-xl font-bold text-gray-900 mb-6">Create New Task / Opportunity</h2>
                         <form onSubmit={handleCreateTask} className="space-y-5">
 
-                            {/* Assignment Type Selection */}
-                            <div className="grid grid-cols-3 gap-3 p-1 bg-gray-100 rounded-lg">
-                                <button
-                                    type="button"
-                                    onClick={() => setAssignmentType('volunteer')}
-                                    className={`py-2 px-3 rounded-md text-sm font-medium transition-all ${assignmentType === 'volunteer' ? 'bg-white text-[#ae2b2b] shadow-sm' : 'text-gray-500 hover:text-gray-700'
-                                        }`}
-                                >
-                                    Specific Volunteer
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => setAssignmentType('team')}
-                                    className={`py-2 px-3 rounded-md text-sm font-medium transition-all ${assignmentType === 'team' ? 'bg-white text-[#ae2b2b] shadow-sm' : 'text-gray-500 hover:text-gray-700'
-                                        }`}
-                                >
-                                    Entire Team
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => setAssignmentType('general')}
-                                    className={`py-2 px-3 rounded-md text-sm font-medium transition-all ${assignmentType === 'general' ? 'bg-white text-[#ae2b2b] shadow-sm' : 'text-gray-500 hover:text-gray-700'
-                                        }`}
-                                >
-                                    General Opportunity
-                                </button>
-                            </div>
+
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Select Project</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Select Pod</label>
                                 <select
                                     className="w-full border-gray-300 rounded-lg shadow-sm focus:ring-[#ae2b2b] focus:border-[#ae2b2b] p-2.5 border bg-white"
                                     value={taskForm.projectId}
@@ -1207,7 +1218,7 @@ export default function ManagerHub() {
                                 </select>
                             </div>
 
-                            {assignmentType === 'volunteer' && (
+
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Assign To (Volunteer)</label>
                                     <div className="relative">
@@ -1257,19 +1268,9 @@ export default function ManagerHub() {
                                         )}
                                     </div>
                                 </div>
-                            )}
 
-                            {assignmentType === 'team' && (
-                                <div className="p-4 bg-blue-50 text-blue-800 rounded-lg text-sm border border-blue-100">
-                                    This task will be assigned to <strong>all current members</strong> of the selected team.
-                                </div>
-                            )}
 
-                            {assignmentType === 'general' && (
-                                <div className="p-4 bg-purple-50 text-purple-800 rounded-lg text-sm border border-purple-100">
-                                    This will be posted as an <strong>Opportunity</strong> in the Announcements section. Volunteers can express interest.
-                                </div>
-                            )}
+
 
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Task Title</label>
@@ -1294,7 +1295,7 @@ export default function ManagerHub() {
                                 />
                             </div>
 
-                            {assignmentType !== 'general' && (
+
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Deadline</label>
                                     <input
@@ -1305,7 +1306,7 @@ export default function ManagerHub() {
                                         required
                                     />
                                 </div>
-                            )}
+
 
                             <button
                                 type="submit"
@@ -1317,10 +1318,10 @@ export default function ManagerHub() {
                                 {creatingTask ? (
                                     <>
                                         <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                                        {assignmentType === 'general' ? 'Posting...' : 'Assigning...'}
+                                        Assigning...
                                     </>
                                 ) : (
-                                    assignmentType === 'general' ? 'Post Opportunity' : 'Assign Task'
+                                    'Assign Task'
                                 )}
                             </button>
                         </form>
@@ -1341,7 +1342,7 @@ export default function ManagerHub() {
                                     <div className="flex justify-between items-start mb-2">
                                         <div>
                                             <h4 className="font-bold text-lg text-gray-900">{opp.title}</h4>
-                                            <p className="text-xs text-gray-500">Project: {opp.project?.title || 'General'} • Posted: {new Date(opp.created_at).toLocaleDateString()}</p>
+                                            <p className="text-xs text-gray-500">Pod: {opp.project?.title || 'General'} • Posted: {new Date(opp.created_at).toLocaleDateString()}</p>
                                         </div>
                                         <div className="flex items-center gap-2">
                                             {opp.deadline && (

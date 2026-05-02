@@ -283,7 +283,7 @@ export default function AdminTasks() {
 
                             if (activeStatusTab === 'projectwise') {
                                 const grouped = tasks.reduce((acc, t) => {
-                                    const pTitle = t.project ? t.project.title : 'General / No Project';
+                                    const pTitle = t.project ? t.project.title : 'General / No Pod';
                                     if (!acc[pTitle]) acc[pTitle] = [];
                                     acc[pTitle].push(t);
                                     return acc;
@@ -326,7 +326,7 @@ export default function AdminTasks() {
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-sm font-medium mb-1">Project</label>
+                                    <label className="block text-sm font-medium mb-1">Pod</label>
                                     <select className="w-full border rounded-lg p-2" value={formData.project_id} onChange={e => setFormData({ ...formData, project_id: e.target.value })}>
                                         <option value="">-- General --</option>
                                         {projects.map(p => <option key={p.id} value={p.id}>{p.title}</option>)}

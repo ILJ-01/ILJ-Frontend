@@ -168,7 +168,7 @@ export default function AdminTimesheets() {
                             value={projectFilter}
                             onChange={(e) => setProjectFilter(e.target.value)}
                         >
-                            <option value="all">All Projects</option>
+                            <option value="all">All Pods</option>
                             {projects.map(p => (
                                 <option key={p.id} value={p.id}>{p.title}</option>
                             ))}
@@ -227,7 +227,7 @@ export default function AdminTimesheets() {
                                 <thead className="bg-gray-50 text-gray-500 font-medium border-b border-gray-100">
                                     <tr>
                                         <th className="px-6 py-4">Volunteer</th>
-                                        <th className="px-6 py-4">Activity / Project</th>
+                                        <th className="px-6 py-4">Activity / Pod</th>
                                         <th className="px-6 py-4">Date & Hours</th>
                                         <th className="px-6 py-4">Description</th>
                                         <th className="px-6 py-4 text-right">Actions</th>

@@ -113,7 +113,7 @@ const ProjectsPage = () => {
   return (
     <div className="px-6 py-10 font-serif min-h-screen">
       <h1 className="text-4xl font-bold text-[#ae2b2b] mb-10 text-center">
-        Our Projects
+        Our Pods
       </h1>
 
       <div className="max-w-7xl mx-auto space-y-16">

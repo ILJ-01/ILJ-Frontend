@@ -102,7 +102,7 @@ const Projects = () => {
   };
 
   if (loading) {
-    return <div className="py-10 text-center text-gray-500 font-serif">Loading Projects...</div>;
+    return <div className="py-10 text-center text-gray-500 font-serif">Loading Pods...</div>;
   }
 
   return (
@@ -111,7 +111,7 @@ const Projects = () => {
         className="font-serif text-[28px] font-bold text-left"
         style={{ color: "#ae2b2b", margin: "0px 0px 20px 10px" }}
       >
-        Our Projects
+        Our Pods
       </h1>
 
       <div className="relative group no-scrollbar">

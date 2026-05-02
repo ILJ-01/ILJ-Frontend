@@ -2,7 +2,6 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { FaPray, FaBriefcase, FaLandmark } from "react-icons/fa";
 import Projects from "../components/Projects";
-import Instagram from "../components/Instagram";
 
 export default function Home() {
   return (
@@ -77,10 +76,7 @@ export default function Home() {
         <Projects />
       </section>
 
-      {/* 4. Instagram Reels Section */}
-      <section className="py-10 bg-white">
-        <Instagram />
-      </section>
+
 
       {/* 5. Why Join Us Section */}
       <section className="py-16 px-5 bg-[#fff5f5]">

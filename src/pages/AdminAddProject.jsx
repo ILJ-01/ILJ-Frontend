@@ -180,7 +180,7 @@ const AdminAddProject = () => {
                         >
                             <ArrowLeft className="h-5 w-5 text-gray-500" />
                         </button>
-                        <h1 className="text-xl font-bold text-gray-900">Create New Project</h1>
+                        <h1 className="text-xl font-bold text-gray-900">Create New Pod</h1>
                     </div>
                 </div>
             </div>
@@ -194,13 +194,13 @@ const AdminAddProject = () => {
                         {/* 1. Basic Info */}
                         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
                             <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                                <Briefcase className="h-5 w-5 text-amber-600" /> Project Details
+                                <Briefcase className="h-5 w-5 text-amber-600" /> Pod Details
                             </h2>
 
                             <div className="space-y-4">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">Project Code</label>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Pod Code</label>
                                         <div className="relative">
                                             <Hash className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                                             <input
@@ -215,7 +215,7 @@ const AdminAddProject = () => {
                                         </div>
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">Project Status</label>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Pod Status</label>
                                         <select
                                             name="status"
                                             value={formData.status}
@@ -245,7 +245,7 @@ const AdminAddProject = () => {
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Project Title</label>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Pod Title</label>
                                     <input
                                         type="text"
                                         name="title"
@@ -265,7 +265,7 @@ const AdminAddProject = () => {
                                         required
                                         value={formData.description}
                                         onChange={handleInputChange}
-                                        placeholder="Describe the project goals and requirements..."
+                                        placeholder="Describe the pod goals and requirements..."
                                         className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:outline-none resize-none"
                                     />
                                 </div>
@@ -315,7 +315,7 @@ const AdminAddProject = () => {
                         {/* 2. Assign Manager Section (Search Based) */}
                         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
                             <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                                <User className="h-5 w-5 text-amber-600" /> Project Manager
+                                <User className="h-5 w-5 text-amber-600" /> Pod Manager
                             </h2>
 
                             {selectedManager ? (
@@ -445,7 +445,7 @@ const AdminAddProject = () => {
                                         </>
                                     ) : (
                                         <>
-                                            <Cloud className="h-4 w-4" /> Create Project
+                                            <Cloud className="h-4 w-4" /> Create Pod
                                         </>
                                     )}
                                 </button>

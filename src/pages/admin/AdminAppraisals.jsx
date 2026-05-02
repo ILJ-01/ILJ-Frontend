@@ -13,14 +13,12 @@ const AdminAppraisals = () => {
     const [filterByEligible, setFilterByEligible] = useState(true);
 
     const RANKS = [
-        { title: "Intern", minHours: 0, order: 0 },
-        { title: "Associate", minHours: 20, order: 1 },
-        { title: "Assistant Manager", minHours: 100, order: 2 },
-        { title: "Manager", minHours: 500, order: 3 },
-        { title: "Senior Manager", minHours: 1000, order: 4 },
-        { title: "Associate Director", minHours: 2000, order: 5 },
-        { title: "Director", minHours: 4000, order: 6 }
-    ];
+    { title: "Volunteer", minHours: 0, minSTC: 0, order: 0 },
+    { title: "ILJ Elite Volunteer", minHours: 100, minSTC: 25, order: 1 },
+    { title: "ILJ Premier Volunteer", minHours: 750, minSTC: 100, order: 2 },
+    { title: "ILJ Prestige Volunteer", minHours: 1750, minSTC: 150, order: 3 },
+    { title: "ILJ Legacy Volunteer", minHours: 3000, minSTC: 250, order: 4 }
+];
 
     useEffect(() => {
         fetchPromotionData();
@@ -44,21 +42,35 @@ const AdminAppraisals = () => {
 
             if (hourError) throw hourError;
 
-            // 3. Aggregate hours
+            // Fetch STC completions
+            const { data: stcData, error: stcError } = await supabase
+                .from('spiritual_task_assignments')
+                .select('volunteer_id')
+                .eq('status', 'completed');
+
+            if (stcError) throw stcError;
+
+            // 3. Aggregate hours and STC
             const hourMap = hourData.reduce((acc, curr) => {
                 acc[curr.volunteer_id] = (acc[curr.volunteer_id] || 0) + Number(curr.hours);
+                return acc;
+            }, {});
+
+            const stcMap = (stcData || []).reduce((acc, curr) => {
+                acc[curr.volunteer_id] = (acc[curr.volunteer_id] || 0) + 1;
                 return acc;
             }, {});
 
             // 4. Combine and calculate eligibility
             const combined = volData.map(v => {
                 const totalHours = hourMap[v.id] || 0;
-                const currentRank = v.rank || "Intern";
+                const totalSTC = stcMap[v.id] || 0;
+                const currentRank = v.rank || "Volunteer";
 
                 // Find highest rank they are eligible for
                 let eligibleRank = RANKS[0];
                 for (let i = RANKS.length - 1; i >= 0; i--) {
-                    if (totalHours >= RANKS[i].minHours) {
+                    if (totalHours >= RANKS[i].minHours && totalSTC >= RANKS[i].minSTC) {
                         eligibleRank = RANKS[i];
                         break;
                     }
@@ -70,6 +82,7 @@ const AdminAppraisals = () => {
                 return {
                     ...v,
                     totalHours,
+                    totalSTC,
                     currentRank,
                     eligibleRank: eligibleRank.title,
                     isEligible,
@@ -225,6 +238,12 @@ const AdminAppraisals = () => {
                                     <span className="text-gray-500">Current Rank</span>
                                     <span className="px-2 py-0.5 bg-gray-100 text-gray-700 rounded-md font-bold text-[10px] uppercase border border-gray-200">
                                         {volunteer.currentRank}
+                                    </span>
+                                </div>
+                                <div className="flex items-center justify-between text-sm">
+                                    <span className="text-gray-500">Total STC</span>
+                                    <span className="text-gray-900 font-bold flex items-center gap-1">
+                                        {volunteer.totalSTC}
                                     </span>
                                 </div>
                                 <div className="flex items-center justify-between text-sm">

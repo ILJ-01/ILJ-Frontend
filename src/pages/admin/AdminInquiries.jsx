@@ -14,18 +14,26 @@ export default function AdminInquiries() {
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(true);
     const [projects, setProjects] = useState({});
+    const [events, setEvents] = useState({});
 
     useEffect(() => {
-        fetchProjects();
+        fetchProjectsAndEvents();
         fetchData();
     }, [activeTab]);
 
-    const fetchProjects = async () => {
-        const { data } = await supabase.from('projects').select('id, title');
-        if (data) {
-            const map = {};
-            data.forEach(p => map[p.id] = p.title);
-            setProjects(map);
+    const fetchProjectsAndEvents = async () => {
+        const { data: pData } = await supabase.from('projects').select('id, title');
+        if (pData) {
+            const pMap = {};
+            pData.forEach(p => pMap[p.id] = p.title);
+            setProjects(pMap);
+        }
+        
+        const { data: eData } = await supabase.from('events').select('id, title');
+        if (eData) {
+            const eMap = {};
+            eData.forEach(e => eMap[e.id] = e.title);
+            setEvents(eMap);
         }
     };
 
@@ -73,7 +81,8 @@ export default function AdminInquiries() {
                 };
             } else {
                 return {
-                    Project: projects[item.project_id] || 'Unknown',
+                    Pod: projects[item.project_id] || 'Unknown',
+                    Event: item.event_id ? (events[item.event_id] || 'Unknown') : 'N/A',
                     Rating: item.rating,
                     Comments: item.comments,
                     Is_Anonymous: item.is_anonymous ? 'Yes' : 'No',
@@ -97,7 +106,7 @@ export default function AdminInquiries() {
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
                     <h1 className="text-2xl font-bold text-gray-900 font-serif">
-                        {activeTab === 'inquiries' ? 'Project Inquiries' : 'Feedback & Reviews'}
+                        {activeTab === 'inquiries' ? 'Pod Inquiries' : 'Feedback & Reviews'}
                     </h1>
                     <p className="text-gray-500">Manage incoming requests and feedback.</p>
                 </div>
@@ -151,8 +160,13 @@ export default function AdminInquiries() {
                                 <div className="space-y-1 flex-1">
                                     <div className="flex items-center gap-2 mb-1">
                                         <span className="text-xs font-semibold uppercase tracking-wide px-2 py-0.5 bg-gray-100 text-gray-600 rounded">
-                                            {projects[item.project_id] || 'Unknown Project'}
+                                            {projects[item.project_id] || 'Unknown Pod'}
                                         </span>
+                                        {item.event_id && (
+                                            <span className="text-xs font-semibold uppercase tracking-wide px-2 py-0.5 bg-blue-50 text-blue-600 rounded border border-blue-100">
+                                                Event: {events[item.event_id] || 'Unknown'}
+                                            </span>
+                                        )}
                                         <span className="text-xs text-gray-400">• {new Date(item.created_at).toLocaleDateString()}</span>
                                     </div>
 

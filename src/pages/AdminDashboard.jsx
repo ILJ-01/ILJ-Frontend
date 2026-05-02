@@ -18,13 +18,11 @@ import AdminSTC from './admin/AdminSTC';
 import AdminKalyanMitras from './admin/AdminKalyanMitras';
 
 const RANKS = [
-    { title: "Intern", minHours: 0, order: 0 },
-    { title: "Associate", minHours: 10, order: 1 },
-    { title: "Assistant Manager", minHours: 100, order: 2 },
-    { title: "Manager", minHours: 500, order: 3 },
-    { title: "Senior Manager", minHours: 1000, order: 4 },
-    { title: "Associate Director", minHours: 2000, order: 5 },
-    { title: "Director", minHours: 4000, order: 6 }
+    { title: "Volunteer", minHours: 0, minSTC: 0, order: 0 },
+    { title: "ILJ Elite Volunteer", minHours: 100, minSTC: 25, order: 1 },
+    { title: "ILJ Premier Volunteer", minHours: 750, minSTC: 100, order: 2 },
+    { title: "ILJ Prestige Volunteer", minHours: 1750, minSTC: 150, order: 3 },
+    { title: "ILJ Legacy Volunteer", minHours: 3000, minSTC: 250, order: 4 }
 ];
 
 const AdminDashboard = () => {
@@ -165,7 +163,7 @@ const AdminDashboard = () => {
                 Manager_Name: p.manager ? `${p.manager.first_name || ''} ${p.manager.last_name || ''}`.trim() : 'Unknown'
             }));
             const projSheet = XLSX.utils.json_to_sheet(projSheetData);
-            XLSX.utils.book_append_sheet(workbook, projSheet, "Projects");
+            XLSX.utils.book_append_sheet(workbook, projSheet, "Pods");
 
             // 3. Events
             const { data: eventData } = await supabase.from('events').select('*').order('created_at');
@@ -302,7 +300,7 @@ const AdminDashboard = () => {
                             {[
                                 { id: 'volunteers', label: 'Volunteers', icon: Users },
                                 { id: 'kalyan_mitras', label: 'Kalyan Mitras', icon: Users },
-                                { id: 'projects', label: 'Projects', icon: LayoutGrid },
+                                { id: 'projects', label: 'Pods', icon: LayoutGrid },
                                 { id: 'events', label: 'Events', icon: Calendar },
                                 { id: 'event-registrations', label: 'Event Registrations', icon: Ticket },
                                 { id: 'tasks', label: 'Tasks', icon: CheckSquare },
@@ -373,7 +371,7 @@ const AdminDashboard = () => {
                                 <Users className="h-4 w-4" /> Kalyan Mitras
                             </button>
                             <button onClick={() => setActiveTab('projects')} className={`flex items-center gap-2 px-3 py-2 rounded-md font-medium text-sm whitespace-nowrap transition-all ${activeTab === 'projects' ? 'bg-white text-[#ae2b2b] shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}>
-                                <LayoutGrid className="h-4 w-4" /> Projects
+                                <LayoutGrid className="h-4 w-4" /> Pods
                             </button>
                             <button onClick={() => setActiveTab('events')} className={`flex items-center gap-2 px-3 py-2 rounded-md font-medium text-sm whitespace-nowrap transition-all ${activeTab === 'events' ? 'bg-white text-[#ae2b2b] shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}>
                                 <Calendar className="h-4 w-4" /> Events
@@ -411,7 +409,7 @@ const AdminDashboard = () => {
                                     {showArchivedProjects ? 'Show Active' : 'Show Archived'}
                                 </button>
                                 <button onClick={() => navigate('/admin/add-project')} className="flex items-center gap-2 bg-[#ae2b2b] text-white px-4 py-2 rounded-lg hover:bg-[#8b1e1e] transition-all shadow-md font-semibold text-sm whitespace-nowrap">
-                                    <Plus className="h-5 w-5" /> Add Project
+                                    <Plus className="h-5 w-5" /> Add Pod
                                 </button>
                             </div>
                         )}
@@ -509,7 +507,7 @@ const AdminDashboard = () => {
                                                             <span className="text-xs font-medium bg-blue-50 text-blue-700 px-2 py-0.5 rounded border border-blue-100">{volunteer.ilj_id || 'No ID'}</span>
                                                             <span className="text-xs font-bold bg-amber-50 text-amber-700 px-2 py-0.5 rounded border border-amber-100 flex items-center gap-1 uppercase tracking-tight">
                                                                 <Award className="h-3 w-3" />
-                                                                {volunteer.rank || 'Intern'}
+                                                                {volunteer.rank || 'Volunteer'}
                                                             </span>
                                                             {volunteer.designation && (
                                                                 <span className="text-xs font-bold bg-blue-50 text-blue-700 px-2 py-0.5 rounded border border-blue-100 flex items-center gap-1 uppercase tracking-tight">
@@ -550,14 +548,14 @@ const AdminDashboard = () => {
                                 {projects.filter(p => showArchivedProjects ? p.status === 'archived' : p.status !== 'archived').length === 0 ? (
                                     <div className="col-span-full text-center py-20 bg-white rounded-xl border border-gray-200 border-dashed">
                                         <Briefcase className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                                        <h3 className="text-lg font-medium text-gray-900">No {showArchivedProjects ? 'Archived ' : ''}Projects Found</h3>
-                                        {!showArchivedProjects && <p className="text-gray-500 mb-6">Create your first project to get started.</p>}
+                                        <h3 className="text-lg font-medium text-gray-900">No {showArchivedProjects ? 'Archived ' : ''}Pods Found</h3>
+                                        {!showArchivedProjects && <p className="text-gray-500 mb-6">Create your first pod to get started.</p>}
                                         {!showArchivedProjects && (
                                             <button
                                                 onClick={() => navigate('/admin/add-project')}
                                                 className="px-4 py-2 bg-[#ae2b2b] text-white rounded-lg hover:bg-[#8b1e1e] transition-colors"
                                             >
-                                                Create Project
+                                                Create Pod
                                             </button>
                                         )}
                                     </div>
@@ -695,7 +693,7 @@ const AdminDashboard = () => {
                                         <span className="h-4 w-px bg-gray-300"></span>
                                         <div className="flex items-center gap-1 text-amber-600 font-bold text-xs uppercase tracking-wider">
                                             <Award className="h-4 w-4" />
-                                            {selectedVolunteer.rank || 'Intern'}
+                                            {selectedVolunteer.rank || 'Volunteer'}
                                         </div>
                                         {selectedVolunteer.designation && (
                                             <>
@@ -854,7 +852,7 @@ const AdminDashboard = () => {
                                                 <div className="flex gap-2">
                                                     <select
                                                         id="rank-selector"
-                                                        value={selectedVolunteer.rank || 'Intern'}
+                                                        value={selectedVolunteer.rank || 'Volunteer'}
                                                         onChange={async (e) => {
                                                             const newRank = e.target.value;
                                                             if (!newRank) return;

@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/lib/supabase";
-import { CheckCircle, Clock, AlertCircle, Briefcase, Star, MessageSquare } from "lucide-react";
+import { CheckCircle, Clock, AlertCircle, Briefcase, Star, MessageSquare, Calendar } from "lucide-react";
+import { downloadICS } from "@/lib/ics";
 
 export default function TasksPage() {
     const { user } = useAuth();
@@ -195,11 +196,27 @@ export default function TasksPage() {
                                             <h3 className="text-lg font-bold text-gray-900">{task.title}</h3>
                                             <p className="text-gray-600 mt-1 text-sm">{task.description}</p>
                                             {task.deadline && (
-                                                <p className={`text-xs mt-2 font-medium flex items-center gap-1
-                                            ${new Date(task.deadline) < new Date() && task.status !== 'completed' ? 'text-red-500' : 'text-gray-500'}
-                                        `}>
-                                                    <Clock className="h-3 w-3" /> Due: {new Date(task.deadline).toLocaleDateString()}
-                                                </p>
+                                                <div className="flex items-center gap-4 mt-2">
+                                                    <p className={`text-xs font-medium flex items-center gap-1
+                                                ${new Date(task.deadline) < new Date() && task.status !== 'completed' ? 'text-red-500' : 'text-gray-500'}
+                                            `}>
+                                                        <Clock className="h-3 w-3" /> Due: {new Date(task.deadline).toLocaleDateString()}
+                                                    </p>
+                                                    <button
+                                                        onClick={() => {
+                                                            const event = {
+                                                                title: task.title,
+                                                                description: task.description,
+                                                                startTime: new Date(task.deadline),
+                                                                endTime: new Date(task.deadline),
+                                                            };
+                                                            downloadICS(event, `task_${task.id}.ics`);
+                                                        }}
+                                                        className="text-xs text-blue-600 hover:text-blue-800 hover:underline flex items-center gap-1 transition-colors"
+                                                    >
+                                                        <Calendar className="h-3 w-3" /> Add to Calendar
+                                                    </button>
+                                                </div>
                                             )}
                                         </div>
 

@@ -256,7 +256,7 @@ export default function AdminEvents() {
                                     <div>
                                         <label className="block text-sm font-medium mb-1">Project (Optional)</label>
                                         <select className="w-full border rounded-lg p-2" value={formData.project_id} onChange={e => setFormData({ ...formData, project_id: e.target.value })}>
-                                            <option value="">-- No Project (General) --</option>
+                                            <option value="">-- No Pod (General) --</option>
                                             {projects.map(p => <option key={p.id} value={p.id}>{p.title}</option>)}
                                         </select>
                                     </div>

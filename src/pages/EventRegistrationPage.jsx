@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import { Calendar, User, Users, Phone, Mail, MapPin, Upload, ArrowLeft } from "lucide-react";
+import { downloadICS } from "../lib/ics";
 
 export default function EventRegistrationPage() {
     const { id } = useParams();
@@ -190,6 +191,24 @@ export default function EventRegistrationPage() {
                         {eventForm.email ? " A confirmation email has been sent to your inbox." : " We look forward to seeing you!"}
                     </p>
 
+                    <div className="flex flex-col gap-3 mb-6">
+                        <button
+                            onClick={() => {
+                                const event = {
+                                    title: project.title,
+                                    description: project.description || "Thank you for registering!",
+                                    startTime: project.next_event_date ? new Date(project.next_event_date) : new Date(),
+                                    endTime: project.next_event_date ? new Date(project.next_event_date) : new Date(),
+                                };
+                                downloadICS(event, `${project.title.replace(/\s+/g, '_')}.ics`);
+                            }}
+                            className="w-full flex justify-center py-3 px-4 border border-gray-300 rounded-lg shadow-sm text-sm font-semibold text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-200 transition-all items-center"
+                        >
+                            <Calendar className="h-4 w-4 mr-2 text-gray-500" />
+                            Add to Calendar
+                        </button>
+                    </div>
+
                     {project.project_code === 'PRJ-008' && (
                         <div className="bg-emerald-50 border border-emerald-200 p-5 rounded-xl mb-6 text-left">
                             <h3 className="text-emerald-800 font-bold mb-1 text-md text-center">Important Next Step</h3>
@@ -209,7 +228,7 @@ export default function EventRegistrationPage() {
                         onClick={() => navigate(`/project/${project.id}`)}
                         className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-md text-sm font-semibold text-white bg-[#ae2b2b] hover:bg-[#8f1f1f] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#ae2b2b] transition-all"
                     >
-                        ← Return to Project Details
+                        ← Return to Pod Details
                     </button>
                 </div>
             </div>
@@ -223,7 +242,7 @@ export default function EventRegistrationPage() {
                     onClick={() => navigate(-1)}
                     className="flex items-center text-gray-500 hover:text-gray-900 mb-6 font-medium transition-colors group"
                 >
-                    <ArrowLeft className="h-5 w-5 mr-1 group-hover:-translate-x-1 transition-transform" /> Back to Project
+                    <ArrowLeft className="h-5 w-5 mr-1 group-hover:-translate-x-1 transition-transform" /> Back to Pod
                 </button>
 
                 <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden animate-in fade-in slide-in-from-bottom-8 duration-500">
@@ -240,7 +259,7 @@ export default function EventRegistrationPage() {
                             {project.project_code === 'PRJ-008' ? (
                                 <>
                                     <h1 className="text-3xl sm:text-4xl font-bold font-serif leading-tight mb-2">
-                                        Reconnect <br/> with Soul . Shasan . Nature
+                                        Reconnect <br/> <span className="text-lg sm:text-xl font-normal text-white/90">with Soul . Shasan . Nature</span>
                                     </h1>
                                     <p className="text-white/90 text-lg">A 3 days religious residential Shibir</p>
                                 </>
@@ -265,7 +284,7 @@ export default function EventRegistrationPage() {
                     <div className="p-4 sm:p-6 md:p-10">
                         {project.project_code === 'PRJ-008' && (
                             <div className="mb-8 prose prose-amber max-w-none bg-[#fff6ed] rounded-xl p-4 sm:p-6 border border-amber-200/60 shadow-sm">
-                                <h3 className="text-center text-[#ae2b2b] font-bold text-sm mb-6 tracking-[0.2em] font-sans">I LOVE JINSHASAN PRESENTS</h3>
+
 
                                 <div className="grid md:grid-cols-2 gap-4 mb-6">
                                     <div className="bg-white p-4 rounded-xl shadow-sm border border-amber-100">
