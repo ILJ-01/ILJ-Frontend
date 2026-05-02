@@ -12,6 +12,10 @@ const MasterSheet = () => {
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [filterStatus, setFilterStatus] = useState('All');
+    const [filterDesignation, setFilterDesignation] = useState('All');
+    const [filterLocation, setFilterLocation] = useState('All');
+    const [filterMode, setFilterMode] = useState('All');
+    const [filterKalyanMitra, setFilterKalyanMitra] = useState('All');
     const [activeTab, setActiveTab] = useState('Master');
     const [selectedVolunteer, setSelectedVolunteer] = useState(null);
 
@@ -60,6 +64,11 @@ const MasterSheet = () => {
         }
     };
 
+    const uniqueDesignations = useMemo(() => [...new Set(volunteers.map(v => v.designation).filter(Boolean))], [volunteers]);
+    const uniqueLocations = useMemo(() => [...new Set(volunteers.map(v => v.city ? `${v.city}, ${v.state}` : null).filter(Boolean))], [volunteers]);
+    const uniqueModes = useMemo(() => [...new Set(volunteers.map(v => v.participation_mode).filter(Boolean))], [volunteers]);
+    const uniqueKalyanMitras = useMemo(() => [...new Set(volunteers.map(v => v.kalyan_mitra).filter(Boolean))], [volunteers]);
+
     const filteredVolunteers = useMemo(() => {
         return volunteers.filter(volunteer => {
             const matchesSearch = searchTerm === '' || 
@@ -68,9 +77,14 @@ const MasterSheet = () => {
                 (volunteer.email || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
                 (volunteer.ilj_id || '').toLowerCase().includes(searchTerm.toLowerCase());
                 
-            const matchesFilter = filterStatus === 'All' || 
+            const matchesStatus = filterStatus === 'All' || 
                 (filterStatus === 'Onboarded' && volunteer.onboarding_status === 'onboarded') ||
                 (filterStatus === 'Pending' && volunteer.onboarding_status !== 'onboarded' && volunteer.onboarding_status !== 'duplicate');
+
+            const matchesDesignation = filterDesignation === 'All' || volunteer.designation === filterDesignation;
+            const matchesLocation = filterLocation === 'All' || (volunteer.city && `${volunteer.city}, ${volunteer.state}` === filterLocation);
+            const matchesMode = filterMode === 'All' || volunteer.participation_mode === filterMode;
+            const matchesKalyanMitra = filterKalyanMitra === 'All' || volunteer.kalyan_mitra === filterKalyanMitra;
 
             let matchesTab = true;
             if (activeTab !== 'Master') {
@@ -80,9 +94,9 @@ const MasterSheet = () => {
                 }
             }
 
-            return matchesSearch && matchesFilter && matchesTab;
+            return matchesSearch && matchesStatus && matchesDesignation && matchesLocation && matchesMode && matchesKalyanMitra && matchesTab;
         });
-    }, [volunteers, searchTerm, filterStatus, activeTab, projects]);
+    }, [volunteers, searchTerm, filterStatus, filterDesignation, filterLocation, filterMode, filterKalyanMitra, activeTab, projects]);
 
     const exportToCSV = () => {
         const headers = ["Volunteer ID", "Name", "Email", "Phone", "New/Existing", "Preferred Pod", "Assigned Pod", "Onboarding Status", "Activity Status"];
@@ -168,28 +182,82 @@ const MasterSheet = () => {
             </div>
 
             <div className="bg-white rounded-xl shadow-sm border border-gray-200">
-                <div className="p-4 border-b border-gray-200 flex flex-col sm:flex-row gap-4 justify-between items-center bg-gray-50/50 rounded-t-xl">
-                    <div className="relative w-full sm:w-96">
-                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                        <input
-                            type="text"
-                            placeholder="Search by name, email, or ID..."
-                            className="w-full pl-9 pr-4 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400 text-sm"
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                        />
-                    </div>
-                    <div className="flex items-center gap-2 w-full sm:w-auto">
-                        <Filter className="h-4 w-4 text-gray-400" />
-                        <select
-                            className="bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 font-medium text-gray-700"
-                            value={filterStatus}
-                            onChange={(e) => setFilterStatus(e.target.value)}
-                        >
-                            <option value="All">All Statuses</option>
-                            <option value="Onboarded">Onboarded</option>
-                            <option value="Pending">Pending / Queue</option>
-                        </select>
+                <div className="p-4 border-b border-gray-200 bg-gray-50/50 rounded-t-xl space-y-4">
+                    <div className="flex flex-col md:flex-row gap-4 justify-between items-start md:items-center">
+                        <div className="relative w-full md:w-96 shrink-0">
+                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                            <input
+                                type="text"
+                                placeholder="Search by name, email, or ID..."
+                                className="w-full pl-9 pr-4 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400 text-sm shadow-sm"
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                            />
+                        </div>
+                        
+                        <div className="flex flex-wrap items-center gap-2 w-full justify-end">
+                            <Filter className="h-4 w-4 text-gray-400 mr-1 hidden sm:block" />
+                            <select
+                                className="bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 font-medium text-gray-700 shadow-sm"
+                                value={filterStatus}
+                                onChange={(e) => setFilterStatus(e.target.value)}
+                            >
+                                <option value="All">All Statuses</option>
+                                <option value="Onboarded">Onboarded</option>
+                                <option value="Pending">Pending / Queue</option>
+                            </select>
+                            
+                            <select
+                                className="bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 font-medium text-gray-700 shadow-sm max-w-[150px]"
+                                value={filterDesignation}
+                                onChange={(e) => setFilterDesignation(e.target.value)}
+                            >
+                                <option value="All">All Designations</option>
+                                {uniqueDesignations.map(d => <option key={d} value={d}>{d}</option>)}
+                            </select>
+
+                            <select
+                                className="bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 font-medium text-gray-700 shadow-sm max-w-[150px]"
+                                value={filterLocation}
+                                onChange={(e) => setFilterLocation(e.target.value)}
+                            >
+                                <option value="All">All Locations</option>
+                                {uniqueLocations.map(l => <option key={l} value={l}>{l}</option>)}
+                            </select>
+
+                            <select
+                                className="bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 font-medium text-gray-700 shadow-sm max-w-[150px]"
+                                value={filterMode}
+                                onChange={(e) => setFilterMode(e.target.value)}
+                            >
+                                <option value="All">All Modes</option>
+                                {uniqueModes.map(m => <option key={m} value={m}>{m}</option>)}
+                            </select>
+
+                            <select
+                                className="bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 font-medium text-gray-700 shadow-sm max-w-[150px]"
+                                value={filterKalyanMitra}
+                                onChange={(e) => setFilterKalyanMitra(e.target.value)}
+                            >
+                                <option value="All">All Kalyan Mitras</option>
+                                {uniqueKalyanMitras.map(k => <option key={k} value={k}>{k}</option>)}
+                            </select>
+                            
+                            {(filterStatus !== 'All' || filterDesignation !== 'All' || filterLocation !== 'All' || filterMode !== 'All' || filterKalyanMitra !== 'All') && (
+                                <button 
+                                    onClick={() => {
+                                        setFilterStatus('All');
+                                        setFilterDesignation('All');
+                                        setFilterLocation('All');
+                                        setFilterMode('All');
+                                        setFilterKalyanMitra('All');
+                                    }}
+                                    className="text-xs text-red-600 hover:text-red-800 font-medium px-2 py-1 transition-colors"
+                                >
+                                    Clear
+                                </button>
+                            )}
+                        </div>
                     </div>
                 </div>
 

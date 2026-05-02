@@ -61,15 +61,12 @@ export default function DashboardLayout({ children }) {
 
     const menuItems = [
         { icon: Lightbulb, label: "Share an Idea", path: "/dashboard/share-idea" },
-        { icon: FolderOpen, label: "Assigned Projects", path: "/dashboard/assigned-projects" },
-        { icon: Calendar, label: "Events", path: "/dashboard/events" },
+        { icon: FolderOpen, label: "Pods", path: "/dashboard/assigned-projects" },
         { icon: CheckSquare, label: "Tasks", path: "/dashboard/tasks" },
         { icon: Clock, label: "Timesheet", path: "/dashboard/timesheet" },
         { icon: Activity, label: "Spiritual Tasks", path: "/dashboard/stc" },
         { icon: User, label: "My Profile", path: "/dashboard/profile" },
-        { icon: FileText, label: "Policies", path: "/dashboard/policies" },
-        { icon: Home, label: "Go to Website", path: "/" },
-    ];
+        { icon: FileText, label: "Policies", path: "/dashboard/policies" }];
 
     if (user?.managed_projects?.length > 0) {
         menuItems.unshift({ icon: Briefcase, label: "Manager Hub", path: "/dashboard/manager" });
@@ -144,7 +141,16 @@ export default function DashboardLayout({ children }) {
                     })}
                 </nav>
 
-                <div className="p-4 border-t border-gray-100">
+                <div className="p-4 border-t border-gray-100 space-y-2">
+                    <Link
+                        to="/"
+                        className={`flex items-center gap-3 px-3 py-3 w-full rounded-lg text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-colors
+              ${!isOpen ? "justify-center" : ""}
+            `}
+                    >
+                        <Home className="h-6 w-6 flex-shrink-0" />
+                        {isOpen && <span className="font-medium">Go to Home</span>}
+                    </Link>
                     <button
                         onClick={handleLogout}
                         className={`flex items-center gap-3 px-3 py-3 w-full rounded-lg text-red-600 hover:bg-red-50 transition-colors

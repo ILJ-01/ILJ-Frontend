@@ -5,7 +5,7 @@ import {
 
     Briefcase, CheckSquare, Clock, Users, Award,
     Plus, Check, X, Search, ChevronRight, Trash2, Archive, Star, MessageSquare,
-    FileSpreadsheet, RotateCcw, History
+    FileSpreadsheet, RotateCcw, History, Lightbulb
 } from "lucide-react";
 import { motion } from "framer-motion";
 import * as XLSX from 'xlsx';
@@ -21,6 +21,7 @@ export default function ManagerHub() {
     const [volunteers, setVolunteers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [selectedTaskForFeedback, setSelectedTaskForFeedback] = useState(null);
+    const [selectedPodFilter, setSelectedPodFilter] = useState("all");
 
     const [editingProject, setEditingProject] = useState(null);
     const [creatingTask, setCreatingTask] = useState(false);
@@ -96,8 +97,8 @@ export default function ManagerHub() {
 
             if (error) throw error;
             // Attach project_volunteers.status as engagement_status, and the junction id as pv_id
-            setTeamMembers(data?.filter(d => Boolean(d.volunteer)).map(d => ({ 
-                ...d.volunteer, 
+            setTeamMembers(data?.filter(d => Boolean(d.volunteer)).map(d => ({
+                ...d.volunteer,
                 engagement_status: d.status,
                 pv_id: d.id
             })) || []);
@@ -226,7 +227,7 @@ export default function ManagerHub() {
             const projectIds = (user.managed_projects || []).map(p => p.id);
 
             // 1. Fetch ALL Timesheets for these projects (Pending + History)
-            
+
             // Fetch Ideas
             const { data: ideasData, error: ideasError } = await supabase
                 .from('ideas')
@@ -235,7 +236,7 @@ export default function ManagerHub() {
                 .order('created_at', { ascending: false });
 
             if (ideasError) throw ideasError;
-            
+
             const pIdeas = [];
             const hIdeas = [];
             (ideasData || []).forEach(idea => {
@@ -253,7 +254,6 @@ export default function ManagerHub() {
                     project:projects(title)
                 `)
                 .in('project_id', projectIds)
-                .neq('volunteer_id', user.id) // PMs cannot approve their own timesheets
                 .order('date_worked', { ascending: false });
 
             if (tsError) throw tsError;
@@ -828,11 +828,10 @@ export default function ManagerHub() {
                                         <select
                                             value={member.engagement_status || 'active'}
                                             onChange={(e) => handleUpdateEngagementStatus(member.pv_id, e.target.value)}
-                                            className={`text-xs px-2 py-1 rounded font-medium border appearance-none focus:outline-none focus:ring-1 focus:ring-[#ae2b2b] ${
-                                                member.engagement_status === 'engaged' ? 'bg-green-50 text-green-700 border-green-200' :
-                                                member.engagement_status === 'inactive' ? 'bg-gray-50 text-gray-600 border-gray-200' :
-                                                'bg-[#ae2b2b]/10 text-[#ae2b2b] border-[#ae2b2b]/20'
-                                            }`}
+                                            className={`text-xs px-2 py-1 rounded font-medium border appearance-none focus:outline-none focus:ring-1 focus:ring-[#ae2b2b] ${member.engagement_status === 'engaged' ? 'bg-green-50 text-green-700 border-green-200' :
+                                                    member.engagement_status === 'inactive' ? 'bg-gray-50 text-gray-600 border-gray-200' :
+                                                        'bg-[#ae2b2b]/10 text-[#ae2b2b] border-[#ae2b2b]/20'
+                                                }`}
                                         >
                                             <option value="active">Active (Pending)</option>
                                             <option value="engaged">Engaged</option>
@@ -1001,69 +1000,20 @@ export default function ManagerHub() {
             {/* Approvals Tab */}
             {activeTab === "approvals" && (
                 <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
-                    <div className="flex justify-between items-center mb-2">
-                        <h3 className="font-bold text-gray-800">Pending Approvals</h3>
-                        <button
-                            onClick={handleExportTimesheets}
-                            className="flex items-center gap-2 px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 text-xs font-bold"
-                        >
-                            <FileSpreadsheet className="h-3.5 w-3.5" /> Export All Timesheets
-                        </button>
-                    </div>
-
-                    {pendingTimesheets.length === 0 ? (
-                        <div className="bg-white p-12 rounded-xl text-center border border-gray-200 border-dashed">
-                            <CheckSquare className="h-12 w-12 text-green-500 mx-auto mb-4 opacity-50" />
-                            <h3 className="text-lg font-medium text-gray-900">All Caught Up!</h3>
-                            <p className="text-gray-500">No pending timesheets to approve.</p>
+                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-2 gap-4">
+                        <div className="flex items-center gap-4">
+                            <h3 className="font-bold text-gray-800">Pending Approvals</h3>
+                            <select
+                                className="border border-gray-300 rounded-lg text-sm p-1.5 focus:ring-[#ae2b2b] outline-none"
+                                value={selectedPodFilter}
+                                onChange={(e) => setSelectedPodFilter(e.target.value)}
+                            >
+                                <option value="all">All Pods</option>
+                                {projects.map(p => (
+                                    <option key={p.id} value={p.id}>{p.title}</option>
+                                ))}
+                            </select>
                         </div>
-                    ) : (
-                        <div className="grid grid-cols-1 gap-4">
-                            {pendingTimesheets.map((ts) => (
-                                <div key={ts.id} className="bg-white p-4 rounded-xl shadow-sm border border-gray-200 flex flex-col md:flex-row justify-between gap-4 md:items-center">
-                                    <div className="flex items-start gap-4">
-                                        <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-[#ae2b2b] font-bold">
-                                            {ts.volunteer?.first_name?.[0]}{ts.volunteer?.last_name?.[0]}
-                                        </div>
-                                        <div>
-                                            <h4 className="font-bold text-gray-900">{ts.volunteer?.first_name} {ts.volunteer?.last_name}</h4>
-                                            <p className="text-xs text-gray-500">{new Date(ts.date_worked).toLocaleDateString()}</p>
-                                            <p className="text-sm mt-1 text-gray-700 bg-gray-50 p-2 rounded border border-gray-100 italic">"{ts.description}"</p>
-                                        </div>
-                                    </div>
-                                    <div className="flex items-center gap-4">
-                                        <div className="text-right mr-4">
-                                            <span className="block text-2xl font-bold text-gray-900">{ts.hours}h</span>
-                                            <span className="text-xs text-gray-500 uppercase">Logged</span>
-                                        </div>
-                                        <div className="flex gap-2">
-                                            <button
-                                                onClick={() => handleApproval(ts.id, 'rejected')}
-                                                className="p-2 hover:bg-red-50 text-red-600 rounded-lg border border-transparent hover:border-red-100 transition-all"
-                                                title="Reject"
-                                            >
-                                                <X className="h-5 w-5" />
-                                            </button>
-                                            <button
-                                                onClick={() => handleApproval(ts.id, 'approved')}
-                                                className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium shadow-sm transition-all flex items-center gap-2"
-                                            >
-                                                <Check className="h-4 w-4" /> Approve
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    )}
-                </motion.div>
-            )}
-
-            {/* History Tab */}
-            {activeTab === "history" && (
-                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
-                    <div className="flex justify-between items-center mb-2">
-                        <h3 className="font-bold text-gray-800">Processed Timesheets</h3>
                         <button
                             onClick={handleExportTimesheets}
                             className="flex items-center gap-2 px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 text-xs font-bold"
@@ -1072,58 +1022,103 @@ export default function ManagerHub() {
                         </button>
                     </div>
 
-                    {historyTimesheets.length === 0 ? (
-                        <div className="bg-white p-12 rounded-xl text-center border border-gray-200 border-dashed">
-                            <History className="h-12 w-12 text-gray-300 mx-auto mb-4 opacity-50" />
-                            <h3 className="text-lg font-medium text-gray-900">No History Yet</h3>
-                            <p className="text-gray-500">Processed timesheets will appear here.</p>
-                        </div>
-                    ) : (
-                        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                            <div className="overflow-x-auto">
-                                <table className="w-full text-left text-sm">
-                                    <thead className="bg-gray-50 text-gray-500 font-medium border-b border-gray-100">
-                                        <tr>
-                                            <th className="px-6 py-4">Volunteer</th>
-                                            <th className="px-6 py-4">Date</th>
-                                            <th className="px-6 py-4">Pod</th>
-                                            <th className="px-6 py-4">Hours</th>
-                                            <th className="px-6 py-4">Status</th>
-                                            <th className="px-6 py-4 text-right">Action</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-gray-100">
-                                        {historyTimesheets.map((ts) => (
-                                            <tr key={ts.id} className="hover:bg-gray-50">
-                                                <td className="px-6 py-4">
-                                                    <div className="font-bold text-gray-900">{ts.volunteer?.first_name} {ts.volunteer?.last_name}</div>
-                                                    <div className="text-xs text-gray-500">{ts.volunteer?.ilj_id}</div>
-                                                </td>
-                                                <td className="px-6 py-4 text-gray-600">{new Date(ts.date_worked).toLocaleDateString()}</td>
-                                                <td className="px-6 py-4 text-gray-600">{ts.project?.title}</td>
-                                                <td className="px-6 py-4 font-bold">{ts.hours}h</td>
-                                                <td className="px-6 py-4">
-                                                    <span className={`px-2 py-1 rounded-full text-xs font-bold uppercase ${ts.status === 'approved' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
-                                                        }`}>
-                                                        {ts.status}
-                                                    </span>
-                                                </td>
-                                                <td className="px-6 py-4 text-right">
-                                                    <button
-                                                        onClick={() => handleRevertStatus(ts.id)}
-                                                        className="text-gray-400 hover:text-blue-600 p-1 rounded hover:bg-blue-50 transition-colors"
-                                                        title="Revert to Pending"
-                                                    >
-                                                        <RotateCcw className="h-4 w-4" />
-                                                    </button>
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
+                    {/* Pending Timesheets Section */}
+                    <div>
+                        <h4 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-3">Pending Timesheets</h4>
+                        {pendingTimesheets.filter(ts => selectedPodFilter === "all" || ts.project_id === selectedPodFilter).length === 0 ? (
+                            <div className="bg-white p-8 rounded-xl text-center border border-gray-200 border-dashed">
+                                <CheckSquare className="h-8 w-8 text-green-500 mx-auto mb-2 opacity-50" />
+                                <p className="text-gray-500 text-sm">No pending timesheets.</p>
                             </div>
-                        </div>
-                    )}
+                        ) : (
+                            <div className="grid grid-cols-1 gap-4">
+                                {pendingTimesheets.filter(ts => selectedPodFilter === "all" || ts.project_id === selectedPodFilter).map((ts) => (
+                                    <div key={ts.id} className="bg-white p-4 rounded-xl shadow-sm border border-gray-200 flex flex-col md:flex-row justify-between gap-4 md:items-center">
+                                        <div className="flex items-start gap-4">
+                                            <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-[#ae2b2b] font-bold">
+                                                {ts.volunteer?.first_name?.[0]}{ts.volunteer?.last_name?.[0]}
+                                            </div>
+                                            <div>
+                                                <h4 className="font-bold text-gray-900">{ts.volunteer?.first_name} {ts.volunteer?.last_name}</h4>
+                                                <p className="text-xs text-gray-500">{new Date(ts.date_worked).toLocaleDateString()} • {ts.project?.title}</p>
+                                                <p className="text-sm mt-1 text-gray-700 bg-gray-50 p-2 rounded border border-gray-100 italic">"{ts.description}"</p>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-4">
+                                            <div className="text-right mr-4">
+                                                <span className="block text-2xl font-bold text-gray-900">{ts.hours}h</span>
+                                                <span className="text-xs text-gray-500 uppercase">Logged</span>
+                                            </div>
+                                            <div className="flex gap-2">
+                                                <button
+                                                    onClick={() => handleApproval(ts.id, 'rejected')}
+                                                    className="p-2 hover:bg-red-50 text-red-600 rounded-lg border border-transparent hover:border-red-100 transition-all"
+                                                    title="Reject"
+                                                >
+                                                    <X className="h-5 w-5" />
+                                                </button>
+                                                <button
+                                                    onClick={() => handleApproval(ts.id, 'approved')}
+                                                    className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium shadow-sm transition-all flex items-center gap-2"
+                                                >
+                                                    <Check className="h-4 w-4" /> Approve
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Pending Ideas Section */}
+                    <div className="mt-8">
+                        <h4 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-3">Pending Ideas</h4>
+                        {pendingIdeas.filter(idea => selectedPodFilter === "all" || idea.project_id === selectedPodFilter).length === 0 ? (
+                            <div className="bg-white p-8 rounded-xl text-center border border-gray-200 border-dashed">
+                                <Lightbulb className="h-8 w-8 text-amber-500 mx-auto mb-2 opacity-50" />
+                                <p className="text-gray-500 text-sm">No pending ideas.</p>
+                            </div>
+                        ) : (
+                            <div className="grid grid-cols-1 gap-4">
+                                {pendingIdeas.filter(idea => selectedPodFilter === "all" || idea.project_id === selectedPodFilter).map((idea) => (
+                                    <div key={idea.id} className="bg-white p-4 rounded-xl shadow-sm border border-amber-100 flex flex-col md:flex-row justify-between gap-4 md:items-center">
+                                        <div className="flex items-start gap-4">
+                                            <div className="w-10 h-10 rounded-full bg-amber-50 flex items-center justify-center text-amber-600 font-bold">
+                                                <Lightbulb className="h-5 w-5" />
+                                            </div>
+                                            <div>
+                                                <h4 className="font-bold text-gray-900">{idea.title}</h4>
+                                                <p className="text-xs text-gray-500">By {idea.volunteer?.first_name} {idea.volunteer?.last_name} • {idea.project?.title || 'General'}</p>
+                                                <p className="text-sm mt-1 text-gray-700">{idea.description}</p>
+                                            </div>
+                                        </div>
+                                        <div className="flex gap-2">
+                                            <button
+                                                onClick={() => handleIdeaApproval(idea.id, 'rejected')}
+                                                className="p-2 hover:bg-red-50 text-red-600 rounded-lg border border-transparent hover:border-red-100 transition-all"
+                                                title="Reject"
+                                            >
+                                                <X className="h-5 w-5" />
+                                            </button>
+                                            <button
+                                                onClick={() => handleIdeaApproval(idea.id, 'reviewed')}
+                                                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium shadow-sm transition-all"
+                                            >
+                                                Review
+                                            </button>
+                                            <button
+                                                onClick={() => handleIdeaApproval(idea.id, 'approved')}
+                                                className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium shadow-sm transition-all"
+                                            >
+                                                Approve
+                                            </button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
                 </motion.div>
             )}
 
@@ -1219,55 +1214,55 @@ export default function ManagerHub() {
                             </div>
 
 
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Assign To (Volunteer)</label>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Assign To (Volunteer)</label>
+                                <div className="relative">
                                     <div className="relative">
-                                        <div className="relative">
-                                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                                            <input
-                                                type="text"
-                                                className="w-full pl-9 border-gray-300 rounded-lg shadow-sm focus:ring-[#ae2b2b] focus:border-[#ae2b2b] p-2.5 border"
-                                                placeholder="Search by name or ILJ ID..."
-                                                value={volunteerSearch}
-                                                onChange={(e) => {
-                                                    setVolunteerSearch(e.target.value);
-                                                    setShowVolList(true);
-                                                }}
-                                                onFocus={() => setShowVolList(true)}
-                                            />
-                                        </div>
-
-                                        {showVolList && volunteerSearch && (
-                                            <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                                                {volunteers
-                                                    .filter(v => {
-                                                        const fullName = `${v.first_name || ''} ${v.last_name || ''}`.toLowerCase();
-                                                        const iljId = (v.ilj_id || '').toLowerCase();
-                                                        const query = volunteerSearch.toLowerCase();
-                                                        return fullName.includes(query) || iljId.includes(query);
-                                                    })
-                                                    .map(v => (
-                                                        <div
-                                                            key={v.id}
-                                                            className="p-3 hover:bg-gray-50 cursor-pointer border-b border-gray-50 last:border-0"
-                                                            onClick={() => {
-                                                                setTaskForm(prev => ({ ...prev, assigneeId: v.id }));
-                                                                setVolunteerSearch(`${v.first_name} ${v.last_name} (${v.ilj_id})`);
-                                                                setShowVolList(false);
-                                                            }}
-                                                        >
-                                                            <p className="text-sm font-medium text-gray-900">{v.first_name} {v.last_name}</p>
-                                                            <p className="text-xs text-gray-500">{v.ilj_id}</p>
-                                                        </div>
-                                                    ))
-                                                }
-                                                {volunteers.filter(v => `${v.first_name} ${v.last_name}`.toLowerCase().includes(volunteerSearch.toLowerCase())).length === 0 && (
-                                                    <div className="p-3 text-sm text-gray-500 text-center">No volunteers found</div>
-                                                )}
-                                            </div>
-                                        )}
+                                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                                        <input
+                                            type="text"
+                                            className="w-full pl-9 border-gray-300 rounded-lg shadow-sm focus:ring-[#ae2b2b] focus:border-[#ae2b2b] p-2.5 border"
+                                            placeholder="Search by name or ILJ ID..."
+                                            value={volunteerSearch}
+                                            onChange={(e) => {
+                                                setVolunteerSearch(e.target.value);
+                                                setShowVolList(true);
+                                            }}
+                                            onFocus={() => setShowVolList(true)}
+                                        />
                                     </div>
+
+                                    {showVolList && volunteerSearch && (
+                                        <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                                            {volunteers
+                                                .filter(v => {
+                                                    const fullName = `${v.first_name || ''} ${v.last_name || ''}`.toLowerCase();
+                                                    const iljId = (v.ilj_id || '').toLowerCase();
+                                                    const query = volunteerSearch.toLowerCase();
+                                                    return fullName.includes(query) || iljId.includes(query);
+                                                })
+                                                .map(v => (
+                                                    <div
+                                                        key={v.id}
+                                                        className="p-3 hover:bg-gray-50 cursor-pointer border-b border-gray-50 last:border-0"
+                                                        onClick={() => {
+                                                            setTaskForm(prev => ({ ...prev, assigneeId: v.id }));
+                                                            setVolunteerSearch(`${v.first_name} ${v.last_name} (${v.ilj_id})`);
+                                                            setShowVolList(false);
+                                                        }}
+                                                    >
+                                                        <p className="text-sm font-medium text-gray-900">{v.first_name} {v.last_name}</p>
+                                                        <p className="text-xs text-gray-500">{v.ilj_id}</p>
+                                                    </div>
+                                                ))
+                                            }
+                                            {volunteers.filter(v => `${v.first_name} ${v.last_name}`.toLowerCase().includes(volunteerSearch.toLowerCase())).length === 0 && (
+                                                <div className="p-3 text-sm text-gray-500 text-center">No volunteers found</div>
+                                            )}
+                                        </div>
+                                    )}
                                 </div>
+                            </div>
 
 
 
@@ -1296,16 +1291,16 @@ export default function ManagerHub() {
                             </div>
 
 
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Deadline</label>
-                                    <input
-                                        type="date"
-                                        className="w-full border-gray-300 rounded-lg shadow-sm focus:ring-[#ae2b2b] focus:border-[#ae2b2b] p-2.5 border"
-                                        value={taskForm.deadline}
-                                        onChange={e => setTaskForm({ ...taskForm, deadline: e.target.value })}
-                                        required
-                                    />
-                                </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Deadline</label>
+                                <input
+                                    type="date"
+                                    className="w-full border-gray-300 rounded-lg shadow-sm focus:ring-[#ae2b2b] focus:border-[#ae2b2b] p-2.5 border"
+                                    value={taskForm.deadline}
+                                    onChange={e => setTaskForm({ ...taskForm, deadline: e.target.value })}
+                                    required
+                                />
+                            </div>
 
 
                             <button

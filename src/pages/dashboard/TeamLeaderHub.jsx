@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import * as XLSX from 'xlsx';
+import { downloadICS } from "@/lib/ics";
 
 export default function TeamLeaderHub() {
     const { user } = useAuth();
@@ -30,6 +31,9 @@ export default function TeamLeaderHub() {
     const [meetingForm, setMeetingForm] = useState({ title: "", team_name: "All", meeting_date: "", meeting_link: "", minutes: "" });
     const [creatingMeeting, setCreatingMeeting] = useState(false);
     const [editingMeeting, setEditingMeeting] = useState(null);
+    const [editingMinutesFor, setEditingMinutesFor] = useState(null);
+    const [minutesText, setMinutesText] = useState("");
+    const [savingMinutes, setSavingMinutes] = useState(false);
     const [creating, setCreating] = useState(false);
 
     const [taskForm, setTaskForm] = useState({
@@ -196,6 +200,48 @@ export default function TeamLeaderHub() {
         if (user?.id) fetchMeetings();
     }, [user]);
 
+    const handleSaveMinutes = async () => {
+        if (!editingMinutesFor) return;
+        setSavingMinutes(true);
+        try {
+            const { error } = await supabase.from('team_meetings').update({
+                minutes: minutesText
+            }).eq('id', editingMinutesFor);
+            if (error) throw error;
+            alert("Minutes saved successfully!");
+            setEditingMinutesFor(null);
+            fetchMeetings();
+        } catch(e) {
+            alert("Failed to save minutes");
+        } finally {
+            setSavingMinutes(false);
+        }
+    };
+
+    const handleEmailInvite = (m) => {
+        downloadICS({
+            title: m.title,
+            description: `Team: ${m.team_name}. Link: ${m.meeting_link || 'None'}.`,
+            startTime: m.meeting_date,
+            location: m.meeting_link || ''
+        });
+
+        const emails = volunteers
+            .filter(v => m.team_name === "All" || [v.volunteering_preference1, v.volunteering_preference2, v.volunteering_preference3].includes(m.team_name))
+            .map(v => v.email)
+            .filter(Boolean)
+            .join(',');
+
+        const subject = encodeURIComponent(`Meeting Invite: ${m.title}`);
+        let body = `Hello Team,\n\nPlease join the upcoming meeting: ${m.title}\nDate: ${new Date(m.meeting_date).toLocaleString()}\n`;
+        if (m.meeting_link) {
+            body += `Meeting Link / Location: ${m.meeting_link}\n`;
+        }
+        body += `\nI have attached the calendar invite (.ics file) which you can import into your calendar.\n\nBest,\nTeam Leader`;
+        
+        window.location.href = `mailto:?bcc=${emails}&subject=${subject}&body=${encodeURIComponent(body)}`;
+    };
+
     const handleCreateMeeting = async (e) => {
         e.preventDefault();
         setCreatingMeeting(true);
@@ -233,10 +279,10 @@ export default function TeamLeaderHub() {
         }
     };
 
+
     const fetchInterestedVolunteers = async (teamList) => {
         setLoading(true);
         try {
-            // Construct OR conditions for all teams and all preferences
             const orConditions = [];
             teamList.forEach(team => {
                 orConditions.push(`volunteering_preference1.eq."${team}"`);
@@ -262,6 +308,7 @@ export default function TeamLeaderHub() {
     const getPreferenceLevel = (volunteer, contextTeam) => {
         // If a specific team context is active, return the preference level for THAT team
         if (contextTeam && contextTeam !== "All") {
+
             if (volunteer.volunteering_preference1 === contextTeam) return 1;
             if (volunteer.volunteering_preference2 === contextTeam) return 2;
             if (volunteer.volunteering_preference3 === contextTeam) return 3;
@@ -348,7 +395,7 @@ export default function TeamLeaderHub() {
                             <p className="text-xs text-white/60 uppercase font-bold tracking-widest">Total Interested</p>
                             <p className="text-3xl font-bold">{volunteers.length}</p>
                         </div>
-                        <div className="w-px h-10 bg-white/20"></div>
+                                                <div className="w-px h-10 bg-white/20"></div>
                         <div className="bg-white/20 p-3 rounded-xl">
                             <Users className="h-6 w-6" />
                         </div>
@@ -364,17 +411,27 @@ export default function TeamLeaderHub() {
             <div className="flex flex-wrap gap-2 border-b border-gray-200 pb-1">
                 <button
                     onClick={() => setActiveTab("overview")}
-                    className={`flex items-center gap-2 px-6 py-3 font-bold text-sm transition-all rounded-t-xl border-b-2 
-                        ${activeTab === "overview" ? "border-[#ae2b2b] text-[#ae2b2b] bg-red-50" : "border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50"}`}
+                    className={`flex items-center gap-2 px-6 py-3 font-bold text-sm transition-all rounded-t-xl border-b-2 ${activeTab === "overview" ? "border-[#ae2b2b] text-[#ae2b2b] bg-red-50" : "border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50"}`}
                 >
                     <Users className="h-4 w-4" /> Overview & Volunteers
                 </button>
                 <button
                     onClick={() => setActiveTab("tasks")}
-                    className={`flex items-center gap-2 px-6 py-3 font-bold text-sm transition-all rounded-t-xl border-b-2 
-                        ${activeTab === "tasks" ? "border-[#ae2b2b] text-[#ae2b2b] bg-red-50" : "border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50"}`}
+                    className={`flex items-center gap-2 px-6 py-3 font-bold text-sm transition-all rounded-t-xl border-b-2 ${activeTab === "tasks" ? "border-[#ae2b2b] text-[#ae2b2b] bg-red-50" : "border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50"}`}
                 >
                     <CheckSquare className="h-4 w-4" /> Assign Tasks
+                </button>
+                <button
+                    onClick={() => setActiveTab("meetings")}
+                    className={`flex items-center gap-2 px-6 py-3 font-bold text-sm transition-all rounded-t-xl border-b-2 ${activeTab === "meetings" ? "border-[#ae2b2b] text-[#ae2b2b] bg-red-50" : "border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50"}`}
+                >
+                    <Calendar className="h-4 w-4" /> Team Meetings
+                </button>
+                <button
+                    onClick={() => setActiveTab("minutes")}
+                    className={`flex items-center gap-2 px-6 py-3 font-bold text-sm transition-all rounded-t-xl border-b-2 ${activeTab === "minutes" ? "border-[#ae2b2b] text-[#ae2b2b] bg-red-50" : "border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50"}`}
+                >
+                    <FileText className="h-4 w-4" /> Meeting Minutes
                 </button>
             </div>
 
@@ -385,10 +442,7 @@ export default function TeamLeaderHub() {
                         <div className="flex flex-wrap gap-2">
                             <button
                                 onClick={() => setActiveTeam("All")}
-                                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border flex items-center gap-2 ${activeTeam === "All"
-                                    ? 'bg-[#ae2b2b] text-white border-[#ae2b2b] shadow-md'
-                                    : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
-                                    }`}
+                                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border flex items-center gap-2 ${activeTeam === "All" ? 'bg-[#ae2b2b] text-white border-[#ae2b2b] shadow-md' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'}`}
                             >
                                 <LayoutGrid className="h-3.5 w-3.5" /> All Teams
                             </button>
@@ -398,10 +452,7 @@ export default function TeamLeaderHub() {
                                     <button
                                         key={team}
                                         onClick={() => setActiveTeam(team)}
-                                        className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border flex items-center gap-2 ${activeTeam === team
-                                            ? 'bg-[#ae2b2b] text-white border-[#ae2b2b] shadow-md'
-                                            : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
-                                            }`}
+                                        className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border flex items-center gap-2 ${activeTeam === team ? 'bg-[#ae2b2b] text-white border-[#ae2b2b] shadow-md' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'}`}
                                     >
                                         <Icon className="h-3.5 w-3.5" /> {team}
                                     </button>
@@ -606,10 +657,7 @@ export default function TeamLeaderHub() {
                                     <input type="text" className="w-full p-3 bg-white border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-[#ae2b2b]" value={meetingForm.meeting_link} onChange={e => setMeetingForm({ ...meetingForm, meeting_link: e.target.value })} placeholder="Zoom link or Room" />
                                 </div>
                             </div>
-                            <div>
-                                <label className="block text-sm font-bold text-gray-700 mb-1">Minutes of Meeting</label>
-                                <textarea rows="4" className="w-full p-3 bg-white border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-[#ae2b2b]" value={meetingForm.minutes} onChange={e => setMeetingForm({ ...meetingForm, minutes: e.target.value })} placeholder="Record minutes here after the meeting..."></textarea>
-                            </div>
+
                             <div className="flex gap-3 pt-2">
                                 {editingMeeting && (
                                     <button type="button" onClick={() => { setEditingMeeting(null); setMeetingForm({ title: "", team_name: "All", meeting_date: "", meeting_link: "", minutes: "" }); }} className="px-6 py-3 bg-gray-100 text-gray-700 rounded-xl font-bold hover:bg-gray-200 transition-all">Cancel Edit</button>
@@ -646,21 +694,85 @@ export default function TeamLeaderHub() {
                                     <div className="flex items-center gap-2"><Calendar className="h-4 w-4" /> {new Date(m.meeting_date).toLocaleString()}</div>
                                     {m.meeting_link && <div className="flex items-center gap-2"><MapPin className="h-4 w-4" /> <a href={m.meeting_link} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline truncate">{m.meeting_link}</a></div>}
                                 </div>
-                                {m.minutes ? (
-                                    <div className="bg-gray-50 p-3 rounded-lg text-xs text-gray-600 border border-gray-100 max-h-32 overflow-y-auto">
-                                        <p className="font-bold mb-1 text-gray-700">Minutes:</p>
-                                        <p className="whitespace-pre-wrap">{m.minutes}</p>
-                                    </div>
-                                ) : (
-                                    <div className="bg-amber-50 p-3 rounded-lg text-xs text-amber-700 border border-amber-100">
-                                        No minutes recorded yet.
-                                    </div>
-                                )}
+
+                                <div className="mt-4 pt-4 border-t border-gray-100 flex justify-end">
+                                    <button 
+                                        onClick={() => handleEmailInvite(m)}
+                                        className="text-xs font-bold px-4 py-2 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-lg flex items-center gap-2 transition-colors"
+                                    >
+                                        <Mail className="h-3.5 w-3.5" /> Download ICS & Email Team
+                                    </button>
+                                </div>
                             </div>
                         ))}
                     </div>
                 </motion.div>
             )}
+            {activeTab === "minutes" && (
+                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+                    <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-8">
+                        <h2 className="text-2xl font-serif font-bold text-gray-900 mb-2">Meeting Minutes</h2>
+                        <p className="text-gray-500 mb-6">Record and review notes from team meetings.</p>
+                        
+                        <div className="space-y-4">
+                            {meetings.length === 0 ? (
+                                <div className="text-center py-12 bg-gray-50 rounded-xl border border-dashed border-gray-200">
+                                    <FileText className="h-10 w-10 text-gray-300 mx-auto mb-3" />
+                                    <p className="text-gray-500">No meetings scheduled yet.</p>
+                                </div>
+                            ) : (
+                                meetings.map(m => (
+                                    <div key={m.id} className="bg-gray-50 border border-gray-200 rounded-xl p-5 hover:border-gray-300 transition-colors">
+                                        <div className="flex justify-between items-start mb-3">
+                                            <div>
+                                                <h3 className="font-bold text-gray-900 text-lg">{m.title}</h3>
+                                                <div className="flex items-center gap-3 text-xs text-gray-500 mt-1">
+                                                    <span className="font-semibold text-[#ae2b2b] uppercase tracking-wider">{m.team_name}</span>
+                                                    <span>•</span>
+                                                    <span className="flex items-center gap-1"><Calendar className="h-3 w-3" /> {new Date(m.meeting_date).toLocaleDateString()}</span>
+                                                </div>
+                                            </div>
+                                            {editingMinutesFor !== m.id && (
+                                                <button onClick={() => {
+                                                    setEditingMinutesFor(m.id);
+                                                    setMinutesText(m.minutes || "");
+                                                }} className="text-xs px-3 py-1.5 bg-indigo-50 text-indigo-700 font-bold hover:bg-indigo-100 rounded-lg flex items-center gap-1 transition-colors">
+                                                    <FileText className="h-3 w-3" /> {m.minutes ? 'Edit Minutes' : 'Add Minutes'}
+                                                </button>
+                                            )}
+                                        </div>
+                                        
+                                        {editingMinutesFor === m.id ? (
+                                            <div className="mt-4 space-y-3">
+                                                <textarea 
+                                                    rows="4" 
+                                                    className="w-full p-4 bg-white border border-indigo-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm text-gray-800" 
+                                                    value={minutesText} 
+                                                    onChange={e => setMinutesText(e.target.value)} 
+                                                    placeholder="Record meeting minutes here..."
+                                                ></textarea>
+                                                <div className="flex justify-end gap-2">
+                                                    <button onClick={() => setEditingMinutesFor(null)} className="px-4 py-2 bg-gray-200 text-gray-700 font-bold rounded-lg hover:bg-gray-300 transition-colors text-sm">Cancel</button>
+                                                    <button onClick={handleSaveMinutes} disabled={savingMinutes} className="px-4 py-2 bg-indigo-600 text-white font-bold rounded-lg hover:bg-indigo-700 shadow-md transition-colors flex items-center gap-2 text-sm">
+                                                        {savingMinutes ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckSquare className="h-4 w-4" />} Save Minutes
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            m.minutes && (
+                                                <div className="bg-white border border-gray-100 rounded-lg p-5 text-sm text-gray-700 whitespace-pre-wrap shadow-sm mt-2 leading-relaxed">
+                                                    {m.minutes}
+                                                </div>
+                                            )
+                                        )}
+                                    </div>
+                                ))
+                            )}
+                        </div>
+                    </div>
+                </motion.div>
+            )}
+
             {/* Details Modal (Fixed UI Placement) */}
             <AnimatePresence>
                 {selectedVolunteer && (
