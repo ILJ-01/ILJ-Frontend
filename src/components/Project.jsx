@@ -27,6 +27,7 @@ import {
 } from "@/components/ui/card";
 import Autoplay from "embla-carousel-autoplay";
 import Instagram from "./Instagram";
+import KivaRegForm from "./KivaRegForm";
 
 const projectThumbs = import.meta.glob(
   "../assets/projects/*.{png,jpg,jpeg,webp}",
@@ -62,16 +63,21 @@ export default function Project() {
   const [isApplying, setIsApplying] = useState(false);
   const [dbGallery, setDbGallery] = useState([]);
   const [dbTestimonials, setDbTestimonials] = useState([]);
-
+  const [subpods, setSubpods] = useState([]);
+  const [revaSessions, setRevaSessions] = useState([]);
 
   // Inquiry & Feedback State
   const [isInquiryOpen, setIsInquiryOpen] = useState(false);
+  const [isQnaOpen, setIsQnaOpen] = useState(false);
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [inquiryForm, setInquiryForm] = useState({
     name: '', email: '', mobile: '', message: '',
     sangh_name: '', sangh_address: '', proposed_venue: '',
     proposed_dates: '', how_did_you_know: ''
+  });
+  const [qnaForm, setQnaForm] = useState({
+    name: '', email: '', mobile: '', message: ''
   });
   const [feedbackForm, setFeedbackForm] = useState({
     rating: 5,
@@ -124,6 +130,14 @@ export default function Project() {
 
           const { data: testData } = await supabase.from('project_feedback').select('*').eq('project_id', title);
           if (testData) setDbTestimonials(testData);
+
+          const { data: subpodsData } = await supabase.from('projects').select('*').eq('parent_project_id', title);
+          if (subpodsData) setSubpods(subpodsData);
+
+          if (data.project_code === 'PRJ-010') {
+            const { data: sessionData } = await supabase.from('reva_sessions').select('*').order('date', { ascending: true }).order('time', { ascending: true });
+            if (sessionData) setRevaSessions(sessionData);
+          }
 
           // 2. Check application status if logged in
           if (isLoggedIn && user) {
@@ -205,6 +219,26 @@ export default function Project() {
     } catch (error) {
       console.error("Inquiry Error:", error);
       alert("Failed to send inquiry.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleQnaSubmit = async (e) => {
+    e.preventDefault();
+    setSubmitting(true);
+    try {
+      const { error } = await supabase.from('project_inquiries').insert({
+        project_id: project.id,
+        ...qnaForm
+      });
+      if (error) throw error;
+      alert("Query submitted successfully! We will get back to you soon.");
+      setIsQnaOpen(false);
+      setQnaForm({ name: '', email: '', mobile: '', message: '' });
+    } catch (error) {
+      console.error("QnA Error:", error);
+      alert("Failed to submit query.");
     } finally {
       setSubmitting(false);
     }
@@ -387,6 +421,68 @@ export default function Project() {
             </div>
           </div>
 
+          {subpods.length > 0 && (
+            <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100 mt-8">
+              <h2 className="text-2xl font-bold text-gray-800 mb-4 font-serif">Shibirs & Sub-Pods</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {subpods.map(sub => (
+                  <Link key={sub.id} to={`/project/${sub.id}`} className="block border rounded-xl p-4 hover:shadow-md transition-shadow hover:border-[#ae2b2b]/50 group">
+                    <h3 className="font-bold text-[#ae2b2b] text-lg group-hover:underline">{sub.title}</h3>
+                    <p className="text-gray-600 text-sm mt-1">{sub.description?.substring(0, 100)}{sub.description?.length > 100 ? '...' : ''}</p>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* REVA Sessions Schedule */}
+          {project.project_code === 'PRJ-010' && (
+            <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100 mt-8">
+              <h2 className="text-2xl font-bold text-gray-800 mb-4 font-serif flex items-center gap-2">
+                <Calendar className="text-[#ae2b2b] w-6 h-6" /> Upcoming Schedule
+              </h2>
+              {revaSessions.length === 0 ? (
+                <p className="text-gray-500 bg-gray-50 p-6 rounded-xl text-center border border-dashed border-gray-200">No sessions scheduled currently.</p>
+              ) : (
+                <div className="overflow-x-auto border border-gray-200 rounded-xl shadow-sm">
+                    <table className="w-full text-left border-collapse">
+                        <thead>
+                            <tr className="bg-gray-50 border-b border-gray-200 text-xs uppercase tracking-wider text-[#ae2b2b] font-bold">
+                                <th className="p-4">Date</th>
+                                <th className="p-4">Time</th>
+                                <th className="p-4">Venue</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-100">
+                            {revaSessions.map(session => (
+                                <tr key={session.id} className="hover:bg-[#ae2b2b]/5 transition-colors">
+                                    <td className="p-4 whitespace-nowrap text-gray-900 font-medium">
+                                        <div className="flex items-center gap-2">
+                                            <Calendar className="h-4 w-4 text-[#ae2b2b]/70" />
+                                            {new Date(session.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}
+                                        </div>
+                                    </td>
+                                    <td className="p-4 whitespace-nowrap text-gray-600">
+                                        <div className="flex items-center gap-2">
+                                            <Clock className="h-4 w-4 text-gray-400" />
+                                            {session.time}
+                                        </div>
+                                    </td>
+                                    <td className="p-4 text-gray-700">
+                                        <div className="flex items-start gap-2">
+                                            <MapPin className="h-4 w-4 text-gray-400 shrink-0 mt-0.5" />
+                                            {session.venue}
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Manager Contact Card - TEMPORARILY COMMENTED OUT
           {isLoggedIn && project.manager && (
             <div className="bg-gradient-to-br from-[#ae2b2b]/5 to-white rounded-2xl p-6 border border-[#ae2b2b]/10 shadow-sm flex flex-col md:flex-row gap-6 items-start md:items-center">
@@ -471,66 +567,92 @@ export default function Project() {
 
         {/* Right Column: Actions */}
         <div className="space-y-6 sticky top-24 h-fit">
-          <div className="bg-white rounded-2xl p-6 shadow-md border-t-4 border-[#ae2b2b]">
-            <h3 className="text-lg font-bold text-gray-900 mb-4 font-serif">Join the Mission</h3>
-
-            {!isLoggedIn ? (
-              <div className="text-center py-4 bg-gray-50 rounded-xl border border-dashed border-gray-300">
-                <Shield className="w-10 h-10 text-gray-400 mx-auto mb-2" />
-                <Link to="/?login=true" className="block group">
-                  <p className="text-gray-600 mb-3 group-hover:text-[#ae2b2b] transition-colors font-medium">Please login to apply for this project.</p>
-                  <Button variant="outline">Login to Apply</Button>
-                </Link>
-              </div>
-            ) : (
-              <div>
-                {applicationStatus === 'approved' ? (
-                  <div className="bg-green-50 border border-green-200 rounded-xl p-4 text-center">
-                    <div className="mx-auto w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mb-2">
-                      <CheckCircle className="w-6 h-6 text-green-600" />
-                    </div>
-                    <h4 className="font-bold text-green-800">You are a Member!</h4>
-                    <p className="text-sm text-green-600 mt-1">Check your dashboard for tasks.</p>
-                  </div>
-                ) : applicationStatus === 'pending' ? (
-                  <div className="bg-[#ae2b2b]/5 border border-[#ae2b2b]/20 rounded-xl p-4 text-center">
-                    <div className="mx-auto w-12 h-12 bg-[#ae2b2b]/10 rounded-full flex items-center justify-center mb-2">
-                      <Clock className="w-6 h-6 text-[#ae2b2b]" />
-                    </div>
-                    <h4 className="font-bold text-[#ae2b2b]">Request Pending</h4>
-                    <p className="text-sm text-[#ae2b2b] mt-1">Approval sent to manager.</p>
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    <p className="text-sm text-gray-600 mb-4">
-                      Ready to contribute? Click below to request to join this pod team.
-                    </p>
-                    <Button
-                      onClick={handleApply}
-                      disabled={isApplying}
-                      className="w-full bg-[#ae2b2b] hover:bg-[#8f1f1f] text-lg py-6 shadow-lg shadow-red-100"
-                    >
-                      {isApplying ? "Applying..." : "I'm Interested to Volunteer"}
+          
+          {/* Shibir Links */}
+          {(project.registration_link || project.qna_link) && (
+            <div className="bg-white rounded-2xl p-6 shadow-md border-t-4 border-[#ae2b2b]">
+              <h3 className="text-lg font-bold text-gray-900 mb-4 font-serif">Shibir Registration & Info</h3>
+              <div className="space-y-3">
+                {project.registration_link && (
+                  <Link to={`/projects/${project.id}/event-registration`} className="block">
+                    <Button className="w-full bg-[#ae2b2b] hover:bg-[#8f1f1f] text-white shadow-md">
+                      Register for Shibir
                     </Button>
-                  </div>
+                  </Link>
+                )}
+                {project.qna_link && (
+                  <Button variant="outline" onClick={() => setIsQnaOpen(true)} className="w-full text-[#ae2b2b] border-[#ae2b2b] hover:bg-red-50">
+                    Submit your QnA
+                  </Button>
                 )}
               </div>
-            )}
+            </div>
+          )}
 
+          {project.project_code === 'PRJ-009' ? (
+            <KivaRegForm projectId={project.id} />
+          ) : (
+            <div className="bg-white rounded-2xl p-6 shadow-md border-t-4 border-[#ae2b2b]">
+              <h3 className="text-lg font-bold text-gray-900 mb-4 font-serif">Join the Mission</h3>
 
-          </div>
+              {!isLoggedIn ? (
+                <div className="text-center py-4 bg-gray-50 rounded-xl border border-dashed border-gray-300">
+                  <Shield className="w-10 h-10 text-gray-400 mx-auto mb-2" />
+                  <Link to="/?login=true" className="block group">
+                    <p className="text-gray-600 mb-3 group-hover:text-[#ae2b2b] transition-colors font-medium">Please login to apply for this project.</p>
+                    <Button variant="outline">Login to Apply</Button>
+                  </Link>
+                </div>
+              ) : (
+                <div>
+                  {applicationStatus === 'approved' ? (
+                    <div className="bg-green-50 border border-green-200 rounded-xl p-4 text-center">
+                      <div className="mx-auto w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mb-2">
+                        <CheckCircle className="w-6 h-6 text-green-600" />
+                      </div>
+                      <h4 className="font-bold text-green-800">You are a Member!</h4>
+                      <p className="text-sm text-green-600 mt-1">Check your dashboard for tasks.</p>
+                    </div>
+                  ) : applicationStatus === 'pending' ? (
+                    <div className="bg-[#ae2b2b]/5 border border-[#ae2b2b]/20 rounded-xl p-4 text-center">
+                      <div className="mx-auto w-12 h-12 bg-[#ae2b2b]/10 rounded-full flex items-center justify-center mb-2">
+                        <Clock className="w-6 h-6 text-[#ae2b2b]" />
+                      </div>
+                      <h4 className="font-bold text-[#ae2b2b]">Request Pending</h4>
+                      <p className="text-sm text-[#ae2b2b] mt-1">Approval sent to manager.</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      <p className="text-sm text-gray-600 mb-4">
+                        Ready to contribute? Click below to request to join this pod team.
+                      </p>
+                      <Button
+                        onClick={handleApply}
+                        disabled={isApplying}
+                        className="w-full bg-[#ae2b2b] hover:bg-[#8f1f1f] text-lg py-6 shadow-lg shadow-red-100"
+                      >
+                        {isApplying ? "Applying..." : "I'm Interested to Volunteer"}
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Organize & Feedback Actions */}
           <div className="bg-white rounded-2xl p-6 shadow-md border border-gray-100 space-y-4">
             <h3 className="text-lg font-bold text-gray-900 mb-2 font-serif">More Actions</h3>
 
-            <Button
-              variant="outline"
-              onClick={() => setIsInquiryOpen(true)}
-              className="w-full justify-start text-gray-700 hover:text-[#ae2b2b] hover:border-[#ae2b2b]"
-            >
-              <MapPin className="mr-2 h-4 w-4" /> Organize in your area
-            </Button>
+            {project.project_code !== 'PRJ-009' && (
+              <Button
+                variant="outline"
+                onClick={() => setIsInquiryOpen(true)}
+                className="w-full justify-start text-gray-700 hover:text-[#ae2b2b] hover:border-[#ae2b2b]"
+              >
+                <MapPin className="mr-2 h-4 w-4" /> Organize in your area
+              </Button>
+            )}
 
             <Button
               variant="outline"
@@ -694,6 +816,48 @@ export default function Project() {
 
                 <Button type="submit" disabled={submitting} className="w-full bg-[#ae2b2b] hover:bg-[#912323]">
                   {submitting ? "Sending..." : "Send Inquiry"}
+                </Button>
+              </form>
+            </div>
+          </div>
+        )
+      }
+
+      {/* QnA Modal */}
+      {
+        isQnaOpen && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 backdrop-blur-sm">
+            <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl relative max-h-[90vh] overflow-y-auto custom-scrollbar">
+              <button onClick={() => setIsQnaOpen(false)} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
+                <X className="h-5 w-5" />
+              </button>
+              <h3 className="text-xl font-bold text-gray-900 mb-1">Submit your QnA</h3>
+              <p className="text-sm text-gray-500 mb-4">Have a question? We will address it during the Shibir.</p>
+
+              <form onSubmit={handleQnaSubmit} className="space-y-4">
+                <input
+                  type="text" placeholder="Your Name" required
+                  className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-[#ae2b2b]/20 outline-none"
+                  value={qnaForm.name} onChange={e => setQnaForm({ ...qnaForm, name: e.target.value })}
+                />
+                <input
+                  type="tel" placeholder="Contact Number" required
+                  className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-[#ae2b2b]/20 outline-none"
+                  value={qnaForm.mobile} onChange={e => setQnaForm({ ...qnaForm, mobile: e.target.value })}
+                />
+                <input
+                  type="email" placeholder="Email Address" required
+                  className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-[#ae2b2b]/20 outline-none"
+                  value={qnaForm.email} onChange={e => setQnaForm({ ...qnaForm, email: e.target.value })}
+                />
+                <textarea
+                  placeholder="Your Question / Query" required rows="4"
+                  className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-[#ae2b2b]/20 outline-none"
+                  value={qnaForm.message} onChange={e => setQnaForm({ ...qnaForm, message: e.target.value })}
+                ></textarea>
+
+                <Button type="submit" disabled={submitting} className="w-full bg-[#ae2b2b] hover:bg-[#8f1f1f] text-white">
+                  {submitting ? "Submitting..." : "Submit Question"}
                 </Button>
               </form>
             </div>

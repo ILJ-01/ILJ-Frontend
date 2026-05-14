@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { supabase } from '@/lib/supabase';
+import { supabase, supabaseUrl } from '@/lib/supabase';
 import { 
     Search, MapPin, Mail, Phone, 
     User, CheckCircle, Clock, UserPlus
@@ -107,6 +107,24 @@ const OnboardingHub = () => {
             if (pvError) {
                 console.error("Error creating project_volunteers records:", pvError);
                 // Non-fatal error for this function since master sheet is already updated
+            }
+            
+            // Send email notification for pod assignment unconditionally
+            try {
+                const response = await fetch(`${supabaseUrl}/functions/v1/notify-pod-assignment`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        volunteer_id: volunteerId,
+                        project_ids: projectsArr.map(p => p.id)
+                    })
+                });
+                if (!response.ok) {
+                    const errRes = await response.json().catch(()=>({}));
+                    console.error("Email Edge Function returned error:", errRes);
+                }
+            } catch (emailErr) {
+                console.error("Error sending pod assignment emails:", emailErr);
             }
 
             setVolunteers(prev => prev.map(v => 

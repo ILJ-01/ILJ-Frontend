@@ -45,14 +45,14 @@ export default function EventRegistrationPage() {
             try {
                 const { data, error } = await supabase
                     .from('projects')
-                    .select('id, title, project_code, description, next_event_date, is_event_registration_enabled')
+                    .select('id, title, project_code, description, next_event_date, is_event_registration_enabled, registration_link')
                     .eq('id', id)
                     .single();
 
                 if (error || !data) throw error;
 
-                // If registration is disabled, kick them out
-                if (!data.is_event_registration_enabled) {
+                // If registration is disabled AND no registration link is present, kick them out
+                if (!data.is_event_registration_enabled && !data.registration_link) {
                     navigate(`/project/${data.id}`);
                     return;
                 }
@@ -60,6 +60,11 @@ export default function EventRegistrationPage() {
                 if (data.project_code === 'PRJ-002') {
                     window.location.href = 'https://docs.google.com/forms/d/e/1FAIpQLSe5cPsvyKeh-h2xLw2j2nThavaQGM_Ov5fYwIHjUphNMemyaA/viewform';
                     return;
+                }
+
+                // Treat sub-pods with registration_link as PRJ-008 to reuse the Shibir form logic
+                if (data.registration_link && data.project_code !== 'PRJ-008') {
+                    data.project_code = 'PRJ-008';
                 }
 
                 setProject(data);

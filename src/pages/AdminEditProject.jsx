@@ -5,6 +5,7 @@ import {
     ArrowLeft, Save, Search, User,
     Check, X, Briefcase, Image, Hash, Upload, Cloud, Trash2, CheckCircle, XCircle, Pencil
 } from 'lucide-react';
+import AdminRevaSessions from './admin/AdminRevaSessions';
 
 const AdminEditProject = () => {
     const navigate = useNavigate();
@@ -16,6 +17,7 @@ const AdminEditProject = () => {
     const [testimonials, setTestimonials] = useState([]);
     const [newTestimonial, setNewTestimonial] = useState({ name: '', comments: '' });
     const [eventRegistrations, setEventRegistrations] = useState([]);
+    const [kivaRegistrations, setKivaRegistrations] = useState([]);
 
     // Testimonial Edit State
     const [editingTestimonialId, setEditingTestimonialId] = useState(null);
@@ -150,6 +152,16 @@ const AdminEditProject = () => {
                     .eq('project_id', id)
                     .order('created_at', { ascending: false });
                 if (registrations) setEventRegistrations(registrations);
+            }
+
+            // 7. Get KIVA Registrations (PRJ-009)
+            if (project.project_code === 'PRJ-009') {
+                const { data: kivaRegs } = await supabase
+                    .from('kiva_registrations')
+                    .select('*')
+                    .eq('project_id', id)
+                    .order('created_at', { ascending: false });
+                if (kivaRegs) setKivaRegistrations(kivaRegs);
             }
 
         } catch (error) {
@@ -817,6 +829,46 @@ const AdminEditProject = () => {
                                         </div>
                                     ))}
                                 </div>
+                            </div>
+                        )}
+
+                        {/* 6. KIVA Registrations (PRJ-009 specifically) */}
+                        {formData.project_code === 'PRJ-009' && (
+                            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                                <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                                    <User className="h-5 w-5 text-amber-600" /> KIVA Registrations ({kivaRegistrations.length})
+                                </h2>
+
+                                <div className="grid gap-4 max-h-[500px] overflow-y-auto custom-scrollbar pr-2">
+                                    {kivaRegistrations.length === 0 ? (
+                                        <p className="text-sm text-gray-400 text-center py-8 border-2 border-dashed rounded-lg">No registrations found yet...</p>
+                                    ) : kivaRegistrations.map((r, i) => (
+                                        <div key={r.id} className="p-4 rounded-xl border border-gray-100 shadow-sm flex flex-col sm:flex-row justify-between gap-5 bg-white hover:border-amber-200 transition-all">
+                                            <div className="flex-1 w-full space-y-1">
+                                                <div className="flex justify-between items-start">
+                                                    <h4 className="font-bold text-gray-900 text-md flex items-center gap-2">
+                                                        {i + 1}. {r.full_name}
+                                                        {r.is_ilj_volunteer && (
+                                                            <span className="text-[10px] font-bold bg-[#ae2b2b] text-white px-2 py-0.5 rounded-full">ILJ VOLUNTEER</span>
+                                                        )}
+                                                    </h4>
+                                                    <span className="text-[10px] text-gray-500 bg-gray-100 px-2 py-1 rounded-md">{new Date(r.created_at).toLocaleDateString()}</span>
+                                                </div>
+                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-gray-700 mt-2">
+                                                    <p><span className="font-semibold text-gray-500">Mobile:</span> {r.mobile_number}</p>
+                                                    {r.ilj_id && <p><span className="font-semibold text-gray-500">ILJ ID:</span> <span className="uppercase">{r.ilj_id}</span></p>}
+                                                    <p className="md:col-span-2"><span className="font-semibold text-gray-500">Preferred Weekend:</span> {r.preferred_dates}</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                        {/* 6. REVA Sessions (PRJ-010 specifically) */}
+                        {formData.project_code === 'PRJ-010' && (
+                            <div className="w-full">
+                                <AdminRevaSessions />
                             </div>
                         )}
                     </div>

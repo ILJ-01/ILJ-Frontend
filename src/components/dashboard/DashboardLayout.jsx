@@ -69,7 +69,7 @@ export default function DashboardLayout({ children }) {
         { icon: FileText, label: "Policies", path: "/dashboard/policies" }];
 
     if (user?.managed_projects?.length > 0) {
-        menuItems.unshift({ icon: Briefcase, label: "Manager Hub", path: "/dashboard/manager" });
+        menuItems.unshift({ icon: Briefcase, label: "Pod Hub", path: "/dashboard/manager" });
     }
 
     if (user?.team_leader_for) {
