@@ -14,8 +14,8 @@ export default function PrivacyPolicy() {
                 <section className="space-y-3">
                     <h2 className="text-xl font-bold text-gray-900 border-l-4 border-[#ae2b2b] pl-3">1. Introduction</h2>
                     <p>
-                        Welcome to the India Leading Jains (ILJ) platform. We respect your privacy and are committed to protecting it.
-                        This Privacy Policy explicitly complies with India's <strong>Digital Personal Data Protection (DPDP) Act, 2023</strong>, 
+                        Welcome to the I Love Jinshasan (ILJ) platform. We respect your privacy and are committed to protecting it.
+                        This Privacy Policy explicitly complies with India's <strong>Digital Personal Data Protection (DPDP) Act, 2023</strong>,
                         the General Data Protection Regulation (GDPR), and other relevant privacy frameworks. It governs how we collect, use,
                         maintain, and protect the data you share when you register as a volunteer, participate in events, or visit our platform.
                     </p>
@@ -46,7 +46,7 @@ export default function PrivacyPolicy() {
                 <section className="space-y-3">
                     <h2 className="text-xl font-bold text-gray-900 border-l-4 border-[#ae2b2b] pl-3">4. Security & Storage</h2>
                     <p>
-                        We deploy industry-standard security measures, including role-based access control, encrypted databases, and secure transit protocols (HTTPS) to safeguard your personal data. 
+                        We deploy industry-standard security measures, including role-based access control, encrypted databases, and secure transit protocols (HTTPS) to safeguard your personal data.
                         Only verified IT Administrators and Pod Leaders are granted access to your data, strictly limited to what is necessary for organizational operations.
                     </p>
                 </section>
@@ -61,7 +61,7 @@ export default function PrivacyPolicy() {
                         <li><strong>Right to Nominate:</strong> Nominate an individual to exercise your rights in the event of death or incapacity.</li>
                     </ul>
                 </section>
-                
+
                 <section className="space-y-3">
                     <h2 className="text-xl font-bold text-gray-900 border-l-4 border-[#ae2b2b] pl-3">6. Cookie Policy</h2>
                     <p>

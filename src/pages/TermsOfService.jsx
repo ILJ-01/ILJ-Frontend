@@ -14,7 +14,7 @@ export default function TermsOfService() {
                 <section className="space-y-3">
                     <h2 className="text-xl font-bold text-gray-900 border-l-4 border-[#ae2b2b] pl-3">1. Acceptance of Terms</h2>
                     <p>
-                        By accessing, browsing, or using the India Leading Jains (ILJ) platform, whether as a visitor, volunteer, or administrator, you agree to abide by these Terms & Conditions. 
+                        By accessing, browsing, or using the I Love Jinshasan (ILJ) platform, whether as a visitor, volunteer, or administrator, you agree to abide by these Terms & Conditions.
                         If you do not agree to these terms, you must not use our platform or submit any personal information.
                     </p>
                 </section>
@@ -33,7 +33,7 @@ export default function TermsOfService() {
                 <section className="space-y-3">
                     <h2 className="text-xl font-bold text-gray-900 border-l-4 border-[#ae2b2b] pl-3">3. Use of Content</h2>
                     <p>
-                        All content, including text, graphics, logos, and software provided on this platform, is the property of India Leading Jains.
+                        All content, including text, graphics, logos, and software provided on this platform, is the property of I Love Jinshasan.
                         You may not reproduce, distribute, or modify any materials without explicit prior written consent.
                     </p>
                 </section>

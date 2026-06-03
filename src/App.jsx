@@ -20,6 +20,8 @@ import AdminInquiries from "./pages/admin/AdminInquiries";
 import InterestsPage from "./pages/InterestsPage";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
+import LibraryPage from "./pages/LibraryPage";
+import LibraryRegistrationPage from "./pages/LibraryRegistrationPage";
 import "./styles/global.css";
 
 // Dashboard Imports
@@ -88,6 +90,9 @@ function App() {
             <Route path="/interests" element={<MainLayout><InterestsPage /></MainLayout>} />
             <Route path="/privacy-policy" element={<MainLayout><PrivacyPolicy /></MainLayout>} />
             <Route path="/terms" element={<MainLayout><TermsOfService /></MainLayout>} />
+            <Route path="/library" element={<MainLayout><LibraryPage /></MainLayout>} />
+            <Route path="/library-registration" element={<MainLayout><LibraryRegistrationPage /></MainLayout>} />
+            <Route path="/library-registartion" element={<Navigate to="/library-registration" replace />} />
 
             {/* Admin Routes */}
             <Route path="/admin" element={<AdminLogin />} />
