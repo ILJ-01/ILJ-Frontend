@@ -68,10 +68,6 @@ export default function DashboardLayout({ children }) {
         { icon: User, label: "My Profile", path: "/dashboard/profile" },
         { icon: FileText, label: "Policies", path: "/dashboard/policies" }];
 
-    if (user?.managed_projects?.length > 0) {
-        menuItems.unshift({ icon: Briefcase, label: "Pod Hub", path: "/dashboard/manager" });
-    }
-
     if (user?.team_leader_for) {
         menuItems.unshift({ icon: Shield, label: "Team Leader Hub", path: "/dashboard/team-leader" });
     }
@@ -80,8 +76,8 @@ export default function DashboardLayout({ children }) {
         menuItems.unshift({ icon: Heart, label: "Kalyan Mitra Hub", path: "/dashboard/kalyan-mitra" });
     }
 
-    if (user?.isPodTeam || user?.isITAdmin) {
-        menuItems.unshift({ icon: Users, label: "Pod Management", path: "/dashboard/pod-management" });
+    if (user?.managed_projects?.length > 0 || user?.isPodTeam || user?.isITAdmin) {
+        menuItems.unshift({ icon: Users, label: "Pod Management Hub", path: "/dashboard/pod-management" });
     }
 
     if (user?.isOnboardingTeam) {

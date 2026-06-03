@@ -53,6 +53,27 @@ export default function VolunteerSTC() {
         }
     };
 
+    const markAsPending = async (assignmentId) => {
+        if (!window.confirm("Are you sure you want to undo this submission and mark the task as pending?")) return;
+        try {
+            const { error } = await supabase
+                .from('spiritual_task_assignments')
+                .update({ 
+                    status: 'pending', 
+                    completed_at: null 
+                })
+                .eq('id', assignmentId);
+
+            if (error) throw error;
+
+            setAssignments(prev => prev.map(a => 
+                a.id === assignmentId ? { ...a, status: 'pending', completed_at: null } : a
+            ));
+        } catch (err) {
+            alert(`Error: ${err.message}`);
+        }
+    };
+
     const completedCount = assignments.filter(a => a.status === 'completed').length;
     const pendingCount = assignments.filter(a => a.status === 'pending').length;
 
@@ -138,7 +159,7 @@ export default function VolunteerSTC() {
                                         Assigned on: {new Date(assignment.task?.created_at).toLocaleDateString()}
                                     </p>
                                 </div>
-                                <div className="shrink-0">
+                                <div className="shrink-0 flex flex-col items-center sm:items-end justify-center">
                                     {assignment.status === 'pending' ? (
                                         <button
                                             onClick={() => markAsCompleted(assignment.id)}
@@ -147,10 +168,19 @@ export default function VolunteerSTC() {
                                             <CheckCircle className="h-4 w-4" /> Mark Complete
                                         </button>
                                     ) : (
-                                        <div className="text-sm font-bold text-green-600 flex items-center justify-center sm:justify-start gap-1">
-                                            Completed <br />
-                                            {new Date(assignment.completed_at).toLocaleDateString()}
-                                        </div>
+                                        <>
+                                            <div className="text-sm font-bold text-green-600 flex items-center justify-center sm:justify-start gap-1 text-center sm:text-right">
+                                                Completed <br />
+                                                {new Date(assignment.completed_at).toLocaleDateString()}
+                                            </div>
+                                            <button
+                                                onClick={() => markAsPending(assignment.id)}
+                                                className="mt-2 text-xs font-bold text-[#ae2b2b] hover:text-[#8b1e1e] hover:underline flex items-center gap-1 transition-colors"
+                                                title="Undo Completion"
+                                            >
+                                                Undo Completion
+                                            </button>
+                                        </>
                                     )}
                                 </div>
                             </div>

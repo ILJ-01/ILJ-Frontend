@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import {
-    Activity, Plus, Search, Users, CheckCircle, Search as SearchIcon, X, CheckSquare, Clock, Edit2, Trash2, PieChart, ChevronDown, ChevronUp
+    Activity, Plus, Search, Users, CheckCircle, Search as SearchIcon, X, CheckSquare, Clock, Edit2, Trash2, PieChart, ChevronDown, ChevronUp, Download
 } from 'lucide-react';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import { useAuth } from '../../context/AuthContext';
 import ErrorBoundary from '../../components/ErrorBoundary';
 
@@ -270,6 +272,85 @@ export default function AdminSTC() {
     // You could filter volunteerList to only show those > 0: .filter(v => v.completedCount > 0)
     const taskList = Object.values(taskStats).sort((a,b) => b.completedCount - a.completedCount);
 
+    const exportToPDF = () => {
+        const doc = new jsPDF();
+        
+        // Brand Header
+        doc.setFillColor(174, 43, 43); // #ae2b2b crimson
+        doc.rect(0, 0, 210, 30, 'F');
+        
+        doc.setTextColor(255, 255, 255);
+        doc.setFont('Helvetica', 'bold');
+        doc.setFontSize(20);
+        doc.text("I LOVE JINSHASAN", 15, 20);
+        
+        doc.setFontSize(10);
+        doc.setFont('Helvetica', 'normal');
+        doc.text("STC Summary Report", 150, 20);
+        
+        doc.setTextColor(30, 30, 30);
+        doc.setFont('Helvetica', 'bold');
+        doc.setFontSize(14);
+        
+        let tableHeaders = [];
+        let tableData = [];
+        let filename = '';
+
+        if (activeTab === 'vol_summary') {
+            doc.text("Volunteer Wise Spiritual Task (STC) Summary", 15, 45);
+            doc.setFont('Helvetica', 'normal');
+            doc.setFontSize(10);
+            doc.setTextColor(100, 100, 100);
+            doc.text(`Generated: ${new Date().toLocaleDateString('en-GB')}`, 15, 52);
+            doc.line(15, 56, 195, 56);
+
+            tableHeaders = [["ILJ Code", "Volunteer Name", "Tasks Completed", "Score/Points"]];
+            tableData = volunteerList.map(v => [
+                v.ilj_id || 'N/A',
+                v.name || 'N/A',
+                String(v.completedCount),
+                `${v.completedCount} pts`
+            ]);
+            filename = `STC_Volunteer_Summary_${new Date().toISOString().slice(0, 10)}.pdf`;
+        } else if (activeTab === 'task_summary') {
+            doc.text("Task Wise Spiritual Task (STC) Summary", 15, 45);
+            doc.setFont('Helvetica', 'normal');
+            doc.setFontSize(10);
+            doc.setTextColor(100, 100, 100);
+            doc.text(`Generated: ${new Date().toLocaleDateString('en-GB')}`, 15, 52);
+            doc.line(15, 56, 195, 56);
+
+            tableHeaders = [["No.", "Task Title", "Completion Count", "Completed By Volunteers"]];
+            tableData = taskList.map((t, index) => [
+                String(index + 1),
+                t.title || 'N/A',
+                `${t.completedCount} Volunteers`,
+                t.completedBy.map(v => `${v.name} (${v.ilj_id})`).join(', ') || 'None'
+            ]);
+            filename = `STC_Task_Summary_${new Date().toISOString().slice(0, 10)}.pdf`;
+        } else {
+            return; // Not applicable
+        }
+
+        autoTable(doc, {
+            startY: 60,
+            head: tableHeaders,
+            body: tableData,
+            theme: 'striped',
+            headStyles: { fillColor: [174, 43, 43] },
+            styles: { fontSize: 9, cellPadding: 3 },
+            columnStyles: activeTab === 'task_summary' ? {
+                0: { cellWidth: 12 },
+                1: { cellWidth: 50 },
+                2: { cellWidth: 35 },
+                3: { cellWidth: 'auto' } // wrap volunteer list
+            } : {},
+            margin: { left: 15, right: 15 }
+        });
+
+        doc.save(filename);
+    };
+
     return (
         <div className="space-y-6">
             {/* Header */}
@@ -300,12 +381,19 @@ export default function AdminSTC() {
                         </button>
                     </div>
                 </div>
-                {activeTab === 'tasks' && (
+                {activeTab === 'tasks' ? (
                     <button
                         onClick={() => setShowCreateModal(true)}
                         className="flex items-center justify-center gap-2 bg-[#ae2b2b] text-white px-4 py-2 rounded-lg hover:bg-[#8b1e1e] transition-all shadow-md font-semibold text-sm w-full sm:w-auto"
                     >
                         <Plus className="h-4 w-4" /> Create STC Task
+                    </button>
+                ) : (
+                    <button
+                        onClick={exportToPDF}
+                        className="flex items-center justify-center gap-2 bg-red-50 text-[#ae2b2b] border border-red-200 px-4 py-2 rounded-lg hover:bg-red-100 transition-all shadow-md font-semibold text-sm w-full sm:w-auto"
+                    >
+                        <Download className="h-4 w-4" /> Download PDF
                     </button>
                 )}
             </div>

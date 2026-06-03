@@ -145,7 +145,7 @@ export default function ProfilePage() {
     const [isEditing, setIsEditing] = useState(false);
 
     const [saving, setSaving] = useState(false);
-    const [stats, setStats] = useState({ totalHours: 0, eventsCount: 0 });
+    const [stats, setStats] = useState({ totalHours: 0, stcScore: 0 });
     const [kalyamMitraDetails, setKalyamMitraDetails] = useState(null);
     const [guidanceLeaders, setGuidanceLeaders] = useState([]);
 
@@ -307,15 +307,15 @@ export default function ProfilePage() {
 
     const fetchStats = async () => {
         try {
-            const [timesheetRes, eventsRes] = await Promise.all([
+            const [timesheetRes, stcRes] = await Promise.all([
                 supabase.from('timesheets').select('hours').eq('volunteer_id', user.id).eq('status', 'approved'),
-                supabase.from('event_interests').select('id', { count: 'exact', head: true }).eq('volunteer_id', user.id)
+                supabase.from('spiritual_task_assignments').select('id', { count: 'exact', head: true }).eq('volunteer_id', user.id).eq('status', 'completed')
             ]);
 
             const hours = timesheetRes.data?.reduce((acc, curr) => acc + (Number(curr.hours) || 0), 0) || 0;
-            const events = eventsRes.count || 0;
+            const stc = stcRes.count || 0;
 
-            setStats({ totalHours: hours, eventsCount: events });
+            setStats({ totalHours: hours, stcScore: stc });
         } catch (error) {
             console.error("Error fetching stats:", error);
         }
@@ -418,8 +418,8 @@ export default function ProfilePage() {
                                 <p className="text-xs text-gray-500 uppercase tracking-wide mt-1">Total Hours</p>
                             </div>
                             <div className="bg-gray-50 p-4 rounded-xl text-center border border-gray-200">
-                                <p className="text-2xl font-bold text-gray-800">{stats.eventsCount}</p>
-                                <p className="text-xs text-gray-500 uppercase tracking-wide mt-1">Events</p>
+                                <p className="text-2xl font-bold text-gray-800">{stats.stcScore}</p>
+                                <p className="text-xs text-gray-500 uppercase tracking-wide mt-1">STC Score</p>
                             </div>
                         </div>
                     </div>

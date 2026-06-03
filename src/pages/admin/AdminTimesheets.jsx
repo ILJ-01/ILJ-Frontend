@@ -1,20 +1,23 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
-import { Check, X, Loader2, Clock, Filter, CheckCircle, FileSpreadsheet, Calendar } from 'lucide-react';
+import { Check, X, Loader2, Clock, Filter, CheckCircle, FileSpreadsheet, Calendar, Download } from 'lucide-react';
 import * as XLSX from 'xlsx';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 export default function AdminTimesheets() {
     const [entries, setEntries] = useState([]);
     const [projects, setProjects] = useState([]);
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState('pending'); // pending, approved, rejected, all
-    const [dateFilter, setDateFilter] = useState('');
+    const [startDate, setStartDate] = useState('');
+    const [endDate, setEndDate] = useState('');
     const [projectFilter, setProjectFilter] = useState('all');
 
     useEffect(() => {
         fetchData();
         fetchProjects();
-    }, [filter, dateFilter, projectFilter]);
+    }, [filter, startDate, endDate, projectFilter]);
 
     const fetchProjects = async () => {
         const { data } = await supabase.from('projects').select('id, title').order('title');
@@ -36,8 +39,12 @@ export default function AdminTimesheets() {
             query = query.eq('status', filter);
         }
 
-        if (dateFilter) {
-            query = query.eq('date_worked', dateFilter);
+        if (startDate) {
+            query = query.gte('date_worked', startDate);
+        }
+
+        if (endDate) {
+            query = query.lte('date_worked', endDate);
         }
 
         if (projectFilter !== 'all') {
@@ -108,6 +115,94 @@ export default function AdminTimesheets() {
         XLSX.writeFile(workbook, `Admin_Timesheets_${new Date().toLocaleDateString().replace(/\//g, '-')}.xlsx`);
     };
 
+    const exportToPDF = () => {
+        const doc = new jsPDF();
+        
+        // Brand Header
+        doc.setFillColor(174, 43, 43); // #ae2b2b crimson
+        doc.rect(0, 0, 210, 30, 'F');
+        
+        doc.setTextColor(255, 255, 255);
+        doc.setFont('Helvetica', 'bold');
+        doc.setFontSize(20);
+        doc.text("I LOVE JINSHASAN", 15, 20);
+        
+        doc.setFontSize(10);
+        doc.setFont('Helvetica', 'normal');
+        doc.text("Timesheet Report", 160, 20);
+        
+        doc.setTextColor(30, 30, 30);
+        doc.setFont('Helvetica', 'bold');
+        doc.setFontSize(14);
+        doc.text(`Timesheet Data - ${filter.toUpperCase()} Entries`, 15, 45);
+        
+        // Date filters display
+        doc.setFont('Helvetica', 'normal');
+        doc.setFontSize(10);
+        doc.setTextColor(100, 100, 100);
+        const formatDateText = (d) => d ? new Date(d).toLocaleDateString('en-GB') : '';
+        const dateRangeText = (startDate || endDate) 
+            ? `Date Range: ${formatDateText(startDate) || 'Start'} to ${formatDateText(endDate) || 'End'}`
+            : "Date Range: All Time";
+        const podFilterText = projectFilter !== 'all'
+            ? `Pod Filter: ${projects.find(p => p.id === projectFilter)?.title || 'Selected Pod'}`
+            : "Pod Filter: All Pods";
+        doc.text(`${dateRangeText} | ${podFilterText}`, 15, 52);
+        
+        doc.setDrawColor(220, 220, 220);
+        doc.line(15, 56, 195, 56);
+
+        let tableHeaders = [];
+        let tableData = [];
+
+        if (filter === 'all') {
+            tableHeaders = [["ILJ Code", "Name", "Total Hours", "Approved Hours", "Pending Hours"]];
+            tableData = getAggregatedData().map(agg => [
+                agg.volunteer?.ilj_id || 'N/A',
+                `${agg.volunteer?.first_name || ''} ${agg.volunteer?.last_name || ''}`.trim() || 'N/A',
+                String(agg.total_hrs),
+                String(agg.approved_hrs),
+                String(agg.pending_hrs)
+            ]);
+        } else {
+            tableHeaders = [["Date", "Volunteer", "ILJ Code", "Pod", "Role", "Hours", "Mode", "Status", "Description"]];
+            tableData = entries.map(t => [
+                t.date_worked ? new Date(t.date_worked).toLocaleDateString('en-GB') : 'N/A',
+                `${t.volunteer?.first_name || ''} ${t.volunteer?.last_name || ''}`.trim() || 'N/A',
+                t.volunteer?.ilj_id || 'N/A',
+                t.project?.title || 'N/A',
+                t.role || 'N/A',
+                String(t.hours),
+                t.work_mode || 'N/A',
+                t.status || 'N/A',
+                t.description || 'N/A'
+            ]);
+        }
+
+        autoTable(doc, {
+            startY: 60,
+            head: tableHeaders,
+            body: tableData,
+            theme: 'striped',
+            headStyles: { fillColor: [174, 43, 43] },
+            styles: { fontSize: 8, cellPadding: 2 },
+            columnStyles: filter === 'all' ? {} : {
+                0: { cellWidth: 18 }, // Date
+                1: { cellWidth: 25 }, // Volunteer
+                2: { cellWidth: 18 }, // ILJ Code
+                3: { cellWidth: 25 }, // Pod
+                4: { cellWidth: 20 }, // Role
+                5: { cellWidth: 10 }, // Hours
+                6: { cellWidth: 12 }, // Mode
+                7: { cellWidth: 15 }, // Status
+                8: { cellWidth: 'auto' }  // Description
+            },
+            margin: { left: 15, right: 15 }
+        });
+
+        doc.save(`Admin_Timesheets_${filter}_${new Date().toISOString().slice(0, 10)}.pdf`);
+    };
+
     const updateStatus = async (id, newStatus) => {
         const { error } = await supabase.from('timesheets').update({ status: newStatus }).eq('id', id);
         if (error) {
@@ -132,6 +227,12 @@ export default function AdminTimesheets() {
                     >
                         <FileSpreadsheet className="h-3.5 w-3.5" /> Export Excel
                     </button>
+                    <button
+                        onClick={exportToPDF}
+                        className="flex items-center gap-2 px-3 py-1.5 bg-red-50 text-[#ae2b2b] border border-red-200 rounded-lg hover:bg-red-100 text-xs font-bold transition-colors"
+                    >
+                        <Download className="h-3.5 w-3.5" /> Download PDF
+                    </button>
                 </div>
 
                 <div className="flex flex-col sm:flex-row gap-3 w-full xl:w-auto overflow-x-auto">
@@ -150,15 +251,32 @@ export default function AdminTimesheets() {
                         ))}
                     </div>
 
-                    {/* Date Filter */}
-                    <div className="relative shrink-0">
-                        <Calendar className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400" />
-                        <input
-                            type="date"
-                            className="pl-8 pr-3 py-1.5 bg-white border border-gray-200 rounded-lg text-xs font-medium focus:ring-2 focus:ring-[#ae2b2b] outline-none"
-                            value={dateFilter}
-                            onChange={(e) => setDateFilter(e.target.value)}
-                        />
+                    {/* Start Date Filter */}
+                    <div className="relative shrink-0 flex items-center gap-1.5">
+                        <span className="text-[10px] uppercase font-bold text-gray-500">From</span>
+                        <div className="relative">
+                            <Calendar className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400" />
+                            <input
+                                type="date"
+                                className="pl-8 pr-3 py-1.5 bg-white border border-gray-200 rounded-lg text-xs font-medium focus:ring-2 focus:ring-[#ae2b2b] outline-none"
+                                value={startDate}
+                                onChange={(e) => setStartDate(e.target.value)}
+                            />
+                        </div>
+                    </div>
+
+                    {/* End Date Filter */}
+                    <div className="relative shrink-0 flex items-center gap-1.5">
+                        <span className="text-[10px] uppercase font-bold text-gray-500">To</span>
+                        <div className="relative">
+                            <Calendar className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400" />
+                            <input
+                                type="date"
+                                className="pl-8 pr-3 py-1.5 bg-white border border-gray-200 rounded-lg text-xs font-medium focus:ring-2 focus:ring-[#ae2b2b] outline-none"
+                                value={endDate}
+                                onChange={(e) => setEndDate(e.target.value)}
+                            />
+                        </div>
                     </div>
 
                     {/* Project Filter */}

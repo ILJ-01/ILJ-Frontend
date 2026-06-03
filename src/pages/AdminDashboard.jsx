@@ -1,6 +1,8 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase, supabaseUrl } from '../lib/supabase';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import {
     Search, Filter, LogOut, MapPin, Mail, Phone,
     X, User, Briefcase, Heart, BookOpen, Plus, LayoutGrid, Users,
@@ -16,6 +18,7 @@ import AdminEventRegistrations from './admin/AdminEventRegistrations';
 import AdminIdeas from './admin/AdminIdeas';
 import AdminSTC from './admin/AdminSTC';
 import AdminKalyanMitras from './admin/AdminKalyanMitras';
+import AdminOpportunities from './admin/AdminOpportunities';
 
 const RANKS = [
     { title: "Volunteer", minHours: 0, minSTC: 0, order: 0 },
@@ -36,6 +39,7 @@ const AdminDashboard = () => {
     const [volunteers, setVolunteers] = useState([]);
     const [loadingVolunteers, setLoadingVolunteers] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
+    const [selectedLevelFilter, setSelectedLevelFilter] = useState('');
     const [showFilters, setShowFilters] = useState(false);
     const [selectedVolunteer, setSelectedVolunteer] = useState(null);
     const [filters, setFilters] = useState({ district: '', skills: '', volunteering_preference1: '' });
@@ -77,12 +81,47 @@ const AdminDashboard = () => {
 
             if (error) throw error;
 
-            setVolunteers(data || []);
+            // Fetch total approved hours for each volunteer
+            const { data: hourData, error: hourError } = await supabase
+                .from('timesheets')
+                .select('volunteer_id, hours')
+                .eq('status', 'approved');
 
-            const districts = [...new Set(data.map(v => v.district).filter(Boolean).map(d => d.trim()))].sort();
-            const allPrefs = data.flatMap(v => [v.volunteering_preference1, v.volunteering_preference2, v.volunteering_preference3]).filter(Boolean);
+            if (hourError) throw hourError;
+
+            // Fetch STC completions
+            const { data: stcData, error: stcError } = await supabase
+                .from('spiritual_task_assignments')
+                .select('volunteer_id')
+                .eq('status', 'completed');
+
+            if (stcError) throw stcError;
+
+            // Aggregate hours
+            const hourMap = (hourData || []).reduce((acc, curr) => {
+                acc[curr.volunteer_id] = (acc[curr.volunteer_id] || 0) + Number(curr.hours);
+                return acc;
+            }, {});
+
+            // Aggregate STC
+            const stcMap = (stcData || []).reduce((acc, curr) => {
+                acc[curr.volunteer_id] = (acc[curr.volunteer_id] || 0) + 1;
+                return acc;
+            }, {});
+
+            // Merge stats into volunteers list
+            const volunteersWithStats = (data || []).map(v => ({
+                ...v,
+                totalHours: Math.round((hourMap[v.id] || 0) * 10) / 10,
+                totalSTC: stcMap[v.id] || 0
+            }));
+
+            setVolunteers(volunteersWithStats);
+
+            const districts = [...new Set(volunteersWithStats.map(v => v.district).filter(Boolean).map(d => d.trim()))].sort();
+            const allPrefs = volunteersWithStats.flatMap(v => [v.volunteering_preference1, v.volunteering_preference2, v.volunteering_preference3]).filter(Boolean);
             const preferences = [...new Set(allPrefs)].sort();
-            const allSkills = data.map(v => v.skills).filter(Boolean).flatMap(skillStr => skillStr.split(',').map(s => s.trim()));
+            const allSkills = volunteersWithStats.map(v => v.skills).filter(Boolean).flatMap(skillStr => skillStr.split(',').map(s => s.trim()));
             const uniqueSkills = [...new Set(allSkills)].sort();
 
             setOptions({ districts, preferences, skills: uniqueSkills });
@@ -211,6 +250,20 @@ const AdminDashboard = () => {
     };
 
     // --- Search & Filter Logic (Volunteers) ---
+    const levelCounts = useMemo(() => {
+        const counts = { Standard: 0, Elite: 0, Premier: 0, Prestige: 0, Legacy: 0 };
+        volunteers.forEach(v => {
+            const rank = (v.rank || '').toLowerCase();
+            if (rank.includes('elite')) counts.Elite++;
+            else if (rank.includes('premier')) counts.Premier++;
+            else if (rank.includes('prestige')) counts.Prestige++;
+            else if (rank.includes('legacy')) counts.Legacy++;
+            else counts.Standard++;
+        });
+        return counts;
+    }, [volunteers]);
+
+    // --- Search & Filter Logic (Volunteers) ---
     const filteredVolunteers = useMemo(() => {
         return volunteers.filter(volunteer => {
             const searchLower = searchTerm.toLowerCase();
@@ -221,18 +274,134 @@ const AdminDashboard = () => {
             const matchesPreference = !filters.volunteering_preference1 ||
                 [volunteer.volunteering_preference1, volunteer.volunteering_preference2, volunteer.volunteering_preference3].includes(filters.volunteering_preference1);
             const matchesSkill = !filters.skills || (volunteer.skills || '').toLowerCase().includes(filters.skills.toLowerCase());
-            return matchesSearch && matchesDistrict && matchesSkill && matchesPreference;
+            
+            const rankStr = (volunteer.rank || '').toLowerCase();
+            const matchesLevel = !selectedLevelFilter || 
+                (selectedLevelFilter === 'Standard' 
+                    ? (!volunteer.rank || rankStr === 'volunteer' || rankStr === 'intern')
+                    : rankStr.includes(selectedLevelFilter.toLowerCase())
+                );
+
+            return matchesSearch && matchesDistrict && matchesSkill && matchesPreference && matchesLevel;
         });
-    }, [volunteers, searchTerm, filters]);
+    }, [volunteers, searchTerm, filters, selectedLevelFilter]);
 
     const clearFilters = () => {
         setFilters({ district: '', skills: '', volunteering_preference1: '' });
         setSearchTerm('');
+        setSelectedLevelFilter('');
     };
 
     const formatDate = (dateString) => {
         if (!dateString) return 'N/A';
         return new Date(dateString).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+    };
+
+    const downloadProfilePDF = (volunteer) => {
+        const doc = new jsPDF();
+        
+        // Brand Header
+        doc.setFillColor(174, 43, 43); // #ae2b2b crimson
+        doc.rect(0, 0, 210, 30, 'F');
+        
+        doc.setTextColor(255, 255, 255);
+        doc.setFont('Helvetica', 'bold');
+        doc.setFontSize(20);
+        doc.text("I LOVE JINSHASAN", 15, 20);
+        
+        doc.setFontSize(10);
+        doc.setFont('Helvetica', 'normal');
+        doc.text("Volunteer Profile Report", 150, 20);
+        
+        // Title: Volunteer Name
+        doc.setTextColor(30, 30, 30);
+        doc.setFont('Helvetica', 'bold');
+        doc.setFontSize(18);
+        doc.text(`${volunteer.first_name || ''} ${volunteer.middle_name || ''} ${volunteer.last_name || ''}`.replace(/\s+/g, ' ').trim(), 15, 45);
+        
+        doc.setFont('Helvetica', 'bold');
+        doc.setFontSize(12);
+        doc.setTextColor(174, 43, 43);
+        doc.text(`ILJ ID: ${volunteer.ilj_id || 'N/A'}`, 15, 52);
+        
+        doc.setDrawColor(220, 220, 220);
+        doc.line(15, 56, 195, 56);
+        
+        const personalInfo = [
+            ["Full Name", `${volunteer.first_name || ''} ${volunteer.middle_name || ''} ${volunteer.last_name || ''}`.replace(/\s+/g, ' ').trim()],
+            ["Date of Birth", formatDate(volunteer.dob)],
+            ["Age", volunteer.age ? String(volunteer.age) : 'N/A'],
+            ["Gender", volunteer.gender || 'N/A'],
+            ["Sangh Name", volunteer.sangh_name || 'N/A']
+        ];
+        
+        const contactInfo = [
+            ["Email Address", volunteer.email || 'N/A'],
+            ["Mobile Number", volunteer.mobile_number || 'N/A'],
+            ["District / City", `${volunteer.district || 'N/A'} / ${volunteer.city || 'N/A'}`],
+            ["Full Address", `${volunteer.address_line1 || ''} ${volunteer.address_line2 || ''}`.trim() || 'N/A'],
+            ["State / Pincode", `${volunteer.state || 'N/A'} - ${volunteer.pincode || 'N/A'}`]
+        ];
+
+        const professionalInfo = [
+            ["Occupation", volunteer.occupation || 'N/A'],
+            ["Qualification", volunteer.qualification || 'N/A'],
+            ["Specialization", volunteer.specialization || 'N/A'],
+            ["Skills", volunteer.skills || 'N/A'],
+            ["Hobbies", volunteer.hobbies || 'N/A']
+        ];
+
+        const volunteeringInfo = [
+            ["Preference 1", volunteer.volunteering_preference1 || 'N/A'],
+            ["Preference 2", volunteer.volunteering_preference2 || 'N/A'],
+            ["Preference 3", volunteer.volunteering_preference3 || 'N/A'],
+            ["Availability Days", volunteer.availability_days || 'N/A'],
+            ["Participation Mode", volunteer.participation_mode || 'N/A'],
+            ["Time Commitment", volunteer.time_commitment || 'N/A']
+        ];
+
+        const activityMetrics = [
+            ["Total Hours Worked", `${volunteer.totalHours || 0} hrs`],
+            ["Spiritual Tasks (STC)", `${volunteer.totalSTC || 0} completed`],
+            ["Current Level", volunteer.rank || 'Volunteer'],
+            ["Designation", volunteer.designation || 'N/A'],
+            ["Kalyan Mitra", volunteer.kalyan_mitra || 'N/A']
+        ];
+
+        let currentY = 62;
+
+        const drawSection = (title, data) => {
+            doc.setFont('Helvetica', 'bold');
+            doc.setFontSize(13);
+            doc.setTextColor(174, 43, 43);
+            doc.text(title, 15, currentY);
+            currentY += 4;
+            
+            autoTable(doc, {
+                startY: currentY,
+                margin: { left: 15, right: 15 },
+                theme: 'striped',
+                headStyles: { fillColor: [174, 43, 43] },
+                styles: { fontSize: 9, cellPadding: 2.5 },
+                columnStyles: { 0: { fontStyle: 'bold', width: 45 } },
+                body: data,
+                showHead: false
+            });
+            
+            currentY = doc.lastAutoTable.finalY + 8;
+        };
+
+        drawSection("Personal Details", personalInfo);
+        drawSection("Contact & Location Details", contactInfo);
+        
+        doc.addPage();
+        currentY = 20;
+        
+        drawSection("Professional & Skills", professionalInfo);
+        drawSection("Volunteering Preferences", volunteeringInfo);
+        drawSection("Activity & Organization Metrics", activityMetrics);
+        
+        doc.save(`${volunteer.first_name}_${volunteer.last_name}_Profile.pdf`);
     };
 
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -309,6 +478,7 @@ const AdminDashboard = () => {
                                 { id: 'inquiries', label: 'Inquiries', icon: Mail },
                                 { id: 'ideas', label: 'Ideas', icon: Lightbulb },
                                 { id: 'stc', label: 'Spiritual Tasks', icon: Activity },
+                                { id: 'opportunities', label: 'Opportunities', icon: Briefcase },
                             ].map((item) => {
                                 const Icon = item.icon;
                                 const isActive = activeTab === item.id;
@@ -397,6 +567,9 @@ const AdminDashboard = () => {
                             <button onClick={() => setActiveTab('stc')} className={`flex items-center gap-2 px-3 py-2 rounded-md font-medium text-sm whitespace-nowrap transition-all ${activeTab === 'stc' ? 'bg-white text-[#ae2b2b] shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}>
                                 <Activity className="h-4 w-4" /> STC
                             </button>
+                            <button onClick={() => setActiveTab('opportunities')} className={`flex items-center gap-2 px-3 py-2 rounded-md font-medium text-sm whitespace-nowrap transition-all ${activeTab === 'opportunities' ? 'bg-white text-[#ae2b2b] shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}>
+                                <Briefcase className="h-4 w-4" /> Opportunities
+                            </button>
                         </div>
 
                         {/* Action Buttons */}
@@ -424,6 +597,32 @@ const AdminDashboard = () => {
                 {/* --- TAB CONTENT: VOLUNTEERS --- */}
                 {activeTab === 'volunteers' && (
                     <>
+                        {/* Level Summary Cards */}
+                        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
+                            {[
+                                { id: 'Standard', label: 'Standard', count: levelCounts.Standard, bg: 'bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100', activeBg: 'bg-gray-200 border-gray-400 text-gray-900 shadow-sm ring-2 ring-gray-400/20' },
+                                { id: 'Elite', label: 'Elite', count: levelCounts.Elite, bg: 'bg-amber-50 border-amber-200 text-amber-700 hover:bg-amber-100/50', activeBg: 'bg-amber-100 border-amber-400 text-amber-900 shadow-sm ring-2 ring-amber-400/20' },
+                                { id: 'Premier', label: 'Premier', count: levelCounts.Premier, bg: 'bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100/50', activeBg: 'bg-emerald-100 border-emerald-400 text-emerald-900 shadow-sm ring-2 ring-emerald-400/20' },
+                                { id: 'Prestige', label: 'Prestige', count: levelCounts.Prestige, bg: 'bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100/50', activeBg: 'bg-blue-100 border-blue-400 text-blue-900 shadow-sm ring-2 ring-blue-400/20' },
+                                { id: 'Legacy', label: 'Legacy', count: levelCounts.Legacy, bg: 'bg-purple-50 border-purple-200 text-purple-700 hover:bg-purple-100/50', activeBg: 'bg-purple-100 border-purple-400 text-purple-900 shadow-sm ring-2 ring-purple-400/20' }
+                            ].map(level => {
+                                const isActive = selectedLevelFilter === level.id;
+                                return (
+                                    <div
+                                        key={level.id}
+                                        onClick={() => setSelectedLevelFilter(isActive ? '' : level.id)}
+                                        className={`p-4 rounded-xl border cursor-pointer transition-all duration-200 flex flex-col justify-between hover:scale-[1.02] ${isActive ? level.activeBg : level.bg}`}
+                                    >
+                                        <span className="text-xs font-bold uppercase tracking-wider opacity-85">{level.label}</span>
+                                        <div className="flex items-baseline justify-between mt-2">
+                                            <span className="text-2xl font-black">{level.count}</span>
+                                            {isActive && <span className="text-[10px] font-black bg-white/60 px-1.5 py-0.5 rounded">Selected</span>}
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+
                         {/* Search & Filter Controls */}
                         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-6">
                             <div className="flex flex-col md:flex-row gap-4">
@@ -524,10 +723,12 @@ const AdminDashboard = () => {
                                                         </div>
                                                     </div>
                                                 </div>
-                                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-x-8 gap-y-1 text-sm text-gray-600 flex-1 md:ml-8">
+                                                <div className="grid grid-cols-1 sm:grid-cols-5 gap-x-4 gap-y-1 text-sm text-gray-600 flex-1 md:ml-8">
                                                     <div className="flex items-center gap-2"><MapPin className="h-4 w-4 text-gray-400" /><span className="truncate">{volunteer.city}</span></div>
-                                                    <div className="flex items-center gap-2"><Mail className="h-4 w-4 text-gray-400" /><span className="truncate">{volunteer.email}</span></div>
+                                                    <div className="flex items-center gap-2"><Mail className="h-4 w-4 text-gray-400" /><span className="truncate text-ellipsis overflow-hidden max-w-[120px]" title={volunteer.email}>{volunteer.email}</span></div>
                                                     <div className="flex items-center gap-2"><Phone className="h-4 w-4 text-gray-400" /><span>{volunteer.mobile_number}</span></div>
+                                                    <div className="flex items-center gap-2"><Clock className="h-4 w-4 text-[#ae2b2b]" /><span>{volunteer.totalHours || 0} hrs</span></div>
+                                                    <div className="flex items-center gap-2"><Activity className="h-4 w-4 text-[#ae2b2b]" /><span>STC: {volunteer.totalSTC || 0}</span></div>
                                                 </div>
                                             </div>
                                         </div>
@@ -673,6 +874,11 @@ const AdminDashboard = () => {
                         <AdminSTC />
                     </div>
                 )}
+                {activeTab === 'opportunities' && (
+                    <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
+                        <AdminOpportunities />
+                    </div>
+                )}
             </main>
 
             {/* Volunteer Modal (Same as before) */}
@@ -716,7 +922,17 @@ const AdminDashboard = () => {
                                     </div>
                                 </div>
                             </div>
-                            <button onClick={() => setSelectedVolunteer(null)} className="p-2 hover:bg-gray-100 rounded-full transition-colors"><X className="h-6 w-6 text-gray-500" /></button>
+                            <div className="flex items-center gap-2">
+                                <button
+                                    onClick={() => downloadProfilePDF(selectedVolunteer)}
+                                    className="flex items-center gap-2 bg-[#ae2b2b] text-white px-4 py-2 rounded-xl text-sm font-semibold hover:bg-[#8b1e1e] transition-all shadow-sm"
+                                    title="Download Profile PDF"
+                                >
+                                    <Download className="h-4 w-4" />
+                                    <span className="hidden sm:inline">Download PDF</span>
+                                </button>
+                                <button onClick={() => setSelectedVolunteer(null)} className="p-2 hover:bg-gray-100 rounded-full transition-colors"><X className="h-6 w-6 text-gray-500" /></button>
+                            </div>
                         </div>
                         <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-8">
                             <section>
@@ -755,9 +971,17 @@ const AdminDashboard = () => {
                                     <DetailItem label="Mode" value={selectedVolunteer.participation_mode} />
                                 </div>
                             </section>
-                            <section className="md:col-span-2">
+                            <section>
+                                <h3 className="flex items-center gap-2 text-lg font-semibold text-gray-900 mb-4 border-b pb-2"><Award className="h-5 w-5 text-[#ae2b2b]" /> Activity & Contribution</h3>
+                                <div className="space-y-4">
+                                    <DetailItem label="Total Hours Worked" value={`${selectedVolunteer.totalHours || 0} hrs`} highlight />
+                                    <DetailItem label="Spiritual Tasks (STC)" value={`${selectedVolunteer.totalSTC || 0} completed`} highlight />
+                                    <DetailItem label="Level / Rank" value={selectedVolunteer.rank || 'Volunteer'} />
+                                </div>
+                            </section>
+                            <section>
                                 <h3 className="flex items-center gap-2 text-lg font-semibold text-gray-900 mb-4 border-b pb-2"><BookOpen className="h-5 w-5 text-[#ae2b2b]" /> Other</h3>
-                                <div className="grid md:grid-cols-2 gap-4">
+                                <div className="space-y-4">
                                     <DetailItem label="Dharmik Studies" value={selectedVolunteer.dharmik_studies} />
                                     <DetailItem label="Referred By" value={selectedVolunteer.referred_by} />
                                 </div>
@@ -848,7 +1072,7 @@ const AdminDashboard = () => {
                                         <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm space-y-4">
                                             {/* Rank Selector */}
                                             <div>
-                                                <label className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2 block">Set Rank Override</label>
+                                                <label className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2 block">Assign Level / Rank</label>
                                                 <div className="flex gap-2">
                                                     <select
                                                         id="rank-selector"
@@ -857,7 +1081,7 @@ const AdminDashboard = () => {
                                                             const newRank = e.target.value;
                                                             if (!newRank) return;
 
-                                                            if (window.confirm(`Are you sure you want to change the rank to ${newRank}?`)) {
+                                                            if (window.confirm(`Are you sure you want to assign the level/rank ${newRank} to this volunteer?`)) {
                                                                 try {
                                                                     const { error } = await supabase
                                                                         .from('volunteers')
@@ -1153,6 +1377,19 @@ const AdminDashboard = () => {
                                                                         .eq('id', selectedVolunteer.id);
                                                                     if (error) throw error;
                                                                     
+                                                                    if (!newVal) {
+                                                                        // Clear manager_id from all projects managed by this volunteer
+                                                                        const { error: projError } = await supabase
+                                                                            .from('projects')
+                                                                            .update({ manager_id: null })
+                                                                            .eq('manager_id', selectedVolunteer.id);
+                                                                        if (projError) console.error("Error clearing project managers:", projError);
+                                                                        
+                                                                        setProjects(prev => prev.map(p => 
+                                                                            p.manager_id === selectedVolunteer.id ? { ...p, manager_id: null } : p
+                                                                        ));
+                                                                    }
+                                                                    
                                                                     const updated = { ...selectedVolunteer, is_pod_team: newVal };
                                                                     setSelectedVolunteer(updated);
                                                                     setVolunteers(prev => prev.map(vol => vol.id === updated.id ? updated : vol));
@@ -1166,6 +1403,51 @@ const AdminDashboard = () => {
                                                     <span className="text-sm font-medium text-gray-900">Pod Manager Hub</span>
                                                 </label>
                                             </div>
+
+                                            {/* Specific Pod Selection for Pod Manager */}
+                                            {selectedVolunteer.is_pod_team && (
+                                                <div className="mt-6 pt-6 border-t border-gray-200">
+                                                    <h5 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Managed Pods / Projects</h5>
+                                                    <div className="bg-white border border-gray-200 rounded-lg p-3 max-h-48 overflow-y-auto space-y-2">
+                                                        {projects.length > 0 ? (
+                                                            projects.map(project => {
+                                                                const isManaged = project.manager_id === selectedVolunteer.id;
+                                                                return (
+                                                                    <label key={project.id} className="flex items-center gap-3 cursor-pointer p-1.5 hover:bg-gray-50 rounded transition-colors">
+                                                                        <input 
+                                                                            type="checkbox" 
+                                                                            className="w-4 h-4 rounded border-gray-300 text-[#ae2b2b] focus:ring-[#ae2b2b]"
+                                                                            checked={isManaged}
+                                                                            onChange={async (e) => {
+                                                                                const shouldAssign = e.target.checked;
+                                                                                try {
+                                                                                    const { error } = await supabase
+                                                                                        .from('projects')
+                                                                                        .update({ manager_id: shouldAssign ? selectedVolunteer.id : null })
+                                                                                        .eq('id', project.id);
+                                                                                    
+                                                                                    if (error) throw error;
+                                                                                    
+                                                                                    // Update local projects state
+                                                                                    setProjects(prev => prev.map(p => 
+                                                                                        p.id === project.id ? { ...p, manager_id: shouldAssign ? selectedVolunteer.id : null } : p
+                                                                                    ));
+                                                                                } catch (err) {
+                                                                                    alert(`Error updating pod access: ${err.message}`);
+                                                                                }
+                                                                            }}
+                                                                        />
+                                                                        <span className="text-sm font-medium text-gray-800">{project.title} <span className="text-xs text-gray-400 font-mono">({project.project_code})</span></span>
+                                                                    </label>
+                                                                );
+                                                            })
+                                                        ) : (
+                                                            <p className="text-xs italic text-gray-400 p-2">No projects/pods found.</p>
+                                                        )}
+                                                    </div>
+                                                    <p className="text-[11px] text-gray-400 mt-2">Checking a pod updates the pod's manager to this volunteer in real-time. Unchecking removes them as manager.</p>
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
 

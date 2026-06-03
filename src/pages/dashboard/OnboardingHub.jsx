@@ -68,15 +68,9 @@ const OnboardingHub = () => {
     };
 
     const handleFinalizeOnboarding = async (volunteerId, projectsArr) => {
-        if (projectsArr.length === 0) {
-            setToastMessage('Error: You must assign at least one pod/project.');
-            setTimeout(() => setToastMessage(''), 3000);
-            return;
-        }
-
         try {
             setIsUpdating(true);
-            const assignedPodString = projectsArr.map(p => p.title).join(', ');
+            const assignedPodString = projectsArr.length > 0 ? projectsArr.map(p => p.title).join(', ') : null;
 
             // 1. Update volunteer status and master sheet assigned_pod column
             const { error } = await supabase
@@ -93,38 +87,40 @@ const OnboardingHub = () => {
             // Delete existing mappings first to ensure a clean slate and avoid duplicates
             await supabase.from('project_volunteers').delete().eq('volunteer_id', volunteerId);
 
-            const projectVolunteerRecords = projectsArr.map(p => ({
-                project_id: p.id,
-                volunteer_id: volunteerId,
-                status: 'approved',
-                engagement_status: 'active'
-            }));
+            if (projectsArr.length > 0) {
+                const projectVolunteerRecords = projectsArr.map(p => ({
+                    project_id: p.id,
+                    volunteer_id: volunteerId,
+                    status: 'approved',
+                    engagement_status: 'active'
+                }));
 
-            const { error: pvError } = await supabase
-                .from('project_volunteers')
-                .insert(projectVolunteerRecords);
+                const { error: pvError } = await supabase
+                    .from('project_volunteers')
+                    .insert(projectVolunteerRecords);
 
-            if (pvError) {
-                console.error("Error creating project_volunteers records:", pvError);
-                // Non-fatal error for this function since master sheet is already updated
-            }
-            
-            // Send email notification for pod assignment unconditionally
-            try {
-                const response = await fetch(`${supabaseUrl}/functions/v1/notify-pod-assignment`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        volunteer_id: volunteerId,
-                        project_ids: projectsArr.map(p => p.id)
-                    })
-                });
-                if (!response.ok) {
-                    const errRes = await response.json().catch(()=>({}));
-                    console.error("Email Edge Function returned error:", errRes);
+                if (pvError) {
+                    console.error("Error creating project_volunteers records:", pvError);
+                    // Non-fatal error for this function since master sheet is already updated
                 }
-            } catch (emailErr) {
-                console.error("Error sending pod assignment emails:", emailErr);
+                
+                // Send email notification for pod assignment unconditionally
+                try {
+                    const response = await fetch(`${supabaseUrl}/functions/v1/notify-pod-assignment`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            volunteer_id: volunteerId,
+                            project_ids: projectsArr.map(p => p.id)
+                        })
+                    });
+                    if (!response.ok) {
+                        const errRes = await response.json().catch(()=>({}));
+                        console.error("Email Edge Function returned error:", errRes);
+                    }
+                } catch (emailErr) {
+                    console.error("Error sending pod assignment emails:", emailErr);
+                }
             }
 
             setVolunteers(prev => prev.map(v => 
@@ -140,7 +136,7 @@ const OnboardingHub = () => {
 
             setSelectedVolunteer(null);
             setSelectedProjects([]);
-            setToastMessage('Volunteer successfully onboarded and assigned to pod!');
+            setToastMessage(projectsArr.length > 0 ? 'Volunteer successfully onboarded and assigned to pod!' : 'Volunteer successfully onboarded!');
             setTimeout(() => setToastMessage(''), 3000);
 
         } catch (error) {
@@ -356,7 +352,7 @@ const OnboardingHub = () => {
                             {/* Assigned Pod Select - only show if checklist is done */}
                             {(onboardingTasks.contacted && onboardingTasks.introduced && onboardingTasks.explained) && (
                                 <div className="animate-in slide-in-from-top-2 fade-in duration-300">
-                                    <label className="block text-sm font-bold text-gray-700 mb-2">Assign to Pod / Project <span className="text-red-500">*</span></label>
+                                    <label className="block text-sm font-bold text-gray-700 mb-2">Assign to Pod / Project <span className="text-gray-400 font-normal">(Optional)</span></label>
                                     <div className="bg-white border text-sm border-gray-300 rounded-lg max-h-48 overflow-y-auto w-full p-2 space-y-1">
                                         {projects.length > 0 ? projects.map(p => (
                                             <label key={p.id} className="flex items-start md:items-center gap-3 p-2 hover:bg-blue-50/50 rounded-lg cursor-pointer transition-colors">
@@ -390,7 +386,7 @@ const OnboardingHub = () => {
                             </button>
                             <button 
                                 onClick={() => handleFinalizeOnboarding(selectedVolunteer.id, selectedProjects)}
-                                disabled={isUpdating || !(onboardingTasks.contacted && onboardingTasks.introduced && onboardingTasks.explained) || selectedProjects.length === 0}
+                                disabled={isUpdating || (selectedVolunteer.onboarding_status !== 'onboarded' && !(onboardingTasks.contacted && onboardingTasks.introduced && onboardingTasks.explained))}
                                 className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg shadow-sm transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed min-w-[160px]"
                             >
                                 {isUpdating ? (
@@ -398,7 +394,9 @@ const OnboardingHub = () => {
                                 ) : (
                                     <>
                                         <CheckCircle className="h-5 w-5" /> 
-                                        {selectedVolunteer.onboarding_status === 'onboarded' ? 'Save Assignments' : 'Confirm & Onboard'}
+                                        {selectedVolunteer.onboarding_status === 'onboarded' 
+                                            ? (selectedProjects.length === 0 ? 'Clear Pod Assignments' : 'Save Assignments') 
+                                            : (selectedProjects.length === 0 ? 'Onboard (No Pod)' : 'Confirm & Onboard')}
                                     </>
                                 )}
                             </button>

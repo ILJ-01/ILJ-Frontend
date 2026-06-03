@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import { Calendar, User, Users, Phone, Mail, MapPin, Upload, ArrowLeft } from "lucide-react";
 import { downloadICS } from "../lib/ics";
+import ReflectRegistrationPage from "./ReflectRegistrationPage";
 
 export default function EventRegistrationPage() {
     const { id } = useParams();
@@ -181,6 +182,10 @@ export default function EventRegistrationPage() {
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#ae2b2b]"></div>
             </div>
         );
+    }
+
+    if (project?.project_code === 'PRJ-008-02') {
+        return <ReflectRegistrationPage project={project} />;
     }
 
     if (submitted) {

@@ -11,6 +11,7 @@ import Form from "./components/Form.jsx";
 import VolunteerRegistration from "./pages/VolunteerRegistration";
 import Project from "./components/Project.jsx";
 import EventRegistrationPage from "./pages/EventRegistrationPage.jsx";
+import CookieConsent from "./components/CookieConsent";
 import AdminLogin from "./pages/AdminLogin";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminAddProject from "./pages/AdminAddProject";
@@ -67,6 +68,7 @@ function App() {
     <AuthProvider>
       <Router>
         <div className="app">
+          <CookieConsent />
           {/* Conditionally render Navbar/Footer based on route if needed, or handle inside layout */}
           {/* For simplicity we keep main site structure separate from dashboard */}
 
