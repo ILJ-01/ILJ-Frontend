@@ -6,10 +6,13 @@ import {
     Check, X, Briefcase, Image, Hash, Upload, Cloud, Trash2, CheckCircle, XCircle, Pencil
 } from 'lucide-react';
 import AdminRevaSessions from './admin/AdminRevaSessions';
+import { useAuth } from '../context/AuthContext';
 
 const AdminEditProject = () => {
     const navigate = useNavigate();
     const { id } = useParams();
+    const { user, loading: authLoading } = useAuth();
+    const [projectManagerId, setProjectManagerId] = useState(null);
     const [loading, setLoading] = useState(false);
     const [fetching, setFetching] = useState(true);
     const [volunteers, setVolunteers] = useState([]);
@@ -47,6 +50,7 @@ const AdminEditProject = () => {
     const [selectedManager, setSelectedManager] = useState(null); // Single object
 
     useEffect(() => {
+        if (authLoading) return;
         const checkAuth = async () => {
             const { data: { session } } = await supabase.auth.getSession();
             if (!session) {
@@ -60,7 +64,19 @@ const AdminEditProject = () => {
             setFetching(false);
         };
         loadData();
-    }, [navigate, id]);
+    }, [navigate, id, authLoading]);
+
+    useEffect(() => {
+        if (authLoading || fetching) return;
+        
+        const isITAdmin = user?.isITAdmin;
+        const isRevaManager = formData.project_code === 'PRJ-010' && projectManagerId === user?.id;
+        
+        if (!isITAdmin && !isRevaManager) {
+            alert("Unauthorized: You do not have permission to manage this pod.");
+            navigate('/dashboard');
+        }
+    }, [authLoading, fetching, user, formData.project_code, projectManagerId, navigate]);
 
     const fetchVolunteers = async () => {
         const { data, error } = await supabase
@@ -93,6 +109,7 @@ const AdminEditProject = () => {
                 next_event_date: project.next_event_date || '',
                 is_event_registration_enabled: project.is_event_registration_enabled || false
             });
+            setProjectManagerId(project.manager_id);
 
             if (project.banner_url) {
                 setBannerPreview(project.banner_url);
@@ -145,7 +162,7 @@ const AdminEditProject = () => {
             if (feedback) setTestimonials(feedback);
 
             // 6. Get Event Registrations (for PRJ-002 mainly)
-            if (project.project_code === 'PRJ-002' || project.project_code === 'PRJ-008') {
+            if (project.project_code === 'PRJ-002' || project.project_code === 'PRJ-008' || project.project_code === 'PRJ-010') {
                 const { data: registrations } = await supabase
                     .from('event_registrations')
                     .select('*')
@@ -167,7 +184,11 @@ const AdminEditProject = () => {
         } catch (error) {
             console.error('Error fetching project:', error);
             alert('Failed to load project details');
-            navigate('/admin/dashboard');
+            if (user?.isITAdmin) {
+                navigate('/admin/dashboard');
+            } else {
+                navigate('/dashboard/pod-management');
+            }
         }
     };
 
@@ -425,7 +446,11 @@ const AdminEditProject = () => {
             }
 
             alert('Project updated successfully!');
-            navigate('/admin/dashboard');
+            if (user?.isITAdmin) {
+                navigate('/admin/dashboard');
+            } else {
+                navigate('/dashboard/pod-management');
+            }
 
         } catch (error) {
             console.error('Error updating project:', error);
@@ -475,19 +500,27 @@ const AdminEditProject = () => {
                 <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
                     <div className="flex items-center gap-4">
                         <button
-                            onClick={() => navigate('/admin/dashboard')}
+                            onClick={() => {
+                                if (user?.isITAdmin) {
+                                    navigate('/admin/dashboard');
+                                } else {
+                                    navigate('/dashboard/pod-management');
+                                }
+                            }}
                             className="p-2 hover:bg-gray-100 rounded-full transition-colors"
                         >
                             <ArrowLeft className="h-5 w-5 text-gray-500" />
                         </button>
                         <h1 className="text-xl font-bold text-gray-900">Edit Project</h1>
                     </div>
-                    <button
-                        onClick={handleDelete}
-                        className="text-red-600 hover:text-red-700 hover:bg-red-50 px-3 py-2 rounded-lg flex items-center gap-2 transition-colors text-sm font-medium"
-                    >
-                        <Trash2 className="h-4 w-4" /> Delete Project
-                    </button>
+                    {user?.isITAdmin && (
+                        <button
+                            onClick={handleDelete}
+                            className="text-red-600 hover:text-red-750 hover:bg-red-50 px-3 py-2 rounded-lg flex items-center gap-2 transition-colors text-sm font-medium"
+                        >
+                            <Trash2 className="h-4 w-4" /> Delete Project
+                        </button>
+                    )}
                 </div>
             </div>
 
@@ -795,10 +828,10 @@ const AdminEditProject = () => {
                         </div>
 
                         {/* 5. Event Registrations (PRJ-002 specifically) */}
-                        {(formData.project_code === 'PRJ-002' || formData.project_code === 'PRJ-008') && (
+                        {(formData.project_code === 'PRJ-002' || formData.project_code === 'PRJ-008' || formData.project_code === 'PRJ-010') && (
                             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
                                 <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                                    <User className="h-5 w-5 text-amber-600" /> Event Registrations ({eventRegistrations.length})
+                                    <User className="h-5 w-5 text-amber-600" /> {formData.project_code === 'PRJ-010' ? 'Sangh Registrations' : 'Event Registrations'} ({eventRegistrations.length})
                                 </h2>
 
                                 <div className="grid gap-4 max-h-[500px] overflow-y-auto custom-scrollbar pr-2">

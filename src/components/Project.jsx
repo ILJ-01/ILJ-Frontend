@@ -123,6 +123,11 @@ export default function Project() {
             .single();
 
           if (error) throw error;
+          if (data.status === 'archived' && !user?.isITAdmin) {
+            setProject(null);
+            navigate('/projects');
+            return;
+          }
           setProject({ ...data, type: 'db' });
 
           const { data: photosData } = await supabase.from('project_photos').select('photo_url').eq('project_id', title);

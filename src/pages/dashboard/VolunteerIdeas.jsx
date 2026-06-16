@@ -25,10 +25,11 @@ export default function VolunteerIdeas() {
             setLoading(true);
 
             // Fetch projects for idea form
-            const { data: projectData } = await supabase
-                .from('projects')
-                .select('id, title')
-                .order('title');
+            let projectsQuery = supabase.from('projects').select('id, title');
+            if (!user?.isITAdmin) {
+                projectsQuery = projectsQuery.neq('status', 'archived');
+            }
+            const { data: projectData } = await projectsQuery.order('title');
             setProjects(projectData || []);
 
             // Fetch my ideas

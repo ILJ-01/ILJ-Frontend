@@ -74,15 +74,35 @@ export default function AdminSTC() {
     const fetchAllAssignments = async () => {
         try {
             setSummaryLoading(true);
-            const { data, error } = await supabase
-                .from('spiritual_task_assignments')
-                .select(`
-                    id, status,
-                    task:spiritual_tasks(id, title),
-                    volunteer:volunteers(id, first_name, last_name, ilj_id)
-                `);
-            if (error) throw error;
-            setGlobalAssignments(data || []);
+            let allData = [];
+            let page = 0;
+            const pageSize = 1000;
+            let keepFetching = true;
+            
+            while (keepFetching) {
+                const { data, error } = await supabase
+                    .from('spiritual_task_assignments')
+                    .select(`
+                        id, status,
+                        task:spiritual_tasks(id, title),
+                        volunteer:volunteers(id, first_name, last_name, ilj_id)
+                    `)
+                    .range(page * pageSize, (page + 1) * pageSize - 1);
+                    
+                if (error) throw error;
+                
+                if (!data || data.length === 0) {
+                    keepFetching = false;
+                } else {
+                    allData = [...allData, ...data];
+                    if (data.length < pageSize) {
+                        keepFetching = false;
+                    } else {
+                        page++;
+                    }
+                }
+            }
+            setGlobalAssignments(allData);
         } catch (err) {
             console.error('Error fetching global assignments:', err);
         } finally {
@@ -131,6 +151,7 @@ export default function AdminSTC() {
             setNewTask({ title: '', description: '', assignType: 'all', selectedVolunteers: [] });
             alert('Spiritual Task created and assigned successfully!');
             fetchTasks(); // Refresh to get the joins
+            fetchAllAssignments(); // Refresh summaries
         } catch (err) {
             alert(`Error: ${err.message}`);
         } finally {
@@ -160,6 +181,7 @@ export default function AdminSTC() {
             
             setTasks(tasks.filter(t => t.id !== id));
             if (expandedTask === id) setExpandedTask(null);
+            fetchAllAssignments(); // Refresh summaries
         } catch (err) {
             console.error("Delete task err:", err);
             alert("Failed to delete task: " + err.message);
@@ -230,27 +252,40 @@ export default function AdminSTC() {
     const volunteerStats = {};
     const taskStats = {};
 
+    // Initialize taskStats with all created tasks to show tasks with 0 completions
+    tasks.forEach(t => {
+        taskStats[t.id] = {
+            id: t.id,
+            title: t.title,
+            completedCount: 0,
+            completedBy: []
+        };
+    });
+
     globalAssignments.forEach(a => {
-        if (!a.volunteer || !a.task) return;
+        const vol = Array.isArray(a.volunteer) ? a.volunteer[0] : a.volunteer;
+        const task = Array.isArray(a.task) ? a.task[0] : a.task;
+        
+        if (!vol || !task) return;
         
         // Vol stats
-        const vId = a.volunteer.id;
+        const vId = vol.id;
         if (!volunteerStats[vId]) {
             volunteerStats[vId] = {
                 id: vId,
-                ilj_id: a.volunteer.ilj_id,
-                name: `${a.volunteer.first_name || ''} ${a.volunteer.last_name || ''}`.trim(),
+                ilj_id: vol.ilj_id,
+                name: `${vol.first_name || ''} ${vol.last_name || ''}`.trim(),
                 completedCount: 0,
                 completedTasks: []
             };
         }
         
         // Task stats
-        const tId = a.task.id;
+        const tId = task.id;
         if (!taskStats[tId]) {
             taskStats[tId] = {
                 id: tId,
-                title: a.task.title,
+                title: task.title,
                 completedCount: 0,
                 completedBy: []
             };
@@ -258,12 +293,12 @@ export default function AdminSTC() {
 
         if (a.status === 'completed') {
             volunteerStats[vId].completedCount += 1;
-            volunteerStats[vId].completedTasks.push(a.task.title);
+            volunteerStats[vId].completedTasks.push(task.title);
 
             taskStats[tId].completedCount += 1;
             taskStats[tId].completedBy.push({
-                name: `${a.volunteer.first_name || ''} ${a.volunteer.last_name || ''}`.trim() || 'Unknown',
-                ilj_id: a.volunteer.ilj_id || 'N/A'
+                name: `${vol.first_name || ''} ${vol.last_name || ''}`.trim() || 'Unknown',
+                ilj_id: vol.ilj_id || 'N/A'
             });
         }
     });

@@ -43,10 +43,11 @@ export default function AssignedProjectsPage() {
             const podNames = assignedPodString.split(',').map(s => s.trim()).filter(Boolean);
 
             // 2. Fetch the actual project data for those matched pods
-            const { data: projectsData, error: projectsError } = await supabase
-                .from('projects')
-                .select('*')
-                .in('title', podNames);
+            let projectsQuery = supabase.from('projects').select('*').in('title', podNames);
+            if (!user?.isITAdmin) {
+                projectsQuery = projectsQuery.neq('status', 'archived');
+            }
+            const { data: projectsData, error: projectsError } = await projectsQuery;
 
             if (projectsError) {
                 console.error("Error fetching projects:", projectsError);
@@ -218,28 +219,32 @@ export default function AssignedProjectsPage() {
                                     <p className="text-gray-600 text-sm line-clamp-3 mb-6 flex-1">{project.description}</p>
                                     
                                     {project.next_event_date && (
-                                        <div className="flex items-center justify-between gap-2 text-sm text-gray-600 mb-6 bg-gray-50/80 p-3 rounded-xl border border-gray-100">
-                                            <div className="flex items-center gap-2">
-                                                <Calendar className="h-4 w-4 text-[#ae2b2b]" />
-                                                <span className="font-medium">Next Event: <span className="text-gray-900">{new Date(project.next_event_date).toLocaleDateString()}</span></span>
-                                            </div>
-                                            <button 
-                                                onClick={(e) => {
-                                                    e.preventDefault();
-                                                    const event = {
-                                                        title: `${project.title} Event`,
-                                                        description: project.description,
-                                                        startTime: new Date(project.next_event_date),
-                                                        endTime: new Date(project.next_event_date)
-                                                    };
-                                                    downloadICS(event, `${project.title.replace(/\s+/g, '_')}_event.ics`);
-                                                }}
-                                                className="text-xs text-blue-600 hover:text-blue-800 hover:underline flex items-center gap-1 transition-colors"
-                                            >
-                                                <CalendarPlus className="h-3 w-3" /> Add to Calendar
-                                            </button>
-                                        </div>
-                                    )}
+                                         <div className="flex items-center justify-between gap-2 text-sm text-gray-600 mb-6 bg-gray-50/80 p-3 rounded-xl border border-gray-100">
+                                             <div className="flex items-center gap-2">
+                                                 <Calendar className="h-4 w-4 text-[#ae2b2b]" />
+                                                 <span className="font-medium">Next Event: <span className="text-gray-900">
+                                                     {isNaN(Date.parse(project.next_event_date)) || project.next_event_date.toLowerCase().includes('august') ? project.next_event_date : new Date(project.next_event_date).toLocaleDateString()}
+                                                 </span></span>
+                                             </div>
+                                             {!isNaN(Date.parse(project.next_event_date)) && !project.next_event_date.toLowerCase().includes('august') && (
+                                                 <button 
+                                                     onClick={(e) => {
+                                                         e.preventDefault();
+                                                         const event = {
+                                                             title: `${project.title} Event`,
+                                                             description: project.description,
+                                                             startTime: new Date(project.next_event_date),
+                                                             endTime: new Date(project.next_event_date)
+                                                         };
+                                                         downloadICS(event, `${project.title.replace(/\s+/g, '_')}_event.ics`);
+                                                     }}
+                                                     className="text-xs text-blue-600 hover:text-blue-800 hover:underline flex items-center gap-1 transition-colors"
+                                                 >
+                                                     <CalendarPlus className="h-3 w-3" /> Add to Calendar
+                                                 </button>
+                                             )}
+                                         </div>
+                                     )}
                                     
                                     <Link 
                                         to={`/project/${project.id}`}

@@ -65,7 +65,18 @@ export default function Footer() {
         {/* Resources */}
         <div>
           <h3 className="text-xl font-bold mb-4 text-white uppercase tracking-wider">Resources</h3>
-
+          <ul className="space-y-2 text-sm text-gray-200">
+            <li>
+              <a 
+                href="/I Love Jinshasan Brochure.pdf" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="hover:text-white transition"
+              >
+                ILJ Brochure
+              </a>
+            </li>
+          </ul>
         </div>
 
         {/* Quick Links */}

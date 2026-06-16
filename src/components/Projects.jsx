@@ -39,8 +39,8 @@ const Projects = () => {
           // Fallback
           setProjectsData(fallbackProjects);
         } else if (data && data.length > 0) {
-          // Filter out private projects for homepage
-          let visibleProjects = data.filter(p => p.visibility !== 'private');
+          // Filter out private and archived projects for homepage
+          let visibleProjects = data.filter(p => p.visibility !== 'private' && p.status !== 'archived');
 
           // Define the custom order
           const customOrder = [

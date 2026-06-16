@@ -32,7 +32,11 @@ const OnboardingHub = () => {
 
     const fetchProjects = async () => {
         try {
-            const { data, error } = await supabase.from('projects').select('id, title').order('title');
+            let projectsQuery = supabase.from('projects').select('id, title');
+            if (!user?.isITAdmin) {
+                projectsQuery = projectsQuery.neq('status', 'archived');
+            }
+            const { data, error } = await projectsQuery.order('title');
             if (!error && data) setProjects(data);
         } catch (err) {
             console.error('Error fetching projects:', err);

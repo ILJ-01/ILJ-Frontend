@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { supabase } from '@/lib/supabase';
+import { useNavigate } from 'react-router-dom';
 import { 
     Users, Search, CheckCircle, Mail, Phone, MapPin, 
     MessageSquare, ClipboardList, UserCheck, AlertCircle,
@@ -22,6 +23,7 @@ const TABS = [
 
 const PodManagementHub = () => {
     const { user } = useAuth();
+    const navigate = useNavigate();
     const [projects, setProjects] = useState([]);
     const [selectedProjectId, setSelectedProjectId] = useState('');
     const [activeTab, setActiveTab] = useState('overview');
@@ -91,10 +93,10 @@ const PodManagementHub = () => {
         setLoadingProjects(true);
         try {
             let query = supabase.from('projects').select('*').order('title');
-            
-            // Filter projects if not global admin / IT admin
-            if (!user?.isITAdmin && !user?.isPodTeam) {
-                query = query.eq('manager_id', user.id);
+            // Filter projects to show only managed projects
+            query = query.eq('manager_id', user.id);
+            if (!user?.isITAdmin) {
+                query = query.neq('status', 'archived');
             }
             
             const { data, error } = await query;
@@ -128,6 +130,15 @@ const PodManagementHub = () => {
 
     const fetchProjectData = async (projId) => {
         if (!projId) return;
+        
+        // Safety Check: Verify user manages this project
+        const isManagerOfProject = user?.managed_projects?.some(p => p.id === projId);
+        if (!isManagerOfProject) {
+            console.error("Unauthorized access to project:", projId);
+            clearProjectData();
+            return;
+        }
+
         setLoadingData(true);
         try {
             // 1. Team Members (from project_volunteers joined with volunteers)
@@ -703,14 +714,24 @@ const PodManagementHub = () => {
                             {selectedProject.status}
                         </span>
                     </div>
-                    {(user?.isITAdmin || selectedProject.manager_id === user?.id) && (
-                        <button
-                            onClick={() => setEditingProject(selectedProject)}
-                            className="text-xs border border-[#ae2b2b] text-[#ae2b2b] px-4 py-2 rounded-lg hover:bg-red-50 transition-colors font-bold"
-                        >
-                            Edit Details
-                        </button>
-                    )}
+                    <div className="flex gap-2">
+                        {selectedProject.project_code === 'PRJ-010' && (
+                            <button
+                                onClick={() => navigate(`/admin/edit-project/${selectedProject.id}`)}
+                                className="text-xs bg-[#ae2b2b] text-white px-4 py-2 rounded-lg hover:bg-[#8b1e1e] transition-colors font-bold"
+                            >
+                                Manage Sessions & Sangh Registrations
+                            </button>
+                        )}
+                        {(user?.isITAdmin || selectedProject.manager_id === user?.id) && (
+                            <button
+                                onClick={() => setEditingProject(selectedProject)}
+                                className="text-xs border border-[#ae2b2b] text-[#ae2b2b] px-4 py-2 rounded-lg hover:bg-red-50 transition-colors font-bold"
+                            >
+                                Edit Details
+                            </button>
+                        )}
+                    </div>
                 </div>
                 
                 <p className="text-gray-700 leading-relaxed text-sm bg-gray-50 p-4 rounded-lg border border-gray-100">{selectedProject.description || 'No description provided.'}</p>

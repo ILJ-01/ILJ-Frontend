@@ -56,7 +56,7 @@ export function AuthProvider({ children }) {
 
             if (authError) {
                 console.error('Supabase Auth sync error:', authError);
-                return { success: false, error: 'Authentication sync failed. Please contact support.' };
+                return { success: false, error: `Authentication sync failed: ${authError.message}` };
             }
 
             // Check if user is a manager or team leader and add admin flag

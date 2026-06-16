@@ -47,9 +47,10 @@ const ProjectsPage = () => {
 
       if (error) throw error;
 
-      // Filter: Show private projects only if logged in
+      // Filter: Show private projects only if logged in, and hide archived projects for non-admins
       const visibleData = (data || []).filter(p => {
         if (p.visibility === 'private' && !user) return false;
+        if (p.status === 'archived' && !user?.isITAdmin) return false;
         return true;
       });
 

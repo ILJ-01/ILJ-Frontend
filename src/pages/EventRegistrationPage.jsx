@@ -4,10 +4,12 @@ import { supabase } from "../lib/supabase";
 import { Calendar, User, Users, Phone, Mail, MapPin, Upload, ArrowLeft } from "lucide-react";
 import { downloadICS } from "../lib/ics";
 import ReflectRegistrationPage from "./ReflectRegistrationPage";
+import { useAuth } from "../context/AuthContext";
 
 export default function EventRegistrationPage() {
     const { id } = useParams();
     const navigate = useNavigate();
+    const { user } = useAuth();
 
     const [project, setProject] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -46,11 +48,16 @@ export default function EventRegistrationPage() {
             try {
                 const { data, error } = await supabase
                     .from('projects')
-                    .select('id, title, project_code, description, next_event_date, is_event_registration_enabled, registration_link')
+                    .select('id, title, project_code, description, next_event_date, is_event_registration_enabled, registration_link, status')
                     .eq('id', id)
                     .single();
 
                 if (error || !data) throw error;
+
+                if (data.status === 'archived' && !user?.isITAdmin) {
+                    navigate('/projects');
+                    return;
+                }
 
                 // If registration is disabled AND no registration link is present, kick them out
                 if (!data.is_event_registration_enabled && !data.registration_link) {
@@ -207,8 +214,8 @@ export default function EventRegistrationPage() {
                                 const event = {
                                     title: project.title,
                                     description: project.description || "Thank you for registering!",
-                                    startTime: project.next_event_date ? new Date(project.next_event_date) : new Date(),
-                                    endTime: project.next_event_date ? new Date(project.next_event_date) : new Date(),
+                                    startTime: project.next_event_date && !isNaN(Date.parse(project.next_event_date)) && !project.next_event_date.toLowerCase().includes('august') ? new Date(project.next_event_date) : new Date(),
+                                    endTime: project.next_event_date && !isNaN(Date.parse(project.next_event_date)) && !project.next_event_date.toLowerCase().includes('august') ? new Date(project.next_event_date) : new Date(),
                                 };
                                 downloadICS(event, `${project.title.replace(/\s+/g, '_')}.ics`);
                             }}

@@ -29,7 +29,11 @@ export default function TimesheetPage() {
     }, [user]);
 
     const fetchProjects = async () => {
-        const { data } = await supabase.from('projects').select('id, title, project_code');
+        let projectsQuery = supabase.from('projects').select('id, title, project_code');
+        if (!user?.isITAdmin) {
+            projectsQuery = projectsQuery.neq('status', 'archived');
+        }
+        const { data } = await projectsQuery;
         setProjects(data || []);
     };
 
