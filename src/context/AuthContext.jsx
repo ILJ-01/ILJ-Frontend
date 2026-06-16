@@ -8,107 +8,16 @@ export function AuthProvider({ children }) {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        let active = true;
-
-        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-            if (session?.user) {
-                const email = session.user.email;
-                if (email === 'admin@ilovejinshasan.org') {
-                    const adminUser = {
-                        id: session.user.id,
-                        email: email,
-                        first_name: 'Admin',
-                        last_name: 'User',
-                        is_it_admin: true,
-                        isITAdmin: true,
-                        isAdmin: true,
-                        managed_projects: []
-                    };
-                    if (active) {
-                        setUser(adminUser);
-                        localStorage.setItem('ilj_user', JSON.stringify(adminUser));
-                        setLoading(false);
-                    }
-                } else {
-                    // Try to load cached user first to be fast
-                    const storedUser = localStorage.getItem('ilj_user');
-                    if (storedUser) {
-                        try {
-                            const parsedUser = JSON.parse(storedUser);
-                            if (parsedUser.email === email) {
-                                if (active) {
-                                    setUser(parsedUser);
-                                    setLoading(false);
-                                }
-                            }
-                        } catch (e) {}
-                    }
-
-                    // Then fetch fresh data
-                    try {
-                        const { data: userData, error } = await supabase
-                            .from('volunteers')
-                            .select('*')
-                            .eq('email', email)
-                            .single();
-                        
-                        if (active && userData && !error) {
-                            // Fetch managed projects
-                            const { data: projects } = await supabase
-                                .from('projects')
-                                .select('*')
-                                .eq('manager_id', userData.id);
-                            
-                            const isManager = projects && projects.length > 0;
-                            const isTeamLeader = userData.team_leader_for && userData.team_leader_for.trim() !== '';
-                            const fullName = `${userData.first_name} ${userData.last_name}`.trim();
-                            
-                            const { count: kmCount } = await supabase
-                                .from('volunteers')
-                                .select('*', { count: 'exact', head: true })
-                                .ilike('kalyan_mitra', `%${fullName}%`);
-
-                            const isKalyanMitra = kmCount > 0;
-                            const isITAdmin = Boolean(userData.is_it_admin);
-                            const isOnboardingTeam = Boolean(userData.is_onboarding_team);
-                            const isPodTeam = Boolean(userData.is_pod_team);
-
-                            const userWithProjects = {
-                                ...userData,
-                                managed_projects: projects || [],
-                                isAdmin: isManager || isTeamLeader,
-                                isManager,
-                                isTeamLeader,
-                                isKalyanMitra,
-                                isITAdmin,
-                                isOnboardingTeam,
-                                isPodTeam
-                            };
-
-                            setUser(userWithProjects);
-                            localStorage.setItem('ilj_user', JSON.stringify(userWithProjects));
-                        }
-                    } catch (e) {
-                        console.error("Error restoring user profile from session:", e);
-                    } finally {
-                        if (active) {
-                            setLoading(false);
-                        }
-                    }
-                }
-            } else {
-                if (active) {
-                    setUser(null);
-                    localStorage.removeItem('ilj_user');
-                    setLoading(false);
-                }
+        // Check for existing session in localStorage
+        const storedUser = localStorage.getItem('ilj_user');
+        if (storedUser) {
+            try {
+                setUser(JSON.parse(storedUser));
+            } catch (e) {
+                localStorage.removeItem('ilj_user');
             }
-        });
-
-        return () => {
-            active = false;
-            subscription.unsubscribe();
-        };
+        }
+        setLoading(false);
     }, []);
 
     const login = async (iljId, password) => {
@@ -125,17 +34,6 @@ export function AuthProvider({ children }) {
             }
 
             const userData = data.user;
-
-            // Log in to standard Supabase Auth using the user's email and password
-            const { error: authError } = await supabase.auth.signInWithPassword({
-                email: userData.email,
-                password: password
-            });
-
-            if (authError) {
-                console.error('Supabase Auth sync error:', authError);
-                return { success: false, error: `Authentication sync failed: ${authError.message}` };
-            }
 
             // Check if user is a manager or team leader and add admin flag
             const isManager = userData.managed_projects && userData.managed_projects.length > 0;
@@ -157,7 +55,7 @@ export function AuthProvider({ children }) {
             const userWithProjects = {
                 ...userData,
                 managed_projects: userData.managed_projects || [],
-                isAdmin: isManager || isTeamLeader,
+                isAdmin: isManager || isTeamLeader || isITAdmin,
                 isManager,
                 isTeamLeader,
                 isKalyanMitra,
@@ -176,10 +74,9 @@ export function AuthProvider({ children }) {
         }
     };
 
-    const logout = async () => {
+    const logout = () => {
         setUser(null);
         localStorage.removeItem('ilj_user');
-        await supabase.auth.signOut();
     };
 
     const updatePassword = async (iljId, email, newPassword) => {
@@ -261,7 +158,7 @@ export function AuthProvider({ children }) {
             const updatedUser = {
                 ...mergedUser,
                 managed_projects: projects || currentUser.managed_projects || [],
-                isAdmin: isManager || isTeamLeader,
+                isAdmin: isManager || isTeamLeader || isITAdmin,
                 isManager,
                 isTeamLeader,
                 isKalyanMitra,
