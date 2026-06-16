@@ -20,7 +20,7 @@ const AdminLogin = () => {
 
         try {
             const { data, error } = await supabase.auth.signInWithPassword({
-                email: credentials.email,
+                email: (credentials.email || '').trim(),
                 password: credentials.password,
             });
 

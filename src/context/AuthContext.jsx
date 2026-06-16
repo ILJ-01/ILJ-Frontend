@@ -36,9 +36,10 @@ export function AuthProvider({ children }) {
 
     const login = async (iljId, password) => {
         try {
+            const trimmedIljId = (iljId || '').trim();
             // Verify credentials against volunteers table via RPC
             const { data, error } = await supabase.rpc('login_volunteer', {
-                p_ilj_id: iljId.toUpperCase(),
+                p_ilj_id: trimmedIljId.toUpperCase(),
                 p_password: password
             });
 
@@ -106,10 +107,12 @@ export function AuthProvider({ children }) {
 
     const updatePassword = async (iljId, email, newPassword) => {
         try {
+            const trimmedIljId = (iljId || '').trim();
+            const trimmedEmail = (email || '').trim();
             const { data, error } = await supabase
                 .rpc('reset_volunteer_password', {
-                    p_ilj_id: iljId,
-                    p_email: email,
+                    p_ilj_id: trimmedIljId,
+                    p_email: trimmedEmail,
                     p_new_password: newPassword
                 });
 
