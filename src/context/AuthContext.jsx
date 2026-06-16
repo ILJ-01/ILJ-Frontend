@@ -9,15 +9,29 @@ export function AuthProvider({ children }) {
 
     useEffect(() => {
         // Check for existing session in localStorage
-        const storedUser = localStorage.getItem('ilj_user');
-        if (storedUser) {
-            try {
-                setUser(JSON.parse(storedUser));
-            } catch (e) {
-                localStorage.removeItem('ilj_user');
+        const checkSession = async () => {
+            const storedUser = localStorage.getItem('ilj_user');
+            if (storedUser) {
+                try {
+                    const parsedUser = JSON.parse(storedUser);
+                    // Check if standard Supabase session is active
+                    const { data: { session } } = await supabase.auth.getSession();
+                    if (session) {
+                        setUser(parsedUser);
+                    } else {
+                        // Stale local session without active Supabase Auth session - clear it
+                        console.warn("Stale local session detected without active Supabase session. Clearing.");
+                        localStorage.removeItem('ilj_user');
+                        setUser(null);
+                    }
+                } catch (e) {
+                    localStorage.removeItem('ilj_user');
+                    setUser(null);
+                }
             }
-        }
-        setLoading(false);
+            setLoading(false);
+        };
+        checkSession();
     }, []);
 
     const login = async (iljId, password) => {
@@ -33,6 +47,17 @@ export function AuthProvider({ children }) {
             }
 
             const userData = data.user;
+
+            // Log in to standard Supabase Auth using the user's email and password
+            const { error: authError } = await supabase.auth.signInWithPassword({
+                email: userData.email,
+                password: password
+            });
+
+            if (authError) {
+                console.error('Supabase Auth sync error:', authError);
+                return { success: false, error: 'Authentication sync failed. Please contact support.' };
+            }
 
             // Check if user is a manager or team leader and add admin flag
             const isManager = userData.managed_projects && userData.managed_projects.length > 0;
@@ -73,9 +98,10 @@ export function AuthProvider({ children }) {
         }
     };
 
-    const logout = () => {
+    const logout = async () => {
         setUser(null);
         localStorage.removeItem('ilj_user');
+        await supabase.auth.signOut();
     };
 
     const updatePassword = async (iljId, email, newPassword) => {
