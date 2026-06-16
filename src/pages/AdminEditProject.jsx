@@ -6,6 +6,7 @@ import {
     Check, X, Briefcase, Image, Hash, Upload, Cloud, Trash2, CheckCircle, XCircle, Pencil
 } from 'lucide-react';
 import AdminRevaSessions from './admin/AdminRevaSessions';
+import AdminKivaSessions from './admin/AdminKivaSessions';
 import { useAuth } from '../context/AuthContext';
 
 const AdminEditProject = () => {
@@ -21,6 +22,7 @@ const AdminEditProject = () => {
     const [newTestimonial, setNewTestimonial] = useState({ name: '', comments: '' });
     const [eventRegistrations, setEventRegistrations] = useState([]);
     const [kivaRegistrations, setKivaRegistrations] = useState([]);
+    const [kivaSessions, setKivaSessions] = useState([]);
 
     // Testimonial Edit State
     const [editingTestimonialId, setEditingTestimonialId] = useState(null);
@@ -71,8 +73,9 @@ const AdminEditProject = () => {
         
         const isITAdmin = user?.isITAdmin;
         const isRevaManager = formData.project_code === 'PRJ-010' && projectManagerId === user?.id;
+        const isKivaManager = formData.project_code === 'PRJ-009' && projectManagerId === user?.id;
         
-        if (!isITAdmin && !isRevaManager) {
+        if (!isITAdmin && !isRevaManager && !isKivaManager) {
             alert("Unauthorized: You do not have permission to manage this pod.");
             navigate('/dashboard');
         }
@@ -171,7 +174,7 @@ const AdminEditProject = () => {
                 if (registrations) setEventRegistrations(registrations);
             }
 
-            // 7. Get KIVA Registrations (PRJ-009)
+            // 7. Get KIVA Registrations & Sessions (PRJ-009)
             if (project.project_code === 'PRJ-009') {
                 const { data: kivaRegs } = await supabase
                     .from('kiva_registrations')
@@ -179,6 +182,13 @@ const AdminEditProject = () => {
                     .eq('project_id', id)
                     .order('created_at', { ascending: false });
                 if (kivaRegs) setKivaRegistrations(kivaRegs);
+
+                const { data: kivaSess } = await supabase
+                    .from('kiva_sessions')
+                    .select('*')
+                    .order('date', { ascending: true })
+                    .order('time', { ascending: true });
+                if (kivaSess) setKivaSessions(kivaSess);
             }
 
         } catch (error) {
@@ -469,6 +479,29 @@ const AdminEditProject = () => {
             navigate('/admin/dashboard');
         } catch (error) {
             alert('Failed to delete project');
+        }
+    };
+
+    const handleUpdateKivaAttendance = async (regId, status, sessionId) => {
+        try {
+            const updateData = {
+                attendance_status: status,
+                attended_event_id: status === 'Attended/Visited' ? (sessionId || null) : null
+            };
+            const { error } = await supabase
+                .from('kiva_registrations')
+                .update(updateData)
+                .eq('id', regId);
+
+            if (error) throw error;
+
+            // Update local state
+            setKivaRegistrations(prev => prev.map(reg => 
+                reg.id === regId ? { ...reg, ...updateData } : reg
+            ));
+        } catch (error) {
+            console.error('Error updating Kiva attendance:', error);
+            alert(`Failed to update attendance: ${error.message}`);
         }
     };
 
@@ -876,7 +909,7 @@ const AdminEditProject = () => {
                                     {kivaRegistrations.length === 0 ? (
                                         <p className="text-sm text-gray-400 text-center py-8 border-2 border-dashed rounded-lg">No registrations found yet...</p>
                                     ) : kivaRegistrations.map((r, i) => (
-                                        <div key={r.id} className="p-4 rounded-xl border border-gray-100 shadow-sm flex flex-col sm:flex-row justify-between gap-5 bg-white hover:border-amber-200 transition-all">
+                                        <div key={r.id} className="p-4 rounded-xl border border-gray-100 shadow-sm flex flex-col justify-between gap-4 bg-white hover:border-amber-200 transition-all">
                                             <div className="flex-1 w-full space-y-1">
                                                 <div className="flex justify-between items-start">
                                                     <h4 className="font-bold text-gray-900 text-md flex items-center gap-2">
@@ -892,6 +925,45 @@ const AdminEditProject = () => {
                                                     {r.ilj_id && <p><span className="font-semibold text-gray-500">ILJ ID:</span> <span className="uppercase">{r.ilj_id}</span></p>}
                                                     <p className="md:col-span-2"><span className="font-semibold text-gray-500">Preferred Weekend:</span> {r.preferred_dates}</p>
                                                 </div>
+
+                                                {/* Attendance marking */}
+                                                <div className="mt-4 pt-3 border-t border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-gray-50/50 p-3 rounded-lg border border-gray-100">
+                                                    <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                                                        <label className="text-xs font-bold text-gray-500 uppercase">Attendance:</label>
+                                                        <select
+                                                            value={r.attendance_status || 'Not Attended'}
+                                                            onChange={(e) => {
+                                                                const newStatus = e.target.value;
+                                                                const sessId = newStatus === 'Attended/Visited' ? (r.attended_event_id || (kivaSessions[0]?.id || null)) : null;
+                                                                handleUpdateKivaAttendance(r.id, newStatus, sessId);
+                                                            }}
+                                                            className="text-xs p-1.5 border border-gray-300 rounded-md bg-white focus:ring-1 focus:ring-amber-500 outline-none font-medium"
+                                                        >
+                                                            <option value="Not Attended">Not Attended</option>
+                                                            <option value="Attended/Visited">Attended/Visited</option>
+                                                        </select>
+                                                    </div>
+                                                    
+                                                    {r.attendance_status === 'Attended/Visited' && (
+                                                        <div className="flex flex-col sm:flex-row sm:items-center gap-2 flex-1 max-w-md">
+                                                            <label className="text-xs font-bold text-gray-500 uppercase whitespace-nowrap">Select Event:</label>
+                                                            <select
+                                                                value={r.attended_event_id || ''}
+                                                                onChange={(e) => {
+                                                                    handleUpdateKivaAttendance(r.id, 'Attended/Visited', e.target.value || null);
+                                                                }}
+                                                                className="text-xs p-1.5 border border-gray-300 rounded-md bg-white focus:ring-1 focus:ring-amber-500 outline-none font-medium flex-1 truncate"
+                                                            >
+                                                                <option value="">-- Select Event --</option>
+                                                                {kivaSessions.map(session => (
+                                                                    <option key={session.id} value={session.id}>
+                                                                        {new Date(session.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })} - {session.venue}
+                                                                    </option>
+                                                                ))}
+                                                            </select>
+                                                        </div>
+                                                    )}
+                                                </div>
                                             </div>
                                         </div>
                                     ))}
@@ -902,6 +974,12 @@ const AdminEditProject = () => {
                         {formData.project_code === 'PRJ-010' && (
                             <div className="w-full">
                                 <AdminRevaSessions />
+                            </div>
+                        )}
+                        {/* 6b. KIVA Sessions (PRJ-009 specifically) */}
+                        {formData.project_code === 'PRJ-009' && (
+                            <div className="w-full">
+                                <AdminKivaSessions />
                             </div>
                         )}
                     </div>

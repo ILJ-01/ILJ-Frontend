@@ -715,12 +715,12 @@ const PodManagementHub = () => {
                         </span>
                     </div>
                     <div className="flex gap-2">
-                        {selectedProject.project_code === 'PRJ-010' && (
+                        {(selectedProject.project_code === 'PRJ-010' || selectedProject.project_code === 'PRJ-009') && (
                             <button
                                 onClick={() => navigate(`/admin/edit-project/${selectedProject.id}`)}
                                 className="text-xs bg-[#ae2b2b] text-white px-4 py-2 rounded-lg hover:bg-[#8b1e1e] transition-colors font-bold"
                             >
-                                Manage Sessions & Sangh Registrations
+                                {selectedProject.project_code === 'PRJ-010' ? 'Manage Sessions & Sangh Registrations' : 'Manage Sessions & Kiva Registrations'}
                             </button>
                         )}
                         {(user?.isITAdmin || selectedProject.manager_id === user?.id) && (

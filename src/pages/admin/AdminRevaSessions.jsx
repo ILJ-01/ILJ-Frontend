@@ -35,7 +35,7 @@ export default function AdminRevaSessions() {
     const handleOpenForm = (session = null) => {
         if (session) {
             setEditingId(session.id);
-            setFormData({ date: session.date, time: session.time, venue: session.venue });
+            setFormData({ date: session.date, time: session.time.substring(0, 5), venue: session.venue });
         } else {
             setEditingId(null);
             setFormData({ date: '', time: '', venue: '' });
@@ -47,6 +47,15 @@ export default function AdminRevaSessions() {
         setIsFormOpen(false);
         setEditingId(null);
         setFormData({ date: '', time: '', venue: '' });
+    };
+
+    const formatTime12h = (timeStr) => {
+        if (!timeStr) return '';
+        const [hours, minutes] = timeStr.split(':');
+        const h = parseInt(hours, 10);
+        const ampm = h >= 12 ? 'PM' : 'AM';
+        const h12 = h % 12 || 12;
+        return `${h12}:${minutes} ${ampm}`;
     };
 
     const handleSessionSubmit = async (e) => {
@@ -64,6 +73,33 @@ export default function AdminRevaSessions() {
                     .from('reva_sessions')
                     .insert([formData]);
                 if (error) throw error;
+
+                // Send notifications to all volunteers
+                try {
+                    const { data: allVols } = await supabase
+                        .from('volunteers')
+                        .select('id');
+                    
+                    if (allVols && allVols.length > 0) {
+                        const formattedDate = new Date(formData.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' });
+                        const formattedTime = formatTime12h(formData.time);
+                        const notificationsToInsert = allVols.map(vol => ({
+                            user_id: vol.id,
+                            message: `New REVA Event Scheduled:\nDate: ${formattedDate}\nTime: ${formattedTime}\nVenue: ${formData.venue}`,
+                            type: 'reva_event',
+                            is_read: false
+                        }));
+
+                        // Chunk insertions
+                        const chunkSize = 100;
+                        for (let i = 0; i < notificationsToInsert.length; i += chunkSize) {
+                            const chunk = notificationsToInsert.slice(i, i + chunkSize);
+                            await supabase.from('notifications').insert(chunk);
+                        }
+                    }
+                } catch (notiErr) {
+                    console.error('Failed to dispatch notifications:', notiErr);
+                }
             }
             fetchSessions();
             handleCloseForm();
@@ -185,7 +221,7 @@ export default function AdminRevaSessions() {
                                         <td className="p-4 whitespace-nowrap">
                                             <div className="flex items-center gap-2 text-gray-600">
                                                 <Clock className="h-4 w-4" />
-                                                {session.time}
+                                                {formatTime12h(session.time)}
                                             </div>
                                         </td>
                                         <td className="p-4">

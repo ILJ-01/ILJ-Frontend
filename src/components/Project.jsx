@@ -65,6 +65,7 @@ export default function Project() {
   const [dbTestimonials, setDbTestimonials] = useState([]);
   const [subpods, setSubpods] = useState([]);
   const [revaSessions, setRevaSessions] = useState([]);
+  const [kivaSessions, setKivaSessions] = useState([]);
 
   // Inquiry & Feedback State
   const [isInquiryOpen, setIsInquiryOpen] = useState(false);
@@ -142,6 +143,9 @@ export default function Project() {
           if (data.project_code === 'PRJ-010') {
             const { data: sessionData } = await supabase.from('reva_sessions').select('*').order('date', { ascending: true }).order('time', { ascending: true });
             if (sessionData) setRevaSessions(sessionData);
+          } else if (data.project_code === 'PRJ-009') {
+            const { data: sessionData } = await supabase.from('kiva_sessions').select('*').order('date', { ascending: true }).order('time', { ascending: true });
+            if (sessionData) setKivaSessions(sessionData);
           }
 
           // 2. Check application status if logged in
@@ -440,14 +444,14 @@ export default function Project() {
             </div>
           )}
 
-          {/* REVA Sessions Schedule */}
-          {project.project_code === 'PRJ-010' && (
-            <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100 mt-8">
+          {/* Upcoming Schedule for REVA or Kiva */}
+          {(project.project_code === 'PRJ-010' || project.project_code === 'PRJ-009') && (
+            <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100 mt-8 font-sans">
               <h2 className="text-2xl font-bold text-gray-800 mb-4 font-serif flex items-center gap-2">
                 <Calendar className="text-[#ae2b2b] w-6 h-6" /> Upcoming Schedule
               </h2>
-              {revaSessions.length === 0 ? (
-                <p className="text-gray-500 bg-gray-50 p-6 rounded-xl text-center border border-dashed border-gray-200">No sessions scheduled currently.</p>
+              {(project.project_code === 'PRJ-010' ? revaSessions : kivaSessions).length === 0 ? (
+                <p className="text-gray-500 bg-gray-50 p-6 rounded-xl text-center border border-dashed border-gray-200 text-sm">No sessions scheduled currently.</p>
               ) : (
                 <div className="overflow-x-auto border border-gray-200 rounded-xl shadow-sm">
                     <table className="w-full text-left border-collapse">
@@ -459,28 +463,38 @@ export default function Project() {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100">
-                            {revaSessions.map(session => (
-                                <tr key={session.id} className="hover:bg-[#ae2b2b]/5 transition-colors">
-                                    <td className="p-4 whitespace-nowrap text-gray-900 font-medium">
-                                        <div className="flex items-center gap-2">
-                                            <Calendar className="h-4 w-4 text-[#ae2b2b]/70" />
-                                            {new Date(session.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}
-                                        </div>
-                                    </td>
-                                    <td className="p-4 whitespace-nowrap text-gray-600">
-                                        <div className="flex items-center gap-2">
-                                            <Clock className="h-4 w-4 text-gray-400" />
-                                            {session.time}
-                                        </div>
-                                    </td>
-                                    <td className="p-4 text-gray-700">
-                                        <div className="flex items-start gap-2">
-                                            <MapPin className="h-4 w-4 text-gray-400 shrink-0 mt-0.5" />
-                                            {session.venue}
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))}
+                            {(project.project_code === 'PRJ-010' ? revaSessions : kivaSessions).map(session => {
+                                const formatTime12h = (timeStr) => {
+                                    if (!timeStr) return '';
+                                    const [hours, minutes] = timeStr.split(':');
+                                    const h = parseInt(hours, 10);
+                                    const ampm = h >= 12 ? 'PM' : 'AM';
+                                    const h12 = h % 12 || 12;
+                                    return `${h12}:${minutes} ${ampm}`;
+                                };
+                                return (
+                                    <tr key={session.id} className="hover:bg-[#ae2b2b]/5 transition-colors text-sm">
+                                        <td className="p-4 whitespace-nowrap text-gray-900 font-medium">
+                                            <div className="flex items-center gap-2">
+                                                <Calendar className="h-4 w-4 text-[#ae2b2b]/70" />
+                                                {new Date(session.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}
+                                            </div>
+                                        </td>
+                                        <td className="p-4 whitespace-nowrap text-gray-600">
+                                            <div className="flex items-center gap-2">
+                                                <Clock className="h-4 w-4 text-gray-400" />
+                                                {formatTime12h(session.time)}
+                                            </div>
+                                        </td>
+                                        <td className="p-4 text-gray-700">
+                                            <div className="flex items-start gap-2">
+                                                <MapPin className="h-4 w-4 text-gray-400 shrink-0 mt-0.5" />
+                                                {session.venue}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                );
+                            })}
                         </tbody>
                     </table>
                 </div>

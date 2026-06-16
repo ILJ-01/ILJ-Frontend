@@ -202,12 +202,36 @@ export default function DashboardLayout({ children }) {
                                         <div className="px-4 py-6 text-center text-gray-500 text-sm">No new notifications</div>
                                     ) : (
                                         <div className="max-h-80 overflow-y-auto">
-                                            {notifications.map(n => (
-                                                <div key={n.id} className="px-4 py-3 hover:bg-gray-50 border-b border-gray-50 last:border-0 cursor-pointer" onClick={() => markRead(n.id)}>
-                                                    <p className="text-sm text-gray-800">{n.message}</p>
-                                                    <span className="text-xs text-gray-400 mt-1 block">{new Date(n.created_at).toLocaleDateString()}</span>
-                                                </div>
-                                            ))}
+                                            {notifications.map(n => {
+                                                const isRevaEvent = n.type === 'reva_event';
+                                                const isKivaEvent = n.type === 'kiva_event';
+                                                return (
+                                                    <div 
+                                                        key={n.id} 
+                                                        className="px-4 py-3 hover:bg-gray-50 border-b border-gray-50 last:border-0 cursor-pointer"
+                                                        onClick={() => markRead(n.id)}
+                                                    >
+                                                        <p className="text-sm text-gray-800 whitespace-pre-line font-sans">{n.message}</p>
+                                                        {(isRevaEvent || isKivaEvent) && (
+                                                            <button
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    markRead(n.id);
+                                                                    if (isRevaEvent) {
+                                                                        navigate('/projects/8cb7137b-6d45-494b-afaa-b6e8019305c3/event-registration');
+                                                                    } else {
+                                                                        navigate('/project/1ba3dd33-5e3b-43b0-a272-a1a978804d39');
+                                                                    }
+                                                                }}
+                                                                className="mt-2 text-xs bg-[#ae2b2b] hover:bg-[#8f1f1f] text-white px-3 py-1.5 rounded font-semibold transition-colors w-full text-center"
+                                                            >
+                                                                I'm Interested to Volunteer
+                                                            </button>
+                                                        )}
+                                                        <span className="text-xs text-gray-400 mt-1 block">{new Date(n.created_at).toLocaleDateString()}</span>
+                                                    </div>
+                                                );
+                                            })}
                                         </div>
                                     )}
                                 </div>

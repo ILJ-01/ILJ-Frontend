@@ -8,30 +8,107 @@ export function AuthProvider({ children }) {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        // Check for existing session in localStorage
-        const checkSession = async () => {
-            const storedUser = localStorage.getItem('ilj_user');
-            if (storedUser) {
-                try {
-                    const parsedUser = JSON.parse(storedUser);
-                    // Check if standard Supabase session is active
-                    const { data: { session } } = await supabase.auth.getSession();
-                    if (session) {
-                        setUser(parsedUser);
-                    } else {
-                        // Stale local session without active Supabase Auth session - clear it
-                        console.warn("Stale local session detected without active Supabase session. Clearing.");
-                        localStorage.removeItem('ilj_user');
-                        setUser(null);
+        let active = true;
+
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+            if (session?.user) {
+                const email = session.user.email;
+                if (email === 'admin@ilovejinshasan.org') {
+                    const adminUser = {
+                        id: session.user.id,
+                        email: email,
+                        first_name: 'Admin',
+                        last_name: 'User',
+                        is_it_admin: true,
+                        isITAdmin: true,
+                        isAdmin: true,
+                        managed_projects: []
+                    };
+                    if (active) {
+                        setUser(adminUser);
+                        localStorage.setItem('ilj_user', JSON.stringify(adminUser));
+                        setLoading(false);
                     }
-                } catch (e) {
-                    localStorage.removeItem('ilj_user');
+                } else {
+                    // Try to load cached user first to be fast
+                    const storedUser = localStorage.getItem('ilj_user');
+                    if (storedUser) {
+                        try {
+                            const parsedUser = JSON.parse(storedUser);
+                            if (parsedUser.email === email) {
+                                if (active) {
+                                    setUser(parsedUser);
+                                    setLoading(false);
+                                }
+                            }
+                        } catch (e) {}
+                    }
+
+                    // Then fetch fresh data
+                    try {
+                        const { data: userData, error } = await supabase
+                            .from('volunteers')
+                            .select('*')
+                            .eq('email', email)
+                            .single();
+                        
+                        if (active && userData && !error) {
+                            // Fetch managed projects
+                            const { data: projects } = await supabase
+                                .from('projects')
+                                .select('*')
+                                .eq('manager_id', userData.id);
+                            
+                            const isManager = projects && projects.length > 0;
+                            const isTeamLeader = userData.team_leader_for && userData.team_leader_for.trim() !== '';
+                            const fullName = `${userData.first_name} ${userData.last_name}`.trim();
+                            
+                            const { count: kmCount } = await supabase
+                                .from('volunteers')
+                                .select('*', { count: 'exact', head: true })
+                                .ilike('kalyan_mitra', `%${fullName}%`);
+
+                            const isKalyanMitra = kmCount > 0;
+                            const isITAdmin = Boolean(userData.is_it_admin);
+                            const isOnboardingTeam = Boolean(userData.is_onboarding_team);
+                            const isPodTeam = Boolean(userData.is_pod_team);
+
+                            const userWithProjects = {
+                                ...userData,
+                                managed_projects: projects || [],
+                                isAdmin: isManager || isTeamLeader,
+                                isManager,
+                                isTeamLeader,
+                                isKalyanMitra,
+                                isITAdmin,
+                                isOnboardingTeam,
+                                isPodTeam
+                            };
+
+                            setUser(userWithProjects);
+                            localStorage.setItem('ilj_user', JSON.stringify(userWithProjects));
+                        }
+                    } catch (e) {
+                        console.error("Error restoring user profile from session:", e);
+                    } finally {
+                        if (active) {
+                            setLoading(false);
+                        }
+                    }
+                }
+            } else {
+                if (active) {
                     setUser(null);
+                    localStorage.removeItem('ilj_user');
+                    setLoading(false);
                 }
             }
-            setLoading(false);
+        });
+
+        return () => {
+            active = false;
+            subscription.unsubscribe();
         };
-        checkSession();
     }, []);
 
     const login = async (iljId, password) => {
@@ -136,6 +213,7 @@ export function AuthProvider({ children }) {
     const refreshUser = async () => {
         const currentUser = user || JSON.parse(localStorage.getItem('ilj_user'));
         if (!currentUser?.id) return;
+        if (currentUser.email === 'admin@ilovejinshasan.org') return;
 
         try {
             // Fetch the updated volunteer profile
