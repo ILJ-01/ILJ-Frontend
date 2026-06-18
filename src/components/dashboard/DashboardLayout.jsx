@@ -76,7 +76,7 @@ export default function DashboardLayout({ children }) {
         menuItems.unshift({ icon: Heart, label: "Kalyan Mitra Hub", path: "/dashboard/kalyan-mitra" });
     }
 
-    if (user?.managed_projects?.length > 0 || user?.isPodTeam || user?.isITAdmin || user?.isCPOrVCP) {
+    if (user?.managed_projects?.length > 0 || user?.isCPOrVCP) {
         menuItems.unshift({ icon: Users, label: "Pod Management Hub", path: "/dashboard/pod-management" });
     }
 

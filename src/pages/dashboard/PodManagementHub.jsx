@@ -120,8 +120,8 @@ const PodManagementHub = () => {
         setLoadingProjects(true);
         try {
             let query = supabase.from('projects').select('*').order('title');
-            // Filter projects to show only managed projects unless IT Admin or CP/VCP
-            if (!user?.isITAdmin && !user?.isCPOrVCP) {
+            // Filter projects to show only managed projects unless CP/VCP
+            if (!user?.isCPOrVCP) {
                 query = query.eq('manager_id', user.id);
             }
             if (!user?.isITAdmin) {
@@ -164,7 +164,7 @@ const PodManagementHub = () => {
         if (!projId) return;
         
         // Safety Check: Verify user manages this project
-        const isManagerOfProject = user?.managed_projects?.some(p => p.id === projId) || user?.isITAdmin || user?.isCPOrVCP;
+        const isManagerOfProject = user?.managed_projects?.some(p => p.id === projId) || user?.isCPOrVCP;
         if (!isManagerOfProject) {
             console.error("Unauthorized access to project:", projId);
             clearProjectData();
