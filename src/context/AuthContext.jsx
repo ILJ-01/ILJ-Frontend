@@ -34,9 +34,11 @@ export function AuthProvider({ children }) {
             }
 
             const userData = data.user;
+            const upperIljId = (userData.ilj_id || '').trim().toUpperCase();
+            const isCPOrVCP = ['ILJ-001', 'ILJ-002', 'ILJ-007'].includes(upperIljId);
 
             // Check if user is a manager or team leader and add admin flag
-            const isManager = userData.managed_projects && userData.managed_projects.length > 0;
+            const isManager = (userData.managed_projects && userData.managed_projects.length > 0) || isCPOrVCP;
             const isTeamLeader = userData.team_leader_for && userData.team_leader_for.trim() !== '';
 
             // Check if user is a Kalyan Mitra
@@ -61,7 +63,8 @@ export function AuthProvider({ children }) {
                 isKalyanMitra,
                 isITAdmin,
                 isOnboardingTeam,
-                isPodTeam
+                isPodTeam,
+                isCPOrVCP
             };
 
             setUser(userWithProjects);
@@ -136,8 +139,11 @@ export function AuthProvider({ children }) {
                 console.error("Error fetching managed projects:", projectError);
             }
 
+            const upperIljId = (mergedUser.ilj_id || '').trim().toUpperCase();
+            const isCPOrVCP = ['ILJ-001', 'ILJ-002', 'ILJ-007'].includes(upperIljId);
+
             // Check admin status
-            const isManager = projects && projects.length > 0;
+            const isManager = (projects && projects.length > 0) || isCPOrVCP;
             const isTeamLeader = mergedUser.team_leader_for && mergedUser.team_leader_for.trim() !== '';
 
 
@@ -164,7 +170,8 @@ export function AuthProvider({ children }) {
                 isKalyanMitra,
                 isITAdmin,
                 isOnboardingTeam,
-                isPodTeam
+                isPodTeam,
+                isCPOrVCP
             };
 
             setUser(updatedUser);
@@ -197,7 +204,8 @@ export function AuthProvider({ children }) {
             isKalyanMitra: user?.isKalyanMitra || false,
             isITAdmin: user?.isITAdmin || false,
             isOnboardingTeam: user?.isOnboardingTeam || false,
-            isPodTeam: user?.isPodTeam || false
+            isPodTeam: user?.isPodTeam || false,
+            isCPOrVCP: user?.isCPOrVCP || false
         }}>
             {children}
         </AuthContext.Provider>

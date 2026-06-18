@@ -6,11 +6,15 @@ import {
     MessageSquare, ClipboardList, UserCheck, AlertCircle,
     Briefcase, Clock, History, CheckSquare, Award, Plus,
     Trash2, Check, X, Archive, Star, FileSpreadsheet, RotateCcw,
-    Lightbulb
+    Lightbulb, Calendar, Download
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { motion } from 'framer-motion';
 import * as XLSX from 'xlsx';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import AdminRevaSessions from '../admin/AdminRevaSessions';
+import AdminKivaSessions from '../admin/AdminKivaSessions';
 
 const TABS = [
     { id: 'overview', label: 'Overview', icon: Briefcase },
@@ -75,6 +79,22 @@ const PodManagementHub = () => {
         deadline: ""
     });
 
+    // Kiva and Reva Extra States
+    const [eventRegistrations, setEventRegistrations] = useState([]);
+    const [kivaRegistrations, setKivaRegistrations] = useState([]);
+    const [kivaSessions, setKivaSessions] = useState([]);
+    const [selectedReg, setSelectedReg] = useState(null);
+    const [revaSearchQuery, setRevaSearchQuery] = useState('');
+    const [kivaFilterEvent, setKivaFilterEvent] = useState('all');
+    const [kivaFilterDate, setKivaFilterDate] = useState('all');
+    const [kivaFilterRegStatus, setKivaFilterRegStatus] = useState('all'); // all, ilj, public
+    const [kivaFilterAttStatus, setKivaFilterAttStatus] = useState('all'); // all, Attended/Visited, Not Attended
+    const [kivaSearchQuery, setKivaSearchQuery] = useState('');
+    const [kivaRegActiveTab, setKivaRegActiveTab] = useState('list'); // list or members
+
+    const activeProject = useMemo(() => projects.find(p => p.id === selectedProjectId), [projects, selectedProjectId]);
+    const projectCode = activeProject?.project_code;
+
     useEffect(() => {
         fetchProjects();
     }, [user?.id]);
@@ -83,18 +103,27 @@ const PodManagementHub = () => {
         if (selectedProjectId) {
             fetchProjectData(selectedProjectId);
             setTaskForm(prev => ({ ...prev, projectId: selectedProjectId }));
+            const proj = projects.find(p => p.id === selectedProjectId);
+            if (proj) {
+                const isRevaOrKiva = proj.project_code === 'PRJ-010' || proj.project_code === 'PRJ-009';
+                if (!isRevaOrKiva && (activeTab === 'schedule' || activeTab === 'registrations')) {
+                    setActiveTab('overview');
+                }
+            }
         } else {
             clearProjectData();
         }
-    }, [selectedProjectId]);
+    }, [selectedProjectId, projects]);
 
     const fetchProjects = async () => {
         if (!user?.id) return;
         setLoadingProjects(true);
         try {
             let query = supabase.from('projects').select('*').order('title');
-            // Filter projects to show only managed projects
-            query = query.eq('manager_id', user.id);
+            // Filter projects to show only managed projects unless IT Admin or CP/VCP
+            if (!user?.isITAdmin && !user?.isCPOrVCP) {
+                query = query.eq('manager_id', user.id);
+            }
             if (!user?.isITAdmin) {
                 query = query.neq('status', 'archived');
             }
@@ -125,6 +154,9 @@ const PodManagementHub = () => {
         setPendingIdeas([]);
         setHistoryIdeas([]);
         setPostedOpportunities([]);
+        setEventRegistrations([]);
+        setKivaRegistrations([]);
+        setKivaSessions([]);
         setLoadingData(false);
     };
 
@@ -132,12 +164,15 @@ const PodManagementHub = () => {
         if (!projId) return;
         
         // Safety Check: Verify user manages this project
-        const isManagerOfProject = user?.managed_projects?.some(p => p.id === projId);
+        const isManagerOfProject = user?.managed_projects?.some(p => p.id === projId) || user?.isITAdmin || user?.isCPOrVCP;
         if (!isManagerOfProject) {
             console.error("Unauthorized access to project:", projId);
             clearProjectData();
             return;
         }
+
+        const project = projects.find(p => p.id === projId);
+        const projectCode = project?.project_code;
 
         setLoadingData(true);
         try {
@@ -239,6 +274,38 @@ const PodManagementHub = () => {
 
             if (volError) throw volError;
             setAllVolunteers(volData || []);
+
+            // 7. Get Reva Registrations (PRJ-010)
+            if (projectCode === 'PRJ-010') {
+                const { data: registrations } = await supabase
+                    .from('event_registrations')
+                    .select('*')
+                    .eq('project_id', projId)
+                    .order('created_at', { ascending: false });
+                setEventRegistrations(registrations || []);
+            } else {
+                setEventRegistrations([]);
+            }
+
+            // 8. Get KIVA Registrations & Sessions (PRJ-009)
+            if (projectCode === 'PRJ-009') {
+                const { data: kivaRegs } = await supabase
+                    .from('kiva_registrations')
+                    .select('*')
+                    .eq('project_id', projId)
+                    .order('created_at', { ascending: false });
+                setKivaRegistrations(kivaRegs || []);
+
+                const { data: kivaSess } = await supabase
+                    .from('kiva_sessions')
+                    .select('*')
+                    .order('date', { ascending: true })
+                    .order('time', { ascending: true });
+                setKivaSessions(kivaSess || []);
+            } else {
+                setKivaRegistrations([]);
+                setKivaSessions([]);
+            }
 
         } catch (error) {
             console.error("Error fetching project data:", error);
@@ -639,6 +706,104 @@ const PodManagementHub = () => {
         }
     };
 
+    const handleUpdateKivaAttendance = async (regId, status, sessionId) => {
+        try {
+            const updateData = {
+                attendance_status: status,
+                attended_event_id: status === 'Attended/Visited' ? (sessionId || null) : null
+            };
+            const { error } = await supabase
+                .from('kiva_registrations')
+                .update(updateData)
+                .eq('id', regId);
+
+            if (error) throw error;
+
+            setKivaRegistrations(prev => prev.map(reg => 
+                reg.id === regId ? { ...reg, ...updateData } : reg
+            ));
+            
+            setToastMessage('Attendance updated successfully!');
+            setTimeout(() => setToastMessage(''), 3000);
+        } catch (error) {
+            console.error('Error updating Kiva attendance:', error);
+            alert(`Failed to update attendance: ${error.message}`);
+        }
+    };
+
+    const handleDeleteRevaRegistration = async (registrationId) => {
+        if (!window.confirm("Are you sure you want to delete this registration? This cannot be undone.")) return;
+
+        try {
+            const reg = eventRegistrations.find(r => r.id === registrationId);
+            if (reg) {
+                const filesToRemove = [];
+                const extractPath = (url) => {
+                    if (!url) return null;
+                    try {
+                        const parts = url.split('/project-gallery/');
+                        if (parts.length > 1) {
+                            return parts[1].split('?')[0];
+                        }
+                    } catch (e) {
+                        console.error("Error extracting path from URL:", url, e);
+                    }
+                    return null;
+                };
+
+                const paymentPath = extractPath(reg.payment_screenshot_url);
+                if (paymentPath) filesToRemove.push(paymentPath);
+
+                const photoPath = extractPath(reg.photograph_url);
+                if (photoPath) filesToRemove.push(photoPath);
+
+                if (filesToRemove.length > 0) {
+                    const { error: storageError } = await supabase.storage
+                        .from('project-gallery')
+                        .remove(filesToRemove);
+                    
+                    if (storageError) {
+                        console.error("Error deleting files from storage:", storageError);
+                    }
+                }
+            }
+
+            const { error } = await supabase
+                .from('event_registrations')
+                .delete()
+                .eq('id', registrationId);
+
+            if (error) throw error;
+
+            setEventRegistrations(prev => prev.filter(r => r.id !== registrationId));
+            setToastMessage('Registration deleted successfully!');
+            setTimeout(() => setToastMessage(''), 3000);
+        } catch (error) {
+            console.error('Error deleting registration:', error);
+            alert('Failed to delete registration.');
+        }
+    };
+
+    const handleDeleteKivaRegistration = async (registrationId) => {
+        if (!window.confirm("Are you sure you want to delete this registration? This cannot be undone.")) return;
+
+        try {
+            const { error } = await supabase
+                .from('kiva_registrations')
+                .delete()
+                .eq('id', registrationId);
+
+            if (error) throw error;
+
+            setKivaRegistrations(prev => prev.filter(r => r.id !== registrationId));
+            setToastMessage('Registration deleted successfully!');
+            setTimeout(() => setToastMessage(''), 3000);
+        } catch (error) {
+            console.error('Error deleting Kiva registration:', error);
+            alert('Failed to delete registration.');
+        }
+    };
+
     // Exports
     const exportToExcel = (data, fileName) => {
         const worksheet = XLSX.utils.json_to_sheet(data);
@@ -675,6 +840,215 @@ const PodManagementHub = () => {
             Secondary_Designation: m.secondary_designation
         }));
         exportToExcel(dataToExport, `Team_List_${selectedProjectId}_${new Date().toLocaleDateString().replace(/\//g, '-')}`);
+    };
+
+    const handleExportRevaRegistrations = (filteredRegs) => {
+        const dataToExport = filteredRegs.map((r, index) => ({
+            "S.No": index + 1,
+            "Date": new Date(r.created_at).toLocaleDateString(),
+            "Full Name": r.full_name,
+            "WhatsApp Number": r.whatsapp_number,
+            "Email": r.email || 'N/A',
+            "Age": r.age || 'N/A',
+            "DOB": r.dob || 'N/A',
+            "Sangh Name": r.sangh_name || 'N/A',
+            "Address": r.address || 'N/A'
+        }));
+        exportToExcel(dataToExport, `Reva_Registrations_${new Date().toLocaleDateString().replace(/\//g, '-')}`);
+    };
+
+    const handleExportRevaRegistrationsPDF = (filteredRegs) => {
+        const doc = new jsPDF();
+        doc.setFillColor(174, 43, 43); // #ae2b2b crimson
+        doc.rect(0, 0, 210, 25, 'F');
+        doc.setTextColor(255, 255, 255);
+        doc.setFont('Helvetica', 'bold');
+        doc.setFontSize(16);
+        doc.text("REVA Sangh Registrations", 15, 17);
+        
+        doc.setTextColor(30, 30, 30);
+        doc.setFontSize(10);
+        doc.setFont('Helvetica', 'normal');
+        doc.text(`Total Registrations: ${filteredRegs.length} | Exported: ${new Date().toLocaleDateString()}`, 15, 33);
+        
+        const tableHeaders = [["S.No", "Date", "Name", "WhatsApp", "Age/DOB", "Sangh", "Address"]];
+        const tableData = filteredRegs.map((r, i) => [
+            String(i + 1),
+            new Date(r.created_at).toLocaleDateString('en-GB'),
+            r.full_name,
+            r.whatsapp_number,
+            `${r.age || '-'}${r.dob ? ' (' + r.dob + ')' : ''}`,
+            r.sangh_name || '-',
+            r.address || '-'
+        ]);
+        
+        autoTable(doc, {
+            startY: 38,
+            head: tableHeaders,
+            body: tableData,
+            theme: 'striped',
+            headStyles: { fillColor: [174, 43, 43] },
+            styles: { fontSize: 8, cellPadding: 2 },
+            columnStyles: {
+                0: { cellWidth: 10 },
+                1: { cellWidth: 20 },
+                2: { cellWidth: 35 },
+                3: { cellWidth: 25 },
+                4: { cellWidth: 20 },
+                5: { cellWidth: 35 },
+                6: { cellWidth: 'auto' }
+            },
+            margin: { left: 15, right: 15 }
+        });
+        
+        doc.save(`Reva_Registrations_${new Date().toLocaleDateString().replace(/\//g, '-')}.pdf`);
+    };
+
+    const handleExportKivaRegistrations = (regs) => {
+        const dataToExport = regs.map((r, index) => {
+            const eventSession = r.attended_event_id ? kivaSessions.find(s => s.id === r.attended_event_id) : null;
+            const eventStr = eventSession 
+                ? `${new Date(eventSession.date).toLocaleDateString()} at ${eventSession.venue}` 
+                : 'N/A';
+            return {
+                "S.No": index + 1,
+                "Registration Date": new Date(r.created_at).toLocaleDateString(),
+                "Full Name": r.full_name,
+                "Mobile Number": r.mobile_number,
+                "ILJ Volunteer?": r.is_ilj_volunteer ? 'Yes' : 'No',
+                "ILJ ID": r.ilj_id || 'N/A',
+                "Preferred Weekend": r.preferred_dates,
+                "Attendance Status": r.attendance_status || 'Not Attended',
+                "Attended Event": eventStr
+            };
+        });
+        exportToExcel(dataToExport, `Kiva_All_Registrations_${new Date().toLocaleDateString().replace(/\//g, '-')}`);
+    };
+
+    const handleExportKivaRegistrationsPDF = (regs) => {
+        const doc = new jsPDF();
+        doc.setFillColor(174, 43, 43); // #ae2b2b crimson
+        doc.rect(0, 0, 210, 25, 'F');
+        doc.setTextColor(255, 255, 255);
+        doc.setFont('Helvetica', 'bold');
+        doc.setFontSize(16);
+        doc.text("Kiva All Registrations & Attendance", 15, 17);
+        
+        doc.setTextColor(30, 30, 30);
+        doc.setFontSize(10);
+        doc.setFont('Helvetica', 'normal');
+        doc.text(`Total Records: ${regs.length} | Exported: ${new Date().toLocaleDateString()}`, 15, 33);
+        
+        const tableHeaders = [["S.No", "Date", "Name", "Mobile", "ILJ ID", "Preferred Weekend", "Attendance", "Attended Event"]];
+        const tableData = regs.map((r, i) => {
+            const eventSession = r.attended_event_id ? kivaSessions.find(s => s.id === r.attended_event_id) : null;
+            const eventStr = eventSession 
+                ? `${new Date(eventSession.date).toLocaleDateString('en-GB', {day:'numeric', month:'short'})} - ${eventSession.venue}` 
+                : '-';
+            return [
+                String(i + 1),
+                new Date(r.created_at).toLocaleDateString('en-GB'),
+                r.full_name,
+                r.mobile_number,
+                r.ilj_id || 'Public',
+                r.preferred_dates,
+                r.attendance_status || 'Not Attended',
+                eventStr
+            ];
+        });
+        
+        autoTable(doc, {
+            startY: 38,
+            head: tableHeaders,
+            body: tableData,
+            theme: 'striped',
+            headStyles: { fillColor: [174, 43, 43] },
+            styles: { fontSize: 8, cellPadding: 2 },
+            columnStyles: {
+                0: { cellWidth: 10 },
+                1: { cellWidth: 20 },
+                2: { cellWidth: 30 },
+                3: { cellWidth: 25 },
+                4: { cellWidth: 20 },
+                5: { cellWidth: 35 },
+                6: { cellWidth: 25 },
+                7: { cellWidth: 'auto' }
+            },
+            margin: { left: 15, right: 15 }
+        });
+        
+        doc.save(`Kiva_All_Registrations_${new Date().toLocaleDateString().replace(/\//g, '-')}.pdf`);
+    };
+
+    const handleExportKivaMembers = (members) => {
+        const dataToExport = members.map((m, index) => {
+            const attendedEventsStr = m.attended_events.map(e => 
+                `${new Date(e.date).toLocaleDateString()} (${e.venue})`
+            ).join('; ');
+            return {
+                "S.No": index + 1,
+                "Full Name": m.full_name,
+                "Mobile Number": m.mobile_number,
+                "ILJ Volunteer?": m.is_ilj_volunteer ? 'Yes' : 'No',
+                "ILJ ID": m.ilj_id || 'N/A',
+                "Total Registrations": m.registrations.length,
+                "Total Attended": m.attended_events.length,
+                "Attended Events": attendedEventsStr || 'None'
+            };
+        });
+        exportToExcel(dataToExport, `Kiva_Member_Attendance_History_${new Date().toLocaleDateString().replace(/\//g, '-')}`);
+    };
+
+    const handleExportKivaMembersPDF = (members) => {
+        const doc = new jsPDF();
+        doc.setFillColor(174, 43, 43); // #ae2b2b crimson
+        doc.rect(0, 0, 210, 25, 'F');
+        doc.setTextColor(255, 255, 255);
+        doc.setFont('Helvetica', 'bold');
+        doc.setFontSize(16);
+        doc.text("Kiva Member-wise Attendance History", 15, 17);
+        
+        doc.setTextColor(30, 30, 30);
+        doc.setFontSize(10);
+        doc.setFont('Helvetica', 'normal');
+        doc.text(`Total Members: ${members.length} | Exported: ${new Date().toLocaleDateString()}`, 15, 33);
+        
+        const tableHeaders = [["S.No", "Name", "Mobile", "ILJ ID", "Registrations", "Attended Count", "Attended Events History"]];
+        const tableData = members.map((m, i) => {
+            const attendedEventsStr = m.attended_events.map(e => 
+                `${new Date(e.date).toLocaleDateString('en-GB', {day:'numeric', month:'short'})} @ ${e.venue}`
+            ).join(', ');
+            return [
+                String(i + 1),
+                m.full_name,
+                m.mobile_number,
+                m.ilj_id || 'Public',
+                String(m.registrations.length),
+                String(m.attended_events.length),
+                attendedEventsStr || 'None'
+            ];
+        });
+        
+        autoTable(doc, {
+            startY: 38,
+            head: tableHeaders,
+            body: tableData,
+            theme: 'striped',
+            headStyles: { fillColor: [174, 43, 43] },
+            styles: { fontSize: 8, cellPadding: 2 },
+            columnStyles: {
+                0: { cellWidth: 10 },
+                1: { cellWidth: 35 },
+                2: { cellWidth: 25 },
+                3: { cellWidth: 20 },
+                4: { cellWidth: 22 },
+                5: { cellWidth: 22 },
+                6: { cellWidth: 'auto' }
+            },
+            margin: { left: 15, right: 15 }
+        });
+        
+        doc.save(`Kiva_Member_Attendance_History_${new Date().toLocaleDateString().replace(/\//g, '-')}.pdf`);
     };
 
     const getStatusStyle = (status) => {
@@ -716,12 +1090,20 @@ const PodManagementHub = () => {
                     </div>
                     <div className="flex gap-2">
                         {(selectedProject.project_code === 'PRJ-010' || selectedProject.project_code === 'PRJ-009') && (
-                            <button
-                                onClick={() => navigate(`/admin/edit-project/${selectedProject.id}`)}
-                                className="text-xs bg-[#ae2b2b] text-white px-4 py-2 rounded-lg hover:bg-[#8b1e1e] transition-colors font-bold"
-                            >
-                                {selectedProject.project_code === 'PRJ-010' ? 'Manage Sessions & Sangh Registrations' : 'Manage Sessions & Kiva Registrations'}
-                            </button>
+                            <>
+                                <button
+                                    onClick={() => setActiveTab('schedule')}
+                                    className="text-xs bg-[#ae2b2b] text-white px-4 py-2 rounded-lg hover:bg-[#8b1e1e] transition-colors font-bold shadow-sm"
+                                >
+                                    Manage Schedule
+                                </button>
+                                <button
+                                    onClick={() => setActiveTab('registrations')}
+                                    className="text-xs border border-[#ae2b2b] text-[#ae2b2b] px-4 py-2 rounded-lg hover:bg-red-50 transition-colors font-bold shadow-sm"
+                                >
+                                    Manage Registrations
+                                </button>
+                            </>
                         )}
                         {(user?.isITAdmin || selectedProject.manager_id === user?.id) && (
                             <button
@@ -1536,6 +1918,565 @@ const PodManagementHub = () => {
         );
     };
 
+    const renderScheduleTab = () => {
+        if (projectCode === 'PRJ-010') {
+            return (
+                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 animate-in fade-in duration-300">
+                    <AdminRevaSessions />
+                </div>
+            );
+        }
+        if (projectCode === 'PRJ-009') {
+            return (
+                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 animate-in fade-in duration-300">
+                    <AdminKivaSessions />
+                </div>
+            );
+        }
+        return null;
+    };
+
+    const filteredKivaRegistrations = useMemo(() => {
+        return kivaRegistrations.filter(r => {
+            if (kivaSearchQuery) {
+                const q = kivaSearchQuery.toLowerCase();
+                const nameMatch = (r.full_name || '').toLowerCase().includes(q);
+                const mobileMatch = (r.mobile_number || '').toLowerCase().includes(q);
+                const idMatch = (r.ilj_id || '').toLowerCase().includes(q);
+                if (!nameMatch && !mobileMatch && !idMatch) return false;
+            }
+            if (kivaFilterEvent !== 'all') {
+                if (r.attended_event_id !== kivaFilterEvent) return false;
+            }
+            if (kivaFilterDate !== 'all') {
+                if (r.preferred_dates !== kivaFilterDate) return false;
+            }
+            if (kivaFilterRegStatus !== 'all') {
+                if (kivaFilterRegStatus === 'ilj' && !r.is_ilj_volunteer) return false;
+                if (kivaFilterRegStatus === 'public' && r.is_ilj_volunteer) return false;
+            }
+            if (kivaFilterAttStatus !== 'all') {
+                const status = r.attendance_status || 'Not Attended';
+                if (status !== kivaFilterAttStatus) return false;
+            }
+            return true;
+        });
+    }, [kivaRegistrations, kivaSearchQuery, kivaFilterEvent, kivaFilterDate, kivaFilterRegStatus, kivaFilterAttStatus]);
+
+    const kivaMemberHistory = useMemo(() => {
+        const membersMap = {};
+        kivaRegistrations.forEach(r => {
+            const phone = r.mobile_number;
+            if (!phone) return;
+            if (!membersMap[phone]) {
+                membersMap[phone] = {
+                    full_name: r.full_name,
+                    mobile_number: phone,
+                    ilj_id: r.ilj_id,
+                    is_ilj_volunteer: r.is_ilj_volunteer,
+                    registrations: [],
+                    attended_events: []
+                };
+            }
+            if (r.ilj_id && !membersMap[phone].ilj_id) {
+                membersMap[phone].ilj_id = r.ilj_id;
+                membersMap[phone].is_ilj_volunteer = true;
+            }
+            membersMap[phone].registrations.push(r);
+            if (r.attendance_status === 'Attended/Visited' && r.attended_event_id) {
+                const session = kivaSessions.find(s => s.id === r.attended_event_id);
+                if (session) {
+                    membersMap[phone].attended_events.push({
+                        registration_id: r.id,
+                        session_id: session.id,
+                        date: session.date,
+                        time: session.time,
+                        venue: session.venue
+                    });
+                }
+            }
+        });
+        return Object.values(membersMap).map(m => {
+            m.attended_events.sort((a, b) => new Date(b.date) - new Date(a.date));
+            m.registrations.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+            return m;
+        }).sort((a, b) => a.full_name.localeCompare(b.full_name));
+    }, [kivaRegistrations, kivaSessions]);
+
+    const filteredKivaMemberHistory = useMemo(() => {
+        return kivaMemberHistory.filter(m => {
+            if (kivaSearchQuery) {
+                const q = kivaSearchQuery.toLowerCase();
+                const nameMatch = (m.full_name || '').toLowerCase().includes(q);
+                const mobileMatch = (m.mobile_number || '').toLowerCase().includes(q);
+                const idMatch = (m.ilj_id || '').toLowerCase().includes(q);
+                if (!nameMatch && !mobileMatch && !idMatch) return false;
+            }
+            if (kivaFilterRegStatus !== 'all') {
+                if (kivaFilterRegStatus === 'ilj' && !m.is_ilj_volunteer) return false;
+                if (kivaFilterRegStatus === 'public' && m.is_ilj_volunteer) return false;
+            }
+            if (kivaFilterAttStatus !== 'all') {
+                const hasAttendedAny = m.attended_events.length > 0;
+                if (kivaFilterAttStatus === 'Attended/Visited' && !hasAttendedAny) return false;
+                if (kivaFilterAttStatus === 'Not Attended' && hasAttendedAny) return false;
+            }
+            if (kivaFilterEvent !== 'all') {
+                const attendedThisEvent = m.attended_events.some(e => e.session_id === kivaFilterEvent);
+                if (!attendedThisEvent) return false;
+            }
+            return true;
+        });
+    }, [kivaMemberHistory, kivaSearchQuery, kivaFilterRegStatus, kivaFilterAttStatus, kivaFilterEvent]);
+
+    const renderRegistrationsTab = () => {
+        if (projectCode === 'PRJ-010') {
+            const filteredReva = eventRegistrations.filter(r => {
+                if (revaSearchQuery) {
+                    const q = revaSearchQuery.toLowerCase();
+                    return (r.full_name || '').toLowerCase().includes(q) ||
+                           (r.whatsapp_number || '').toLowerCase().includes(q) ||
+                           (r.email || '').toLowerCase().includes(q) ||
+                           (r.sangh_name || '').toLowerCase().includes(q);
+                }
+                return true;
+            });
+
+            return (
+                <div className="space-y-6 animate-in fade-in duration-300">
+                    <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                        <div>
+                            <h3 className="text-lg font-bold text-gray-905 font-serif flex items-center gap-2">
+                                <UserCheck className="h-5 w-5 text-[#ae2b2b]" /> Sangh Registrations
+                            </h3>
+                            <p className="text-xs text-gray-500 mt-1">Review event registrations for Reva.</p>
+                        </div>
+                        <div className="flex gap-2">
+                            <button
+                                type="button"
+                                onClick={() => handleExportRevaRegistrations(filteredReva)}
+                                className="flex items-center gap-2 px-3.5 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-xs font-bold shadow-sm transition-all cursor-pointer"
+                            >
+                                <FileSpreadsheet className="h-3.5 w-3.5" /> Export Excel
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => handleExportRevaRegistrationsPDF(filteredReva)}
+                                className="flex items-center gap-2 px-3.5 py-2 bg-[#ae2b2b] hover:bg-[#8b1e1e] text-white rounded-lg text-xs font-bold shadow-sm transition-all cursor-pointer"
+                            >
+                                <Download className="h-3.5 w-3.5" /> Export PDF
+                            </button>
+                        </div>
+                    </div>
+
+                    <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+                        <div className="relative">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                            <input
+                                type="text"
+                                placeholder="Search by name, whatsapp, email or sangh..."
+                                className="w-full pl-9 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-xs font-semibold focus:outline-none focus:bg-white focus:ring-2 focus:ring-[#ae2b2b]/20 focus:border-[#ae2b2b] transition-all"
+                                value={revaSearchQuery}
+                                onChange={(e) => setRevaSearchQuery(e.target.value)}
+                            />
+                        </div>
+                    </div>
+
+                    <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                        {filteredReva.length === 0 ? (
+                            <div className="text-center py-16">
+                                <UserCheck className="h-12 w-12 text-gray-300 mx-auto mb-3" />
+                                <h4 className="text-sm font-medium text-gray-900 mb-1">No registrations found</h4>
+                                <p className="text-gray-500 text-xs">There are no registrations matching your search.</p>
+                            </div>
+                        ) : (
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-left text-xs whitespace-nowrap">
+                                    <thead className="bg-gray-50 border-b border-gray-200 text-gray-650 font-bold uppercase tracking-wider">
+                                        <tr>
+                                            <th className="px-6 py-4">Date</th>
+                                            <th className="px-6 py-4">Participant Details</th>
+                                            <th className="px-6 py-4">Contact</th>
+                                            <th className="px-6 py-4">Sangh / Address</th>
+                                            <th className="px-6 py-4">Payment Proof</th>
+                                            <th className="px-6 py-4 text-right">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-gray-100 text-gray-700">
+                                        {filteredReva.map((reg) => (
+                                            <tr key={reg.id} className="hover:bg-gray-50/40 transition-colors">
+                                                <td className="px-6 py-4 font-mono text-gray-500">
+                                                    {new Date(reg.created_at).toLocaleDateString()}
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    <p className="font-semibold text-gray-900">{reg.full_name}</p>
+                                                    {reg.age && <p className="text-gray-500 text-[10px] mt-0.5">Age: {reg.age}</p>}
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    <p className="font-medium">📞 {reg.whatsapp_number}</p>
+                                                    {reg.email && <p className="text-gray-500 mt-0.5">{reg.email}</p>}
+                                                </td>
+                                                <td className="px-6 py-4 max-w-[200px] truncate" title={`${reg.sangh_name || ''} - ${reg.address || ''}`}>
+                                                    <p className="font-bold text-[#ae2b2b]">{reg.sangh_name || '-'}</p>
+                                                    <p className="text-[10px] text-gray-500 mt-0.5 truncate">{reg.address}</p>
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    {reg.payment_screenshot_url ? (
+                                                        <a
+                                                            href={reg.payment_screenshot_url}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-green-50 text-green-700 rounded border border-green-200 font-bold text-[10px] hover:bg-green-100 transition-colors"
+                                                        >
+                                                            View Screenshot
+                                                        </a>
+                                                    ) : (
+                                                        <span className="text-gray-400 italic">No Screenshot</span>
+                                                    )}
+                                                </td>
+                                                <td className="px-6 py-4 text-right space-x-2">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setSelectedReg(reg)}
+                                                        className="px-3 py-1.5 text-[10px] font-bold text-[#ae2b2b] bg-red-50 hover:bg-[#ae2b2b]/10 rounded border border-[#ae2b2b]/20 transition-all cursor-pointer"
+                                                    >
+                                                        Details
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => handleDeleteRevaRegistration(reg.id)}
+                                                        className="p-1.5 text-gray-450 hover:text-red-600 hover:bg-red-50 rounded transition-all inline-block align-middle cursor-pointer"
+                                                    >
+                                                        <Trash2 className="h-4 w-4" />
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            );
+        }
+
+        if (projectCode === 'PRJ-009') {
+            const preferredWeekendOptions = Array.from(new Set(kivaRegistrations.map(r => r.preferred_dates).filter(Boolean)));
+
+            return (
+                <div className="space-y-6 animate-in fade-in duration-300">
+                    <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                        <div>
+                            <h3 className="text-lg font-bold text-gray-905 font-serif flex items-center gap-2">
+                                <UserCheck className="h-5 w-5 text-[#ae2b2b]" /> Kiva Registrations & Attendance
+                            </h3>
+                            <p className="text-xs text-gray-500 mt-1">Manage attendance, schedule matching, and registrations for Kiva.</p>
+                        </div>
+                        <div className="flex gap-2">
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    if (kivaRegActiveTab === 'list') {
+                                        handleExportKivaRegistrations(filteredKivaRegistrations);
+                                    } else {
+                                        handleExportKivaMembers(kivaMemberHistory);
+                                    }
+                                }}
+                                className="flex items-center gap-2 px-3.5 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-xs font-bold shadow-sm transition-all cursor-pointer"
+                            >
+                                <FileSpreadsheet className="h-3.5 w-3.5" /> Export Excel
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    if (kivaRegActiveTab === 'list') {
+                                        handleExportKivaRegistrationsPDF(filteredKivaRegistrations);
+                                    } else {
+                                        handleExportKivaMembersPDF(kivaMemberHistory);
+                                    }
+                                }}
+                                className="flex items-center gap-2 px-3.5 py-2 bg-[#ae2b2b] hover:bg-[#8b1e1e] text-white rounded-lg text-xs font-bold shadow-sm transition-all cursor-pointer"
+                            >
+                                <Download className="h-3.5 w-3.5" /> Export PDF
+                            </button>
+                        </div>
+                    </div>
+
+                    <div className="flex border-b border-gray-200 bg-white px-2 pt-2 rounded-xl shadow-sm border">
+                        <button
+                            type="button"
+                            onClick={() => setKivaRegActiveTab('list')}
+                            className={`px-5 py-2.5 text-xs font-bold border-b-2 transition-all cursor-pointer ${kivaRegActiveTab === 'list' ? 'border-[#ae2b2b] text-[#ae2b2b]' : 'border-transparent text-gray-500 hover:text-gray-800'}`}
+                        >
+                            All Registrations ({filteredKivaRegistrations.length})
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setKivaRegActiveTab('members')}
+                            className={`px-5 py-2.5 text-xs font-bold border-b-2 transition-all cursor-pointer ${kivaRegActiveTab === 'members' ? 'border-[#ae2b2b] text-[#ae2b2b]' : 'border-transparent text-gray-500 hover:text-gray-800'}`}
+                        >
+                            Member-wise Attendance History ({filteredKivaMemberHistory.length})
+                        </button>
+                    </div>
+
+                    <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+                        <div className="lg:col-span-2">
+                            <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1.5">Search Member</label>
+                            <div className="relative">
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                                <input
+                                    type="text"
+                                    placeholder="Search by name, mobile, id..."
+                                    className="w-full pl-9 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-xs font-semibold focus:outline-none focus:bg-white focus:ring-2 focus:ring-[#ae2b2b]/20 focus:border-[#ae2b2b] transition-all"
+                                    value={kivaSearchQuery}
+                                    onChange={(e) => setKivaSearchQuery(e.target.value)}
+                                />
+                            </div>
+                        </div>
+
+                        {kivaRegActiveTab === 'list' ? (
+                            <div>
+                                <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1.5">Preferred Weekend</label>
+                                <select
+                                    className="w-full p-2.5 bg-gray-50 border border-gray-250 rounded-lg text-xs font-bold text-gray-805 focus:outline-none bg-white cursor-pointer"
+                                    value={kivaFilterDate}
+                                    onChange={(e) => setKivaFilterDate(e.target.value)}
+                                >
+                                    <option value="all">All Dates</option>
+                                    {preferredWeekendOptions.map(opt => (
+                                        <option key={opt} value={opt}>{opt}</option>
+                                    ))}
+                                </select>
+                            </div>
+                        ) : (
+                            <div className="invisible h-0 sm:h-auto sm:visible"></div>
+                        )}
+
+                        <div>
+                            <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1.5">Volunteer Type</label>
+                            <select
+                                className="w-full p-2.5 bg-gray-50 border border-gray-250 rounded-lg text-xs font-bold text-gray-805 focus:outline-none bg-white cursor-pointer"
+                                value={kivaFilterRegStatus}
+                                onChange={(e) => setKivaFilterRegStatus(e.target.value)}
+                            >
+                                <option value="all">All Participants</option>
+                                <option value="ilj">ILJ Volunteers Only</option>
+                                <option value="public">General Public Only</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1.5">Attendance Filter</label>
+                            <select
+                                className="w-full p-2.5 bg-gray-50 border border-gray-250 rounded-lg text-xs font-bold text-gray-805 focus:outline-none bg-white cursor-pointer"
+                                value={kivaFilterAttStatus}
+                                onChange={(e) => setKivaFilterAttStatus(e.target.value)}
+                            >
+                                <option value="all">All Statuses</option>
+                                <option value="Attended/Visited">Attended/Visited</option>
+                                <option value="Not Attended">Not Attended</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1.5">Kiva Event Filter</label>
+                            <select
+                                className="w-full p-2.5 bg-gray-50 border border-gray-250 rounded-lg text-xs font-bold text-gray-805 focus:outline-none bg-white cursor-pointer"
+                                value={kivaFilterEvent}
+                                onChange={(e) => setKivaFilterEvent(e.target.value)}
+                            >
+                                <option value="all">All Scheduled Events</option>
+                                {kivaSessions.map(session => (
+                                    <option key={session.id} value={session.id}>
+                                        {new Date(session.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })} - {session.venue}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+                    </div>
+
+                    {kivaRegActiveTab === 'list' ? (
+                        <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                            {filteredKivaRegistrations.length === 0 ? (
+                                <div className="text-center py-16">
+                                    <UserCheck className="h-12 w-12 text-gray-300 mx-auto mb-3" />
+                                    <h4 className="text-sm font-medium text-gray-900 mb-1">No registrations found</h4>
+                                    <p className="text-gray-500 text-xs">There are no registrations matching your filters.</p>
+                                </div>
+                            ) : (
+                                <div className="overflow-x-auto">
+                                    <table className="w-full text-left text-xs whitespace-nowrap">
+                                        <thead className="bg-gray-50 border-b border-gray-200 text-gray-650 font-bold uppercase tracking-wider">
+                                            <tr>
+                                                <th className="px-6 py-4">Date</th>
+                                                <th className="px-6 py-4">Member Name</th>
+                                                <th className="px-6 py-4">Mobile & ILJ ID</th>
+                                                <th className="px-6 py-4">Preferred Weekend</th>
+                                                <th className="px-6 py-4">Attendance Status</th>
+                                                <th className="px-6 py-4">Attended Event</th>
+                                                <th className="px-6 py-4 text-right">Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-gray-100 text-gray-700">
+                                            {filteredKivaRegistrations.map((reg) => (
+                                                <tr key={reg.id} className="hover:bg-gray-50/40 transition-colors">
+                                                    <td className="px-6 py-4 font-mono text-gray-500">
+                                                        {new Date(reg.created_at).toLocaleDateString()}
+                                                    </td>
+                                                    <td className="px-6 py-4 font-semibold text-gray-900">
+                                                        {reg.full_name}
+                                                    </td>
+                                                    <td className="px-6 py-4 font-medium">
+                                                        <p>📞 {reg.mobile_number}</p>
+                                                        {reg.is_ilj_volunteer && (
+                                                            <span className="inline-block mt-0.5 px-2 py-0.5 bg-[#ae2b2b]/10 text-[#ae2b2b] rounded-full text-[9px] font-bold">
+                                                                ILJ Code: {reg.ilj_id || 'N/A'}
+                                                            </span>
+                                                        )}
+                                                    </td>
+                                                    <td className="px-6 py-4 font-medium text-gray-600">
+                                                        {reg.preferred_dates}
+                                                    </td>
+                                                    <td className="px-6 py-4">
+                                                        <select
+                                                            value={reg.attendance_status || 'Not Attended'}
+                                                            onChange={(e) => {
+                                                                const val = e.target.value;
+                                                                const eventId = val === 'Attended/Visited' ? (reg.attended_event_id || (kivaSessions[0]?.id || null)) : null;
+                                                                handleUpdateKivaAttendance(reg.id, val, eventId);
+                                                            }}
+                                                            className="px-2.5 py-1.5 border border-gray-300 rounded-lg text-xs font-bold bg-white focus:outline-none focus:ring-1 focus:ring-[#ae2b2b] cursor-pointer"
+                                                        >
+                                                            <option value="Not Attended">Not Attended</option>
+                                                            <option value="Attended/Visited">Attended/Visited</option>
+                                                        </select>
+                                                    </td>
+                                                    <td className="px-6 py-4 max-w-[200px] truncate">
+                                                        {reg.attendance_status === 'Attended/Visited' ? (
+                                                            <select
+                                                                value={reg.attended_event_id || ''}
+                                                                onChange={(e) => handleUpdateKivaAttendance(reg.id, 'Attended/Visited', e.target.value || null)}
+                                                                className="px-2.5 py-1.5 border border-gray-300 rounded-lg text-xs font-bold bg-white focus:outline-none focus:ring-1 focus:ring-[#ae2b2b] cursor-pointer w-full max-w-[200px]"
+                                                            >
+                                                                <option value="">-- Select Event --</option>
+                                                                {kivaSessions.map(session => (
+                                                                    <option key={session.id} value={session.id}>
+                                                                        {new Date(session.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })} - {session.venue}
+                                                                    </option>
+                                                                ))}
+                                                            </select>
+                                                        ) : (
+                                                            <span className="text-gray-400 italic">-</span>
+                                                        )}
+                                                    </td>
+                                                    <td className="px-6 py-4 text-right">
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setSelectedReg(reg)}
+                                                            className="px-2.5 py-1.5 text-[10px] font-bold text-[#ae2b2b] bg-red-50 hover:bg-[#ae2b2b]/10 rounded border border-[#ae2b2b]/20 transition-all mr-2 cursor-pointer inline-block"
+                                                        >
+                                                            Details
+                                                        </button>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => handleDeleteKivaRegistration(reg.id)}
+                                                            className="p-1.5 text-gray-400 hover:text-red-650 hover:bg-red-50 rounded transition-all inline-block align-middle cursor-pointer"
+                                                        >
+                                                            <Trash2 className="h-4 w-4" />
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            )}
+                        </div>
+                    ) : (
+                        <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                            {filteredKivaMemberHistory.length === 0 ? (
+                                <div className="text-center py-16">
+                                    <Users className="h-12 w-12 text-gray-300 mx-auto mb-3" />
+                                    <h4 className="text-sm font-medium text-gray-900 mb-1">No members found</h4>
+                                    <p className="text-gray-500 text-xs">There are no member records matching your filters.</p>
+                                </div>
+                            ) : (
+                                <div className="overflow-x-auto">
+                                    <table className="w-full text-left text-xs">
+                                        <thead className="bg-gray-50 border-b border-gray-200 text-gray-650 font-bold uppercase tracking-wider">
+                                            <tr>
+                                                <th className="px-6 py-4">Member Name & ID</th>
+                                                <th className="px-6 py-4">Contact</th>
+                                                <th className="px-6 py-4 text-center">Registrations</th>
+                                                <th className="px-6 py-4 text-center">Attended Events</th>
+                                                <th className="px-6 py-4">Attended History Timeline</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-gray-100 text-gray-700">
+                                            {filteredKivaMemberHistory.map((m) => (
+                                                <tr key={m.mobile_number} className="hover:bg-gray-50/40 transition-colors">
+                                                    <td className="px-6 py-4">
+                                                        <p className="font-bold text-gray-900 text-sm">{m.full_name}</p>
+                                                        {m.is_ilj_volunteer ? (
+                                                            <span className="inline-block mt-0.5 px-2 py-0.5 bg-[#ae2b2b]/10 text-[#ae2b2b] rounded-full text-[9px] font-bold uppercase tracking-wider font-mono">
+                                                                ILJ VOLUNTEER ({m.ilj_id})
+                                                            </span>
+                                                        ) : (
+                                                            <span className="inline-block mt-0.5 px-2 py-0.5 bg-gray-100 text-gray-500 rounded-full text-[9px] font-bold uppercase tracking-wider">
+                                                                General Public
+                                                            </span>
+                                                        )}
+                                                    </td>
+                                                    <td className="px-6 py-4 font-mono font-bold text-gray-800 text-sm">
+                                                        {m.mobile_number}
+                                                    </td>
+                                                    <td className="px-6 py-4 text-center font-bold text-gray-900 text-sm">
+                                                        {m.registrations.length}
+                                                    </td>
+                                                    <td className="px-6 py-4 text-center font-bold text-green-700 text-sm">
+                                                        {m.attended_events.length}
+                                                    </td>
+                                                    <td className="px-6 py-4">
+                                                        {m.attended_events.length === 0 ? (
+                                                            <span className="text-gray-400 italic">No events attended yet</span>
+                                                        ) : (
+                                                            <div className="space-y-1.5 max-w-md">
+                                                                {m.attended_events.map((e, idx) => (
+                                                                    <div key={idx} className="flex items-start gap-1.5 text-[11px] bg-green-50/50 p-2 rounded border border-green-100 text-green-800">
+                                                                        <Check className="h-3 w-3 mt-0.5 text-green-600 shrink-0" />
+                                                                        <div>
+                                                                            <span className="font-bold">{new Date(e.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</span>: <span className="font-medium text-gray-700">{e.venue}</span>
+                                                                        </div>
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        )}
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            )}
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        return null;
+    };
+
+    const dynamicTabs = useMemo(() => {
+        const tabs = [...TABS];
+        if (projectCode === 'PRJ-010' || projectCode === 'PRJ-009') {
+            tabs.push({ id: 'schedule', label: 'Schedule', icon: Calendar });
+            tabs.push({ id: 'registrations', label: 'Registrations', icon: UserCheck });
+        }
+        return tabs;
+    }, [projectCode]);
+
     return (
         <div className="space-y-6 animate-fade-in pb-12">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -1575,7 +2516,7 @@ const PodManagementHub = () => {
                         
                         {/* Tab Switcher */}
                         <div className="flex flex-wrap gap-1.5 justify-start xl:justify-end w-full xl:w-auto mt-2 xl:mt-0">
-                            {TABS.map((tab) => {
+                            {dynamicTabs.map((tab) => {
                                 const Icon = tab.icon;
                                 const isActive = activeTab === tab.id;
                                 return (
@@ -1616,6 +2557,8 @@ const PodManagementHub = () => {
                                 {activeTab === 'history' && renderHistoryTab()}
                                 {activeTab === 'tasks' && renderTasksTab()}
                                 {activeTab === 'opportunities' && renderOpportunitiesTab()}
+                                {activeTab === 'schedule' && renderScheduleTab()}
+                                {activeTab === 'registrations' && renderRegistrationsTab()}
                             </>
                         )}
                     </div>
