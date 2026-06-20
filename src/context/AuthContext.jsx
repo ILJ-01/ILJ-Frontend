@@ -12,7 +12,17 @@ export function AuthProvider({ children }) {
         const storedUser = localStorage.getItem('ilj_user');
         if (storedUser) {
             try {
-                setUser(JSON.parse(storedUser));
+                const parsedUser = JSON.parse(storedUser);
+                setUser(parsedUser);
+
+                // Verify that Supabase Auth session is also active to keep them in sync.
+                // If they logged in before the RLS fix, they won't have a Supabase Auth session.
+                supabase.auth.getSession().then(({ data: { session } }) => {
+                    if (!session && parsedUser.email !== 'admin@ilovejinshasan.org') {
+                        console.warn("ILJ session exists but Supabase Auth session is missing. Logging out to resync...");
+                        logout();
+                    }
+                });
             } catch (e) {
                 localStorage.removeItem('ilj_user');
             }
@@ -34,6 +44,38 @@ export function AuthProvider({ children }) {
             }
 
             const userData = data.user;
+
+            // Establish authenticated session with Supabase Auth
+            let authResult = await supabase.auth.signInWithPassword({
+                email: userData.email,
+                password: password
+            });
+
+            // If auth sign in fails (e.g. auth user not synced or password out of sync), force sync and retry
+            if (authResult.error) {
+                console.warn("Auth sign in failed, attempting force sync...", authResult.error.message);
+                const { data: syncData, error: syncError } = await supabase.rpc('force_sync_auth_password', {
+                    p_ilj_id: trimmedIljId.toUpperCase(),
+                    p_password: password
+                });
+
+                if (syncError || !syncData?.success) {
+                    console.error("Force sync failed:", syncError || syncData?.error);
+                    return { success: false, error: authResult.error.message || 'Authentication session setup failed' };
+                }
+
+                // Retry sign in after successful sync
+                authResult = await supabase.auth.signInWithPassword({
+                    email: userData.email,
+                    password: password
+                });
+
+                if (authResult.error) {
+                    console.error("Auth sign in retry failed:", authResult.error);
+                    return { success: false, error: authResult.error.message || 'Authentication session retry failed' };
+                }
+            }
+
             const upperIljId = (userData.ilj_id || '').trim().toUpperCase();
             const isCPOrVCP = ['ILJ-001', 'ILJ-002', 'ILJ-007'].includes(upperIljId);
 
@@ -80,6 +122,7 @@ export function AuthProvider({ children }) {
     const logout = () => {
         setUser(null);
         localStorage.removeItem('ilj_user');
+        supabase.auth.signOut().catch(err => console.error("Error signing out of Supabase auth:", err));
     };
 
     const updatePassword = async (iljId, email, newPassword) => {
