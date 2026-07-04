@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
-import { Calendar, User, Phone, Mail, MapPin, ArrowLeft, Clock, CheckCircle } from "lucide-react";
+import { Calendar, User, Phone, Mail, MapPin, ArrowLeft, Clock, CheckCircle, Upload } from "lucide-react";
 import { downloadICS } from "../lib/ics";
 
 const SESSIONS = [
   { id: "what_if_wrong", title: "What if you are Wrong?", date: "2nd August, 2026 Sunday", venue: "Aspee Auditorium", time: "10:15 AM to 12:30 PM" },
-  { id: "autopilot_off", title: "Autopilot Mode: Off", date: "9th August, 2026 Sunday", venue: "Hall", time: "10:15 AM to 12:30 PM" },
+  { id: "autopilot_off", title: "Autopilot Mode: Off", date: "9th August, 2026 Sunday", venue: "Aspee Auditorium", time: "10:15 AM to 12:30 PM" },
   { id: "simple_ample", title: "Simple is Ample", date: "16th August, 2026 Sunday", venue: "Aspee Auditorium", time: "10:15 AM to 12:30 PM" },
   { id: "darr_jeet", title: "Darr ke Aage Jeet Hai", date: "23rd August, 2026 Sunday", venue: "Aspee Auditorium", time: "10:15 AM to 12:30 PM" },
   { id: "shasan_future", title: "Shasan: Present To Future", date: "30th August, 2026 Sunday", venue: "Aspee Auditorium", time: "10:15 AM to 12:30 PM" }
@@ -16,6 +16,8 @@ export default function ReflectRegistrationPage({ project }) {
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [paymentScreenshot, setPaymentScreenshot] = useState(null);
+  const [registrationId, setRegistrationId] = useState("");
 
   const [form, setForm] = useState({
     full_name: "",
@@ -63,11 +65,45 @@ export default function ReflectRegistrationPage({ project }) {
       return;
     }
 
+    if (!paymentScreenshot) {
+      alert("Please upload the payment screenshot.");
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
-      // Construct comma separated list of selected sessions
-      // If all are selected, prefix with "All"
+      // 1. Upload Payment Screenshot to Storage (project-gallery / event-payments)
+      let finalPaymentImageUrl = null;
+      const fileExt = paymentScreenshot.name.split('.').pop();
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+      const filePath = `event-payments/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('project-gallery')
+        .upload(filePath, paymentScreenshot);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('project-gallery')
+        .getPublicUrl(filePath);
+
+      finalPaymentImageUrl = publicUrl;
+
+      // 2. Generate Unique Registration ID R-XXX (count of existing registrations + 1)
+      const { count, error: countError } = await supabase
+        .from("event_registrations")
+        .select("id", { count: "exact", head: true })
+        .eq("project_id", project.id);
+
+      if (countError) throw countError;
+
+      const nextRegNum = (count || 0) + 1;
+      const generatedRegId = `R-${String(nextRegNum).padStart(3, '0')}`;
+      setRegistrationId(generatedRegId);
+
+      // 3. Construct sessions serialization
       const selectedTitles = SESSIONS
         .filter(s => selectedSessionIds.includes(s.id))
         .map(s => s.title);
@@ -76,6 +112,7 @@ export default function ReflectRegistrationPage({ project }) {
         ? `All ( ${selectedTitles.join(", ")} )`
         : selectedTitles.join(", ");
 
+      // 4. Insert registration record into database
       const { error: insertError } = await supabase
         .from("event_registrations")
         .insert({
@@ -88,7 +125,9 @@ export default function ReflectRegistrationPage({ project }) {
           dob: form.dob || null,
           education_details: form.education_details || null,
           hobbies: form.hobbies || null, // Used for Insta ID
-          fathers_name: serializedSessions // Store selected sessions here
+          fathers_name: serializedSessions, // Store selected sessions here
+          payment_screenshot_url: finalPaymentImageUrl,
+          supported_file_url: generatedRegId // Store generated registration ID
         });
 
       if (insertError) throw insertError;
@@ -137,7 +176,12 @@ export default function ReflectRegistrationPage({ project }) {
             <CheckCircle className="h-10 w-10 text-green-600" />
           </div>
           <h2 className="text-3xl font-bold text-gray-900 mb-2 font-serif">Seat Booked Successfully!</h2>
-          <p className="text-gray-600 mb-6">
+          {registrationId && (
+            <div className="my-4 inline-block bg-emerald-100 text-emerald-800 font-mono font-bold text-lg px-4 py-2 rounded-xl border border-emerald-200">
+              Registration ID: {registrationId}
+            </div>
+          )}
+          <p className="text-gray-650 mb-6">
             Thank you for registering for <span className="font-semibold text-gray-900">{project.title}</span>.
             {form.email ? " A confirmation email has been sent to your inbox." : " We look forward to seeing you!"}
           </p>
@@ -234,19 +278,37 @@ export default function ReflectRegistrationPage({ project }) {
 
           <div className="p-4 sm:p-6 md:p-10">
             
-            {/* Presenting Information and venue info */}
-            <div className="mb-8 bg-amber-50/50 rounded-xl p-5 border border-amber-200/60 text-sm text-gray-700 leading-relaxed">
-              <h4 className="font-bold text-amber-900 mb-2 font-serif text-base">Program Venue & Schedule</h4>
-              <p className="mb-2">
-                All sessions (except Autopilot Mode: Off) are hosted at the prestigious <strong>Aspee Auditorium</strong>. Autopilot Mode: Off will be conducted at the <strong>Hall</strong>.
-              </p>
-              <p className="flex items-start gap-1 bg-white p-3 rounded-lg border border-amber-100 shadow-sm mt-3">
-                <MapPin className="h-5 w-5 text-[#ae2b2b] shrink-0 mt-0.5" />
-                <span>
-                  <strong>Venue Address:</strong> Aspee Auditorium, Laxminarayan Mandir Complex, Malad - Marve Rd, next to Nutan School, Malad, Malad (West) 400064.
-                </span>
-              </p>
-            </div>
+             {/* Presenting Information and venue info */}
+             <div className="mb-8 bg-amber-50/50 rounded-xl p-5 border border-amber-200/60 text-sm text-gray-700 leading-relaxed space-y-4">
+               <h4 className="font-bold text-amber-900 mb-2 font-serif text-base">Program Information & Venue</h4>
+               <p className="mb-2">
+                 All sessions are hosted at the prestigious <strong>Aspee Auditorium</strong>.
+               </p>
+               <p className="flex items-start gap-1 bg-white p-3 rounded-lg border border-amber-100 shadow-sm">
+                 <MapPin className="h-5 w-5 text-[#ae2b2b] shrink-0 mt-0.5" />
+                 <span>
+                   <strong>Venue Address:</strong> Aspee Auditorium, Laxminarayan Mandir Complex, Malad - Marve Rd, next to Nutan School, Malad, Malad (West) 400064.
+                 </span>
+               </p>
+               
+               <div className="grid sm:grid-cols-2 gap-4 pt-2">
+                 <div className="bg-white p-4 rounded-lg border border-amber-100 shadow-sm space-y-1">
+                   <strong className="text-amber-900 block mb-1">Details:</strong>
+                   <ul className="list-disc pl-5 space-y-1">
+                     <li>Registration fees: <strong>₹200/-</strong></li>
+                     <li>Thoughtfully designed for young adults (age 15-40 years).</li>
+                     <li>Enriching for every generation.</li>
+                   </ul>
+                 </div>
+                 <div className="bg-white p-4 rounded-lg border border-amber-100 shadow-sm space-y-1">
+                   <strong className="text-amber-900 block mb-1">For queries contact (WhatsApp Only):</strong>
+                   <ul className="list-none space-y-1">
+                     <li>Harsh Sanghavi: <strong>+91 87790 13669</strong></li>
+                     <li>Hardik Shah: <strong>+91 99304 09832</strong></li>
+                   </ul>
+                 </div>
+               </div>
+             </div>
 
             <form onSubmit={handleSubmit} className="space-y-8">
               
@@ -430,17 +492,59 @@ export default function ReflectRegistrationPage({ project }) {
                   })}
                 </div>
               </div>
+ 
+               {/* Payment Card */}
+               <div className="bg-white p-5 sm:p-6 md:p-8 rounded-2xl border border-gray-100 shadow-sm relative overflow-hidden group hover:border-[#ae2b2b]/20 transition-colors space-y-6">
+                 <div className="absolute top-0 left-0 w-1.5 h-full bg-[#ae2b2b]"></div>
+                 
+                 <div className="flex items-center gap-3 border-b border-gray-50 pb-4">
+                   <div className="bg-red-50 p-2 rounded-xl text-[#ae2b2b]">
+                     <Upload className="h-5 w-5" />
+                   </div>
+                   <h3 className="text-xl font-bold text-gray-900 font-serif">Payment & Verification</h3>
+                 </div>
 
-              {/* Submit */}
-              <div className="pt-4">
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="w-full flex justify-center py-4 px-4 border border-transparent rounded-xl shadow-lg text-base font-bold text-white bg-[#ae2b2b] hover:bg-[#8f1f1f] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#ae2b2b] transition-all disabled:opacity-50"
-                >
-                  {isSubmitting ? "Processing registration..." : "Book your seat now"}
-                </button>
-              </div>
+                 <div className="flex flex-col md:flex-row items-center gap-6 bg-gray-50/50 p-5 rounded-xl border border-gray-100 shadow-sm">
+                   <div className="bg-white p-3 rounded-xl border border-gray-100 shadow-sm shrink-0">
+                     <img src="/reflect_qr.jpeg" alt="Payment QR Code" className="w-48 h-48 sm:w-52 sm:h-52 object-contain rounded-lg" />
+                   </div>
+                   <div className="text-center md:text-left space-y-2">
+                     <h4 className="font-bold text-gray-900 text-lg font-serif">Scan to Pay ₹200/-</h4>
+                     <p className="text-gray-655 text-sm leading-relaxed">
+                       Please use any UPI app (GPay, PhonePe, Paytm, etc.) to scan this QR code or pay to the UPI ID displayed on it to complete the registration fee of <strong>₹200</strong>.
+                     </p>
+                     <div className="bg-red-50/50 text-[#ae2b2b] p-3 rounded-lg border border-red-100/50 inline-block text-xs font-semibold">
+                       After successful payment, please upload the screenshot below.
+                     </div>
+                   </div>
+                 </div>
+
+                 <div className="space-y-2">
+                   <label className="text-xs font-bold text-gray-700 uppercase tracking-wider block">
+                     Upload Payment Screenshot <span className="text-[#ae2b2b]">*</span>
+                   </label>
+                   <input
+                     id="payment-screenshot-upload"
+                     type="file"
+                     required
+                     accept="image/*"
+                     onChange={e => setPaymentScreenshot(e.target.files[0])}
+                     className="block w-full text-sm text-gray-600 file:mr-4 file:py-3 file:px-6 file:rounded-xl file:border-0 file:text-sm file:font-bold file:bg-[#ae2b2b]/10 file:text-[#ae2b2b] hover:file:bg-[#ae2b2b]/20 file:cursor-pointer file:shadow-sm cursor-pointer border border-gray-200 rounded-xl p-2 bg-gray-50"
+                   />
+                   <p className="text-xs text-gray-400 mt-1">PNG, JPG, JPEG formats up to 5MB</p>
+                 </div>
+               </div>
+
+               {/* Submit */}
+               <div className="pt-4">
+                 <button
+                   type="submit"
+                   disabled={isSubmitting}
+                   className="w-full flex justify-center py-4 px-4 border border-transparent rounded-xl shadow-lg text-base font-bold text-white bg-[#ae2b2b] hover:bg-[#8f1f1f] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#ae2b2b] transition-all disabled:opacity-50"
+                 >
+                   {isSubmitting ? "Processing registration..." : "Book your seat now"}
+                 </button>
+               </div>
 
             </form>
           </div>

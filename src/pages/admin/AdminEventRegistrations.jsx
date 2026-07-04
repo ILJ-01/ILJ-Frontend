@@ -190,7 +190,14 @@ const AdminEventRegistrations = () => {
                                                             {new Date(reg.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
                                                         </td>
                                                         <td className="p-3">
-                                                            <div className="font-medium text-gray-900">{reg.full_name}</div>
+                                                            <div className="font-medium text-gray-900 flex items-center gap-2">
+                                                                {reg.full_name}
+                                                                {reg.supported_file_url && (
+                                                                    <span className="text-[10px] bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded font-mono font-bold">
+                                                                        {reg.supported_file_url}
+                                                                    </span>
+                                                                )}
+                                                            </div>
                                                             {reg.age && <div className="text-xs text-gray-500">Age: {reg.age}</div>}
                                                             {reg.dob && <div className="text-xs text-gray-500">DOB: {reg.dob}</div>}
                                                         </td>
@@ -261,6 +268,12 @@ const AdminEventRegistrations = () => {
                         </div>
                         <div className="p-6 space-y-6">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {selectedReg.supported_file_url && (
+                                    <div className="md:col-span-2 bg-blue-50/50 p-3 rounded-lg border border-blue-100 mb-2">
+                                        <p className="text-xs font-semibold text-blue-700 uppercase tracking-wider mb-0.5">Registration ID</p>
+                                        <p className="font-bold text-blue-900 text-lg font-mono">{selectedReg.supported_file_url}</p>
+                                    </div>
+                                )}
                                 <div>
                                     <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Full Name</p>
                                     <p className="font-medium text-gray-900 text-lg">{selectedReg.full_name}</p>

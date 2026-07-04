@@ -172,11 +172,11 @@ export function AuthProvider({ children }) {
 
             const mergedUser = updatedUserData || currentUser;
 
-            // Fetch Projects Managed by User (public data, no auth needed)
+            // Fetch Projects Managed by User (where user is manager OR sub-head)
             const { data: projects, error: projectError } = await supabase
                 .from('projects')
                 .select('*')
-                .eq('manager_id', currentUser.id);
+                .or(`manager_id.eq.${currentUser.id},sub_head_ids.cs.{${currentUser.id}}`);
 
             if (projectError) {
                 console.error("Error fetching managed projects:", projectError);

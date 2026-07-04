@@ -120,9 +120,9 @@ const PodManagementHub = () => {
         setLoadingProjects(true);
         try {
             let query = supabase.from('projects').select('*').order('title');
-            // Filter projects to show only managed projects unless CP/VCP
+            // Filter projects to show only managed projects or sub-headed projects unless CP/VCP
             if (!user?.isCPOrVCP) {
-                query = query.eq('manager_id', user.id);
+                query = query.or(`manager_id.eq.${user.id},sub_head_ids.cs.{${user.id}}`);
             }
             if (!user?.isITAdmin) {
                 query = query.neq('status', 'archived');
@@ -1105,7 +1105,7 @@ const PodManagementHub = () => {
                                 </button>
                             </>
                         )}
-                        {(user?.isITAdmin || selectedProject.manager_id === user?.id) && (
+                        {(user?.isITAdmin || selectedProject.manager_id === user?.id || selectedProject.sub_head_ids?.includes(user?.id)) && (
                             <button
                                 onClick={() => setEditingProject(selectedProject)}
                                 className="text-xs border border-[#ae2b2b] text-[#ae2b2b] px-4 py-2 rounded-lg hover:bg-red-50 transition-colors font-bold"

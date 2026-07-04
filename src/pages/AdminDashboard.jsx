@@ -1437,7 +1437,13 @@ const AdminDashboard = () => {
                                                                                 }
                                                                             }}
                                                                         />
-                                                                        <span className="text-sm font-medium text-gray-800">{project.title} <span className="text-xs text-gray-400 font-mono">({project.project_code})</span></span>
+                                                                        <span className="text-sm font-medium text-gray-800 flex items-center gap-2">
+                                                                            {project.title} 
+                                                                            <span className="text-xs text-gray-400 font-mono">({project.project_code})</span>
+                                                                            {project.sub_head_ids?.includes(selectedVolunteer.id) && (
+                                                                                <span className="text-[10px] bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">Sub-Head</span>
+                                                                            )}
+                                                                        </span>
                                                                     </label>
                                                                 );
                                                             })

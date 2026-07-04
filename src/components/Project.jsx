@@ -64,6 +64,7 @@ export default function Project() {
   const [dbGallery, setDbGallery] = useState([]);
   const [dbTestimonials, setDbTestimonials] = useState([]);
   const [subpods, setSubpods] = useState([]);
+  const [subHeads, setSubHeads] = useState([]);
   const [revaSessions, setRevaSessions] = useState([]);
   const [kivaSessions, setKivaSessions] = useState([]);
 
@@ -138,7 +139,25 @@ export default function Project() {
           if (testData) setDbTestimonials(testData);
 
           const { data: subpodsData } = await supabase.from('projects').select('*').eq('parent_project_id', title);
-          if (subpodsData) setSubpods(subpodsData);
+          if (subpodsData) {
+            const visibleSubpods = subpodsData.filter(sub => {
+              if (sub.project_code === 'PRJ-008-01') return false; // Temporarily hide Reconnect
+              if (sub.status === 'archived' && !user?.isITAdmin) return false;
+              if (sub.visibility === 'private' && !isLoggedIn) return false;
+              return true;
+            });
+            setSubpods(visibleSubpods);
+          }
+
+          if (data.sub_head_ids && data.sub_head_ids.length > 0) {
+            const { data: shData } = await supabase
+              .from('volunteers')
+              .select('id, first_name, last_name, ilj_id, mobile_number, email')
+              .in('id', data.sub_head_ids);
+            if (shData) setSubHeads(shData);
+          } else {
+            setSubHeads([]);
+          }
 
           if (data.project_code === 'PRJ-010') {
             const { data: sessionData } = await supabase.from('reva_sessions').select('*').order('date', { ascending: true }).order('time', { ascending: true });
@@ -502,31 +521,53 @@ export default function Project() {
             </div>
           )}
 
-          {/* Manager Contact Card - TEMPORARILY COMMENTED OUT
-          {isLoggedIn && project.manager && (
-            <div className="bg-gradient-to-br from-[#ae2b2b]/5 to-white rounded-2xl p-6 border border-[#ae2b2b]/10 shadow-sm flex flex-col md:flex-row gap-6 items-start md:items-center">
-              <div className="bg-[#ae2b2b]/10 p-4 rounded-full text-[#ae2b2b]">
-                <User size={32} />
-              </div>
-              <div className="flex-1">
-                <p className="text-xs font-bold text-[#ae2b2b] uppercase tracking-widest mb-1">Pod Head</p>
-                <h3 className="text-xl font-semibold text-gray-900">{project.manager.first_name} {project.manager.last_name}</h3>
-                <p className="text-sm text-gray-500 mb-3">{project.manager.ilj_id}</p>
-
-                <div className="flex flex-wrap gap-4 text-sm">
-                  <div className="flex items-center gap-2 text-gray-700 bg-white px-3 py-1.5 rounded-lg border border-[#ae2b2b]/10 shadow-sm">
-                    <Phone size={14} className="text-[#ae2b2b]" />
-                    {project.manager.mobile_number}
+          {/* Manager & Sub-Heads Contact Card */}
+          {isLoggedIn && (project.manager || (project.display_sub_heads && subHeads.length > 0)) && (
+            <div className="bg-gradient-to-br from-[#ae2b2b]/5 to-white rounded-2xl p-6 border border-[#ae2b2b]/10 shadow-sm space-y-6">
+              {project.manager && (
+                <div className="flex flex-col md:flex-row gap-6 items-start md:items-center">
+                  <div className="bg-[#ae2b2b]/10 p-4 rounded-full text-[#ae2b2b] shrink-0">
+                    <User size={32} />
                   </div>
-                  <div className="flex items-center gap-2 text-gray-700 bg-white px-3 py-1.5 rounded-lg border border-[#ae2b2b]/10 shadow-sm">
-                    <Mail size={14} className="text-[#ae2b2b]" />
-                    {project.manager.email}
+                  <div className="flex-1">
+                    <p className="text-xs font-bold text-[#ae2b2b] uppercase tracking-widest mb-1">Pod Head / Manager</p>
+                    <h3 className="text-xl font-semibold text-gray-900">{project.manager.first_name} {project.manager.last_name}</h3>
+                    <p className="text-sm text-gray-500 mb-3">{project.manager.ilj_id}</p>
+
+                    <div className="flex flex-wrap gap-4 text-sm">
+                      <div className="flex items-center gap-2 text-gray-700 bg-white px-3 py-1.5 rounded-lg border border-[#ae2b2b]/10 shadow-sm">
+                        <Phone size={14} className="text-[#ae2b2b]" />
+                        {project.manager.mobile_number}
+                      </div>
+                      <div className="flex items-center gap-2 text-gray-700 bg-white px-3 py-1.5 rounded-lg border border-[#ae2b2b]/10 shadow-sm">
+                        <Mail size={14} className="text-[#ae2b2b]" />
+                        {project.manager.email}
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
+
+              {project.display_sub_heads && subHeads.length > 0 && (
+                <div className="border-t border-gray-100 pt-6">
+                  <p className="text-xs font-bold text-[#ae2b2b] uppercase tracking-widest mb-3">Pod Sub-Heads</p>
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    {subHeads.map(sh => (
+                      <div key={sh.id} className="bg-white p-4 rounded-xl border border-gray-200 flex items-center gap-3">
+                        <div className="bg-gray-100 text-gray-600 w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm shrink-0">
+                          {sh.first_name[0]}{sh.last_name[0]}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="font-semibold text-gray-900 truncate">{sh.first_name} {sh.last_name}</p>
+                          <p className="text-xs text-gray-500 font-mono">{sh.ilj_id}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
-          */}
 
           {/* Upcoming Event Registration Banner */}
           {project.is_event_registration_enabled && project.next_event_date && (
@@ -537,27 +578,31 @@ export default function Project() {
 
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
                 <div className="flex-1 space-y-4">
-                  {project.project_code === 'PRJ-008' && (
+                  {project.project_code === 'PRJ-008' ? (
                     <div>
+                      <h3 className="font-bold text-gray-900 text-lg">Reflect: Look Beyond your Version</h3>
                       <div className="flex items-center gap-2 text-gray-700 mt-2">
                         <MapPin className="w-5 h-5 text-[#ae2b2b]" />
-                        <a href="https://maps.app.goo.gl/WJ2kFGtr21hmVW6M8" target="_blank" rel="noopener noreferrer" className="font-medium hover:text-[#ae2b2b] hover:underline transition-colors">
-                          Piyushpani Parshvnath Jain Temple
+                        <a href="https://maps.google.com/?q=Aspee+Auditorium+Malad+West" target="_blank" rel="noopener noreferrer" className="font-medium hover:text-[#ae2b2b] hover:underline transition-colors">
+                          Aspee Auditorium, Malad (West)
                         </a>
                       </div>
                     </div>
-                  )}
-                  {project.project_code === 'PRJ-002' && (
+                  ) : project.project_code === 'PRJ-002' ? (
                     <div>
                       <div className="flex items-center gap-2 text-gray-700 mt-2">
                         <MapPin className="w-5 h-5 text-[#ae2b2b]" />
                         <span className="font-medium">Kasturba Dhiriba Aaradhna Bhavan, Vile Parle East</span>
                       </div>
                     </div>
-                  )}
+                  ) : null}
                   <div>
                     <p className="text-sm font-bold text-gray-500 uppercase tracking-widest mb-1">Next Event Date</p>
-                    <p className="text-xl font-bold text-gray-900">{project.next_event_date}</p>
+                    <p className="text-xl font-bold text-gray-900">
+                      {project.project_code === 'PRJ-008' 
+                        ? "Sundays in August 2026 (2nd, 9th, 16th, 23rd, 30th)" 
+                        : project.next_event_date}
+                    </p>
                   </div>
                 </div>
                 
@@ -569,7 +614,7 @@ export default function Project() {
                       </Button>
                     </a>
                   ) : (
-                    <Link to={`/projects/${project.id}/event-registration`}>
+                    <Link to={project.project_code === 'PRJ-008' ? '/projects/e65d8362-e612-4217-b769-cf74719c8d5a/event-registration' : `/projects/${project.id}/event-registration`}>
                       <Button className="bg-[#ae2b2b] hover:bg-[#8f1f1f] text-white px-8 py-2 border-0">
                         Click to Register
                       </Button>

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import {
-    ArrowLeft, Save, Search, User,
+    ArrowLeft, Save, Search, User, Users,
     Check, X, Briefcase, Image, Hash, Upload, Cloud, Trash2, CheckCircle, XCircle, Pencil
 } from 'lucide-react';
 import AdminRevaSessions from './admin/AdminRevaSessions';
@@ -50,6 +50,9 @@ const AdminEditProject = () => {
 
     const [managerSearchQuery, setManagerSearchQuery] = useState('');
     const [selectedManager, setSelectedManager] = useState(null); // Single object
+    const [subHeadIds, setSubHeadIds] = useState([]);
+    const [displaySubHeads, setDisplaySubHeads] = useState(false);
+    const [subHeadSearchQuery, setSubHeadSearchQuery] = useState('');
 
     useEffect(() => {
         if (authLoading) return;
@@ -113,6 +116,8 @@ const AdminEditProject = () => {
                 is_event_registration_enabled: project.is_event_registration_enabled || false
             });
             setProjectManagerId(project.manager_id);
+            setSubHeadIds(project.sub_head_ids || []);
+            setDisplaySubHeads(project.display_sub_heads || false);
 
             if (project.banner_url) {
                 setBannerPreview(project.banner_url);
@@ -414,7 +419,9 @@ const AdminEditProject = () => {
                     banner_url: finalBannerUrl,
                     next_event_date: formData.next_event_date,
                     is_event_registration_enabled: formData.is_event_registration_enabled,
-                    manager_id: selectedManager.id
+                    manager_id: selectedManager.id,
+                    sub_head_ids: subHeadIds,
+                    display_sub_heads: displaySubHeads
                 })
                 .eq('id', id);
 
@@ -747,6 +754,100 @@ const AdminEditProject = () => {
                                     )}
                                 </div>
                             )}
+                        </div>
+
+                        {/* Sub-Heads & Display Settings */}
+                        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 space-y-6">
+                            <div>
+                                <h2 className="text-lg font-semibold text-gray-900 mb-2 flex items-center gap-2">
+                                    <Users className="h-5 w-5 text-amber-600" /> Pod Sub-Heads
+                                </h2>
+                                <p className="text-xs text-gray-500 mb-4">Assign Pod Management Hub rights to multiple volunteers (Sub-Heads).</p>
+                                
+                                <div className="space-y-3 mb-4">
+                                    {subHeadIds.length > 0 ? (
+                                        <div className="grid gap-2 sm:grid-cols-2">
+                                            {subHeadIds.map(shId => {
+                                                const vol = volunteers.find(v => v.id === shId);
+                                                if (!vol) return null;
+                                                return (
+                                                    <div key={shId} className="flex items-center justify-between bg-gray-50 p-2.5 rounded-lg border border-gray-200 text-sm">
+                                                        <div className="flex items-center gap-2">
+                                                            <div className="bg-gray-200 text-gray-700 w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs shrink-0">
+                                                                {vol.first_name?.[0]}{vol.last_name?.[0]}
+                                                            </div>
+                                                            <div className="min-w-0">
+                                                                <p className="font-semibold text-gray-800 truncate">{vol.first_name} {vol.last_name}</p>
+                                                                <p className="text-[10px] text-gray-500 font-mono">{vol.ilj_id}</p>
+                                                            </div>
+                                                        </div>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setSubHeadIds(prev => prev.filter(id => id !== shId))}
+                                                            className="p-1 hover:bg-gray-200 rounded text-gray-500 hover:text-red-500 transition-colors"
+                                                        >
+                                                            <X className="h-4 w-4" />
+                                                        </button>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    ) : (
+                                        <p className="text-sm italic text-gray-400">No sub-heads assigned yet.</p>
+                                    )}
+                                </div>
+
+                                <div className="relative">
+                                    <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+                                    <input
+                                        type="text"
+                                        placeholder="Search for a sub-head..."
+                                        value={subHeadSearchQuery}
+                                        onChange={(e) => setSubHeadSearchQuery(e.target.value)}
+                                        className="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm"
+                                    />
+                                    {subHeadSearchQuery && (
+                                        <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-40 overflow-y-auto">
+                                            {volunteers
+                                                .filter(v => 
+                                                    v.id !== selectedManager?.id &&
+                                                    !subHeadIds.includes(v.id) &&
+                                                    ((v.first_name + ' ' + v.last_name).toLowerCase().includes(subHeadSearchQuery.toLowerCase()) || v.ilj_id?.toLowerCase().includes(subHeadSearchQuery.toLowerCase()))
+                                                )
+                                                .slice(0, 5)
+                                                .map(v => (
+                                                    <div
+                                                        key={v.id}
+                                                        onClick={() => {
+                                                            setSubHeadIds(prev => [...prev, v.id]);
+                                                            setSubHeadSearchQuery('');
+                                                        }}
+                                                        className="p-2.5 hover:bg-gray-50 cursor-pointer flex items-center justify-between text-sm border-b last:border-0 border-gray-50"
+                                                    >
+                                                        <span className="font-medium text-gray-700">{v.first_name} {v.last_name}</span>
+                                                        <span className="text-gray-400 text-xs">{v.ilj_id}</span>
+                                                    </div>
+                                                ))
+                                            }
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                            <div className="border-t border-gray-100 pt-4">
+                                <label className="flex items-center gap-3 cursor-pointer">
+                                    <input
+                                        type="checkbox"
+                                        checked={displaySubHeads}
+                                        onChange={(e) => setDisplaySubHeads(e.target.checked)}
+                                        className="w-4 h-4 rounded border-gray-300 text-[#ae2b2b] focus:ring-[#ae2b2b]"
+                                    />
+                                    <div>
+                                        <span className="text-sm font-semibold text-gray-900 block">Display Sub-Heads on Project Page</span>
+                                        <span className="text-xs text-gray-550">Toggle whether the names of the assigned Pod Sub-Heads are visible to users.</span>
+                                    </div>
+                                </label>
+                            </div>
                         </div>
 
                         {/* 3. Project Gallery Section */}
