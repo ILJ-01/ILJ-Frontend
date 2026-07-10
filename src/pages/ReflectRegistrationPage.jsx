@@ -296,15 +296,14 @@ export default function ReflectRegistrationPage({ project }) {
                    <strong className="text-amber-900 block mb-1">Details:</strong>
                    <ul className="list-disc pl-5 space-y-1">
                      <li>Registration fees: <strong>₹200/-</strong></li>
-                     <li>Thoughtfully designed for young adults (age 15-40 years).</li>
-                     <li>Enriching for every generation.</li>
+                     <li>Age: 15-40 years</li>
                    </ul>
                  </div>
                  <div className="bg-white p-4 rounded-lg border border-amber-100 shadow-sm space-y-1">
                    <strong className="text-amber-900 block mb-1">For queries contact (WhatsApp Only):</strong>
                    <ul className="list-none space-y-1">
                      <li>Harsh Sanghavi: <strong>+91 87790 13669</strong></li>
-                     <li>Hardik Shah: <strong>+91 99304 09832</strong></li>
+                     <li>Bhavesh Doshi: <strong>+91 93238 06706</strong></li>
                    </ul>
                  </div>
                </div>

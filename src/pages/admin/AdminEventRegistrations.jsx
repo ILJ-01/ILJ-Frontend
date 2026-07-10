@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
-import { Calendar, User, Phone, MapPin, Image as ImageIcon, Loader2, ChevronDown, ChevronUp, Trash2, Eye, X } from 'lucide-react';
+import { Calendar, User, Phone, MapPin, Image as ImageIcon, Loader2, ChevronDown, ChevronUp, Trash2, Eye, X, Download } from 'lucide-react';
+import * as XLSX from 'xlsx';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 const AdminEventRegistrations = () => {
     const [registrations, setRegistrations] = useState([]);
@@ -97,6 +100,154 @@ const AdminEventRegistrations = () => {
         }
     };
 
+    const exportToExcel = (project, regs) => {
+        const isReflect = project?.project_code === 'PRJ-008-02';
+        let dataToExport = [];
+
+        if (isReflect) {
+            dataToExport = regs.map(r => ({
+                "Registration ID": r.supported_file_url || 'N/A',
+                "Registration Date": r.created_at ? new Date(r.created_at).toLocaleDateString('en-GB') : 'N/A',
+                "Full Name": r.full_name || 'N/A',
+                "WhatsApp Number": r.whatsapp_number || 'N/A',
+                "Email": r.email || 'N/A',
+                "Date of Birth": r.dob || 'N/A',
+                "Professional Education": r.education_details || 'N/A',
+                "Instagram ID": r.hobbies || 'N/A',
+                "Booked Sessions": r.fathers_name || 'N/A',
+                "Address": r.address || 'N/A',
+                "Payment Status": r.payment_screenshot_url ? "Paid (Proof Uploaded)" : "N/A",
+                "Payment Proof Link": r.payment_screenshot_url || 'N/A'
+            }));
+        } else {
+            dataToExport = regs.map(r => ({
+                "Registration ID": r.supported_file_url || 'N/A',
+                "Registration Date": r.created_at ? new Date(r.created_at).toLocaleDateString('en-GB') : 'N/A',
+                "Full Name": r.full_name || 'N/A',
+                "Age": r.age || 'N/A',
+                "Date of Birth": r.dob || 'N/A',
+                "WhatsApp Number": r.whatsapp_number || 'N/A',
+                "Mobile Number": r.mobile_number || 'N/A',
+                "Email": r.email || 'N/A',
+                "Sangh Name": r.sangh_name || 'N/A',
+                "Address": r.address || 'N/A',
+                "Father's Name": r.fathers_name || 'N/A',
+                "Mother's Name": r.mothers_name || 'N/A',
+                "Emergency Contact Name": r.emergency_contact_name || 'N/A',
+                "Emergency Contact Number": r.emergency_contact_number || 'N/A',
+                "Education Details": r.education_details || 'N/A',
+                "Hobbies/Other Info": r.hobbies || 'N/A',
+                "Payment Proof Link": r.payment_screenshot_url || 'N/A'
+            }));
+        }
+
+        const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+        const workbook = XLSX.utils.book_new();
+        const sheetName = isReflect ? "Reflect_Registrations" : "Registrations";
+        XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
+        
+        const safeTitle = (project?.title || 'Event').replace(/[^a-z0-9]/gi, '_').toLowerCase();
+        XLSX.writeFile(workbook, `${safeTitle}_registrations_${new Date().toISOString().split('T')[0]}.xlsx`);
+    };
+
+    const exportToPDF = (project, regs) => {
+        const isReflect = project?.project_code === 'PRJ-008-02';
+        const doc = new jsPDF(isReflect ? 'l' : 'p', 'mm', 'a4');
+        
+        const crimson = [174, 43, 43];
+        const darkGray = [30, 30, 30];
+        
+        doc.setFillColor(...crimson);
+        const pageWidth = doc.internal.pageSize.getWidth();
+        doc.rect(0, 0, pageWidth, 28, 'F');
+        
+        doc.setTextColor(255, 255, 255);
+        doc.setFont('Helvetica', 'bold');
+        doc.setFontSize(18);
+        doc.text("I LOVE JINSHASAN", 15, 18);
+        
+        doc.setFontSize(10);
+        doc.setFont('Helvetica', 'normal');
+        doc.text("Event Registration Report", pageWidth - 60, 18);
+        
+        doc.setTextColor(...darkGray);
+        doc.setFont('Helvetica', 'bold');
+        doc.setFontSize(13);
+        doc.text(project?.title || "Event Registrations", 15, 38);
+        
+        doc.setFont('Helvetica', 'normal');
+        doc.setFontSize(9);
+        doc.setTextColor(100, 100, 100);
+        doc.text(`Project Code: ${project?.project_code || 'N/A'} | Exported On: ${new Date().toLocaleDateString('en-GB')}`, 15, 44);
+        
+        doc.setDrawColor(220, 220, 220);
+        doc.line(15, 48, pageWidth - 15, 48);
+
+        let tableHeaders = [];
+        let tableData = [];
+        let columnStyles = {};
+
+        if (isReflect) {
+            tableHeaders = [["Reg ID", "Name", "WhatsApp", "Email", "DOB", "Education", "Instagram ID", "Booked Sessions", "Address"]];
+            tableData = regs.map(r => [
+                r.supported_file_url || 'N/A',
+                r.full_name || 'N/A',
+                r.whatsapp_number || 'N/A',
+                r.email || 'N/A',
+                r.dob || 'N/A',
+                r.education_details || 'N/A',
+                r.hobbies || 'N/A',
+                r.fathers_name || 'N/A',
+                r.address || 'N/A'
+            ]);
+            columnStyles = {
+                0: { cellWidth: 15 },
+                1: { cellWidth: 35 },
+                2: { cellWidth: 22 },
+                3: { cellWidth: 35 },
+                4: { cellWidth: 18 },
+                5: { cellWidth: 28 },
+                6: { cellWidth: 22 },
+                7: { cellWidth: 40 },
+                8: { cellWidth: 'auto' }
+            };
+        } else {
+            tableHeaders = [["Reg ID", "Name", "Age/DOB", "WhatsApp", "Sangh", "Address", "Payment"]];
+            tableData = regs.map(r => [
+                r.supported_file_url || 'N/A',
+                r.full_name || 'N/A',
+                r.age ? `Age: ${r.age}` : (r.dob || 'N/A'),
+                r.whatsapp_number || 'N/A',
+                r.sangh_name || 'N/A',
+                r.address || 'N/A',
+                r.payment_screenshot_url ? 'Paid' : 'N/A'
+            ]);
+            columnStyles = {
+                0: { cellWidth: 20 },
+                1: { cellWidth: 40 },
+                2: { cellWidth: 20 },
+                3: { cellWidth: 25 },
+                4: { cellWidth: 30 },
+                5: { cellWidth: 'auto' },
+                6: { cellWidth: 20 }
+            };
+        }
+
+        autoTable(doc, {
+            startY: 52,
+            head: tableHeaders,
+            body: tableData,
+            theme: 'striped',
+            headStyles: { fillColor: crimson },
+            styles: { fontSize: 8, cellPadding: 2, overflow: 'linebreak' },
+            columnStyles: columnStyles,
+            margin: { left: 15, right: 15 }
+        });
+
+        const safeTitle = (project?.title || 'Event').replace(/[^a-z0-9]/gi, '_').toLowerCase();
+        doc.save(`${safeTitle}_registrations_${new Date().toISOString().slice(0, 10)}.pdf`);
+    };
+
     if (loading) {
         return (
             <div className="flex justify-center h-64 items-center">
@@ -167,6 +318,25 @@ const AdminEventRegistrations = () => {
 
                             {expandedProjects[projectId] && (
                                 <div className="p-4 border-t border-gray-200 bg-white">
+                                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-3">
+                                        <div className="text-xs text-gray-500 font-medium">
+                                            Showing {registrations.length} registration(s)
+                                        </div>
+                                        <div className="flex flex-wrap gap-2">
+                                            <button
+                                                onClick={() => exportToExcel(project, registrations)}
+                                                className="px-3 py-1.5 bg-green-700 hover:bg-green-800 text-white rounded text-xs font-semibold flex items-center gap-1.5 shadow-sm transition-colors cursor-pointer"
+                                            >
+                                                <Download className="h-3.5 w-3.5" /> Export to Excel
+                                            </button>
+                                            <button
+                                                onClick={() => exportToPDF(project, registrations)}
+                                                className="px-3 py-1.5 bg-[#ae2b2b] hover:bg-[#8f1f1f] text-white rounded text-xs font-semibold flex items-center gap-1.5 shadow-sm transition-colors cursor-pointer"
+                                            >
+                                                <Download className="h-3.5 w-3.5" /> Export to PDF
+                                            </button>
+                                        </div>
+                                    </div>
                                     <div className="overflow-x-auto">
                                         <table className="w-full text-left border-collapse">
                                             <thead>
