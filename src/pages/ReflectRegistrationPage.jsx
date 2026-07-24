@@ -26,7 +26,9 @@ export default function ReflectRegistrationPage({ project }) {
     dob: "",
     contact_no: "",
     education_details: "",
-    hobbies: "" // Used for Instagram ID (optional)
+    hobbies: "", // Used for Instagram ID (optional)
+    how_did_you_hear: "",
+    how_did_you_hear_other: ""
   });
 
   // Keep track of selected session IDs.
@@ -112,6 +114,10 @@ export default function ReflectRegistrationPage({ project }) {
         ? `All ( ${selectedTitles.join(", ")} )`
         : selectedTitles.join(", ");
 
+      const finalHowDidYouHear = form.how_did_you_hear === "Other"
+        ? (form.how_did_you_hear_other ? `Other: ${form.how_did_you_hear_other}` : "Other")
+        : form.how_did_you_hear;
+
       // 4. Insert registration record into database
       const { error: insertError } = await supabase
         .from("event_registrations")
@@ -125,6 +131,7 @@ export default function ReflectRegistrationPage({ project }) {
           dob: form.dob || null,
           education_details: form.education_details || null,
           hobbies: form.hobbies || null, // Used for Insta ID
+          dharmik_education: finalHowDidYouHear || null, // How did you hear about this workshop
           fathers_name: serializedSessions, // Store selected sessions here
           payment_screenshot_url: finalPaymentImageUrl,
           supported_file_url: generatedRegId // Store generated registration ID
@@ -422,6 +429,55 @@ export default function ReflectRegistrationPage({ project }) {
                       onChange={e => setForm({ ...form, address: e.target.value })}
                       className="w-full rounded-xl border border-gray-200 px-4 py-3 bg-gray-50/50 text-gray-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#ae2b2b]/20 focus:border-[#ae2b2b] transition-all placeholder:text-gray-400 font-medium resize-none"
                     ></textarea>
+                  </div>
+
+                  <div className="space-y-2 md:col-span-2 pt-2 border-t border-gray-100">
+                    <label className="text-xs font-bold text-gray-700 uppercase tracking-wider">
+                      How did you hear about this workshop? <span className="text-[#ae2b2b]">*</span>
+                    </label>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5">
+                      {[
+                        "Instagram",
+                        "WhatsApp",
+                        "Friend / Family",
+                        "Sangh",
+                        "Pujya Sahebji",
+                        "Other"
+                      ].map((option) => (
+                        <label
+                          key={option}
+                          className={`flex items-center gap-2.5 p-3 rounded-xl border cursor-pointer transition-all text-sm font-medium select-none ${
+                            form.how_did_you_hear === option
+                              ? "bg-[#ae2b2b]/10 border-[#ae2b2b] text-[#ae2b2b] font-semibold"
+                              : "bg-gray-50/50 border-gray-200 text-gray-700 hover:bg-gray-100"
+                          }`}
+                        >
+                          <input
+                            type="radio"
+                            name="how_did_you_hear"
+                            required
+                            value={option}
+                            checked={form.how_did_you_hear === option}
+                            onChange={(e) => setForm({ ...form, how_did_you_hear: e.target.value })}
+                            className="text-[#ae2b2b] focus:ring-[#ae2b2b]/20 h-4 w-4"
+                          />
+                          <span>{option === "Other" ? "Other (Please specify)" : option}</span>
+                        </label>
+                      ))}
+                    </div>
+
+                    {form.how_did_you_hear === "Other" && (
+                      <div className="mt-3 animate-in fade-in slide-in-from-top-2">
+                        <input
+                          type="text"
+                          required
+                          placeholder="Please specify how you heard about us..."
+                          value={form.how_did_you_hear_other}
+                          onChange={(e) => setForm({ ...form, how_did_you_hear_other: e.target.value })}
+                          className="w-full rounded-xl border border-gray-200 px-4 py-3 bg-gray-50/50 text-gray-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#ae2b2b]/20 focus:border-[#ae2b2b] transition-all placeholder:text-gray-400 font-medium"
+                        />
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

@@ -114,6 +114,7 @@ const AdminEventRegistrations = () => {
                 "Date of Birth": r.dob || 'N/A',
                 "Professional Education": r.education_details || 'N/A',
                 "Instagram ID": r.hobbies || 'N/A',
+                "How Heard": r.dharmik_education || 'N/A',
                 "Booked Sessions": r.fathers_name || 'N/A',
                 "Address": r.address || 'N/A',
                 "Payment Status": r.payment_screenshot_url ? "Paid (Proof Uploaded)" : "N/A",
@@ -188,7 +189,7 @@ const AdminEventRegistrations = () => {
         let columnStyles = {};
 
         if (isReflect) {
-            tableHeaders = [["Reg ID", "Name", "WhatsApp", "Email", "DOB", "Education", "Instagram ID", "Booked Sessions", "Address"]];
+            tableHeaders = [["Reg ID", "Name", "WhatsApp", "Email", "DOB", "Education", "How Heard", "Instagram ID", "Booked Sessions", "Address"]];
             tableData = regs.map(r => [
                 r.supported_file_url || 'N/A',
                 r.full_name || 'N/A',
@@ -196,6 +197,7 @@ const AdminEventRegistrations = () => {
                 r.email || 'N/A',
                 r.dob || 'N/A',
                 r.education_details || 'N/A',
+                r.dharmik_education || 'N/A',
                 r.hobbies || 'N/A',
                 r.fathers_name || 'N/A',
                 r.address || 'N/A'
@@ -505,6 +507,12 @@ const AdminEventRegistrations = () => {
                                             <div className="md:col-span-2">
                                                 <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Instagram ID</p>
                                                 <p className="font-medium text-gray-900">{selectedReg.hobbies}</p>
+                                            </div>
+                                        )}
+                                        {selectedReg.dharmik_education && (
+                                            <div className="md:col-span-2">
+                                                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">How Heard About Workshop</p>
+                                                <p className="font-medium text-gray-900">{selectedReg.dharmik_education}</p>
                                             </div>
                                         )}
                                         {selectedReg.fathers_name && (

@@ -52,6 +52,14 @@ const getGalleryImages = (projectId) => {
     .map((img) => allGallery[img].default);
 };
 
+const SHIBIR_SESSIONS = [
+  "2 August – What if you are Wrong?",
+  "9 August – Autopilot Mode: Off",
+  "16 August – Simple is Ample",
+  "23 August – Darr ke Aage Jeet Hai",
+  "30 August – Shasan: Present To Future"
+];
+
 export default function Project() {
   const navigate = useNavigate();
   const { title } = useParams(); // Acts as 'id' for DB projects
@@ -83,6 +91,7 @@ export default function Project() {
   });
   const [feedbackForm, setFeedbackForm] = useState({
     rating: 5,
+    session: '',
     comments: '',
     is_anonymous: false,
     name: '',
@@ -276,15 +285,33 @@ export default function Project() {
     e.preventDefault();
     setSubmitting(true);
     try {
-      const { error } = await supabase.from('project_feedback').insert({
+      const parsedAge = feedbackForm.age && !isNaN(parseInt(feedbackForm.age, 10))
+        ? parseInt(feedbackForm.age, 10)
+        : null;
+
+      const finalComments = feedbackForm.session
+        ? `[Session: ${feedbackForm.session}] ${feedbackForm.comments}`
+        : feedbackForm.comments;
+
+      const payload = {
         project_id: project.id,
-        ...feedbackForm
-      });
+        rating: feedbackForm.rating,
+        comments: finalComments,
+        is_anonymous: feedbackForm.is_anonymous,
+        name: feedbackForm.is_anonymous ? null : (feedbackForm.name || null),
+        email: feedbackForm.is_anonymous ? null : (feedbackForm.email || null),
+        mobile: feedbackForm.is_anonymous ? null : (feedbackForm.mobile || null),
+        age: feedbackForm.is_anonymous ? null : parsedAge,
+        city: feedbackForm.is_anonymous ? null : (feedbackForm.city || null)
+      };
+
+      const { error } = await supabase.from('project_feedback').insert(payload);
       if (error) throw error;
       alert("Thank you for your feedback!");
       setIsFeedbackOpen(false);
       setFeedbackForm({
         rating: 5,
+        session: '',
         comments: '',
         is_anonymous: false,
         name: '',
@@ -295,7 +322,7 @@ export default function Project() {
       });
     } catch (error) {
       console.error("Feedback Error:", error);
-      alert("Failed to submit feedback.");
+      alert("Failed to submit feedback. " + (error.message || ''));
     } finally {
       setSubmitting(false);
     }
@@ -790,8 +817,10 @@ export default function Project() {
                   </CardContent>
                   <CardFooter className="pt-0 pb-6 mt-4 px-4 sm:px-6">
                     <div className="flex flex-col w-full pt-4 border-t border-gray-50">
-                      <span className="text-sm font-bold text-gray-900 tracking-tight">~ {t.name || 'Community Member'}</span>
-                      {t.city && <span className="text-xs text-gray-500 mt-0.5">{t.city}</span>}
+                      <span className="text-sm font-bold text-gray-900 tracking-tight">
+                        ~ {t.is_anonymous ? 'Anonymous' : (t.name || 'Community Member')}
+                      </span>
+                      {!t.is_anonymous && t.city && <span className="text-xs text-gray-500 mt-0.5">{t.city}</span>}
                     </div>
                   </CardFooter>
                 </Card>
@@ -937,10 +966,27 @@ export default function Project() {
               <button onClick={() => setIsFeedbackOpen(false)} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
                 <X className="h-5 w-5" />
               </button>
-              <h3 className="text-xl font-bold text-gray-900 mb-1">Share Feedback</h3>
-              <p className="text-sm text-gray-500 mb-4">Help us improve this pod.</p>
+              <h3 className="text-xl font-bold text-gray-900 mb-4">Share Feedback</h3>
 
               <form onSubmit={handleFeedbackSubmit} className="space-y-4">
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">
+                    Select Shibir Session <span className="text-gray-400 font-normal lowercase">(optional)</span>
+                  </label>
+                  <select
+                    value={feedbackForm.session}
+                    onChange={e => setFeedbackForm({ ...feedbackForm, session: e.target.value })}
+                    className="w-full p-3 border border-gray-200 rounded-xl bg-gray-50/50 focus:bg-white focus:ring-2 focus:ring-[#ae2b2b]/20 focus:border-[#ae2b2b] outline-none text-sm font-medium"
+                  >
+                    <option value="">-- All Sessions / General Feedback --</option>
+                    {SHIBIR_SESSIONS.map((sess) => (
+                      <option key={sess} value={sess}>
+                        {sess}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Rating</label>
                   <div className="flex gap-2">
