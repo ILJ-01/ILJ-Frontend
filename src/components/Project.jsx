@@ -18,6 +18,8 @@ import {
   MapPin,
   Star,
   X,
+  Quote,
+  HelpCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -953,10 +955,20 @@ export default function Project() {
             <Button
               variant="outline"
               onClick={() => setIsFeedbackOpen(true)}
-              className="w-full justify-start text-gray-700 hover:text-[#ae2b2b] hover:border-[#ae2b2b]"
+              className="w-full justify-start text-gray-700 hover:text-[#ae2b2b] hover:border-[#ae2b2b] cursor-pointer"
             >
               <MessageSquare className="mr-2 h-4 w-4" /> Share Feedback
             </Button>
+
+            {(project.project_code === "PRJ-008-02" || project.project_code === "PRJ-008") && (
+              <Button
+                variant="outline"
+                onClick={() => navigate("/reflect-questions")}
+                className="w-full justify-start text-[#ae2b2b] border-[#ae2b2b]/30 bg-[#ae2b2b]/5 hover:bg-[#ae2b2b]/10 font-semibold cursor-pointer"
+              >
+                <HelpCircle className="mr-2 h-4 w-4 text-[#ae2b2b]" /> Ask Workshop Question
+              </Button>
+            )}
           </div>
         </div>
       </div>
@@ -1020,37 +1032,97 @@ export default function Project() {
 
         {dbTestimonials.length > 0 && (
           <div className="w-full px-2 sm:px-6 md:px-12 mt-10">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6 font-serif border-b pb-2">
-              Voices of Impact
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {dbTestimonials.map((t) => (
-                <Card
-                  key={t.id}
-                  className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between bg-white rounded-xl overflow-hidden"
-                >
-                  <CardContent className="pt-8 px-4 sm:px-6">
-                    <p className="text-gray-700 leading-relaxed font-serif text-base sm:text-lg wrap-break-word">
-                      "{t.comments}"
-                    </p>
-                  </CardContent>
-                  <CardFooter className="pt-0 pb-6 mt-4 px-4 sm:px-6">
-                    <div className="flex flex-col w-full pt-4 border-t border-gray-50">
-                      <span className="text-sm font-bold text-gray-900 tracking-tight">
-                        ~{" "}
-                        {t.is_anonymous
-                          ? "Anonymous"
-                          : t.name || "Community Member"}
-                      </span>
-                      {!t.is_anonymous && t.city && (
-                        <span className="text-xs text-gray-500 mt-0.5">
-                          {t.city}
-                        </span>
-                      )}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-200 pb-4 mb-8">
+              <div>
+                <span className="text-xs font-bold uppercase tracking-widest text-[#ae2b2b]">
+                  Community Testimonials
+                </span>
+                <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 font-serif mt-1">
+                  Voices of Impact
+                </h2>
+              </div>
+              <div className="flex items-center gap-2 bg-amber-50/80 border border-amber-200/80 px-4 py-2 rounded-2xl w-fit">
+                <div className="flex text-amber-400">
+                  {[...Array(5)].map((_, i) => (
+                    <Star key={i} className="h-4 w-4 fill-amber-400" />
+                  ))}
+                </div>
+                <span className="text-xs font-bold text-amber-900">
+                  {dbTestimonials.length} Review{dbTestimonials.length > 1 ? "s" : ""}
+                </span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+              {dbTestimonials.map((t) => {
+                const displayName = t.is_anonymous
+                  ? "Anonymous Member"
+                  : t.name || "Community Participant";
+                const initial = displayName.charAt(0).toUpperCase();
+                const ratingCount = t.rating && t.rating > 0 ? t.rating : 5;
+
+                return (
+                  <div
+                    key={t.id}
+                    className="relative group rounded-3xl border border-gray-100 bg-white p-6 sm:p-7 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between overflow-hidden"
+                  >
+                    {/* Top Gradient Bar */}
+                    <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-[#ae2b2b] via-[#d66b3a] to-amber-400 opacity-80 group-hover:opacity-100 transition-opacity" />
+
+                    {/* Quote Watermark Icon */}
+                    <Quote className="absolute right-4 top-4 h-12 w-12 text-[#ae2b2b]/5 pointer-events-none group-hover:text-[#ae2b2b]/10 transition-colors" />
+
+                    <div>
+                      {/* Rating Stars & Verified Tag */}
+                      <div className="flex items-center justify-between gap-2 mb-4">
+                        <div className="flex items-center gap-1">
+                          {[...Array(5)].map((_, i) => (
+                            <Star
+                              key={i}
+                              className={`h-4 w-4 ${
+                                i < ratingCount
+                                  ? "fill-amber-400 text-amber-400"
+                                  : "text-gray-200 fill-gray-100"
+                              }`}
+                            />
+                          ))}
+                        </div>
+                        {t.is_anonymous ? (
+                          <span className="text-[10px] font-bold uppercase tracking-wider bg-gray-100 text-gray-500 px-2.5 py-0.5 rounded-full">
+                            Anonymous
+                          </span>
+                        ) : (
+                          <span className="text-[10px] font-bold uppercase tracking-wider bg-emerald-50 text-emerald-700 border border-emerald-100 px-2.5 py-0.5 rounded-full">
+                            Verified
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Comment text */}
+                      <p className="text-gray-800 leading-relaxed font-serif text-base sm:text-lg italic wrap-break-word relative z-10">
+                        "{t.comments}"
+                      </p>
                     </div>
-                  </CardFooter>
-                </Card>
-              ))}
+
+                    {/* Submitter details footer */}
+                    <div className="mt-6 pt-4 border-t border-gray-100 flex items-center gap-3">
+                      <div className="h-10 w-10 rounded-full bg-gradient-to-br from-[#ae2b2b] to-[#7f1919] text-white flex items-center justify-center font-bold text-sm shadow-md shrink-0">
+                        {initial}
+                      </div>
+                      <div className="flex flex-col min-w-0">
+                        <span className="text-sm font-bold text-gray-900 truncate">
+                          {displayName}
+                        </span>
+                        {!t.is_anonymous && t.city && (
+                          <span className="text-xs text-gray-500 truncate">
+                            {t.city}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}

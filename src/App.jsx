@@ -22,6 +22,7 @@ import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
 import LibraryPage from "./pages/LibraryPage";
 import LibraryRegistrationPage from "./pages/LibraryRegistrationPage";
+import ReflectAskQuestionPage from "./pages/ReflectAskQuestionPage";
 import "./styles/global.css";
 
 // Dashboard Imports
@@ -93,6 +94,8 @@ function App() {
             <Route path="/library" element={<MainLayout><LibraryPage /></MainLayout>} />
             <Route path="/library-registration" element={<MainLayout><LibraryRegistrationPage /></MainLayout>} />
             <Route path="/library-registartion" element={<Navigate to="/library-registration" replace />} />
+            <Route path="/reflect-questions" element={<MainLayout><ReflectAskQuestionPage /></MainLayout>} />
+            <Route path="/reflect/ask-question" element={<MainLayout><ReflectAskQuestionPage /></MainLayout>} />
 
             {/* Admin Routes */}
             <Route path="/admin" element={<AdminLogin />} />

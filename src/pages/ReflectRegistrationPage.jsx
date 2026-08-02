@@ -239,16 +239,16 @@ export default function ReflectRegistrationPage({ project }) {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 sm:py-12 px-3 sm:px-6 lg:px-8 font-sans">
-      <div className="max-w-3xl mx-auto">
+    <div className="min-h-screen w-full bg-gray-50 py-6 sm:py-12 px-3 sm:px-6 lg:px-8 font-sans overflow-y-auto touch-pan-y">
+      <div className="max-w-3xl mx-auto w-full">
         <button
           onClick={() => navigate(-1)}
-          className="flex items-center text-gray-500 hover:text-gray-900 mb-6 font-medium transition-colors group"
+          className="flex items-center text-gray-500 hover:text-gray-900 mb-6 font-medium transition-colors group cursor-pointer"
         >
           <ArrowLeft className="h-5 w-5 mr-1 group-hover:-translate-x-1 transition-transform" /> Back to Pod
         </button>
 
-        <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden animate-in fade-in slide-in-from-bottom-8 duration-500">
+        <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-visible md:overflow-hidden animate-in fade-in slide-in-from-bottom-8 duration-500">
           
           {/* Header Banner */}
           <div className="bg-gradient-to-r from-[#5c1212] to-[#ae2b2b] p-6 sm:p-8 text-white relative overflow-hidden">
