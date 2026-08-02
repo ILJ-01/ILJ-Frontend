@@ -1031,28 +1031,30 @@ export default function Project() {
         )}
 
         {dbTestimonials.length > 0 && (
-          <div className="w-full px-2 sm:px-6 md:px-12 mt-10">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-200 pb-4 mb-8">
+          <div className="w-full px-2 sm:px-6 md:px-12 mt-12">
+            {/* Header Section */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#ae2b2b]/15 pb-4 mb-8">
               <div>
                 <span className="text-xs font-bold uppercase tracking-widest text-[#ae2b2b]">
-                  Community Testimonials
+                  Community Reviews
                 </span>
                 <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 font-serif mt-1">
                   Voices of Impact
                 </h2>
               </div>
-              <div className="flex items-center gap-2 bg-amber-50/80 border border-amber-200/80 px-4 py-2 rounded-2xl w-fit">
-                <div className="flex text-amber-400">
+              <div className="flex items-center gap-2.5 bg-[#ae2b2b]/5 border border-[#ae2b2b]/15 px-4 py-2 rounded-full w-fit">
+                <div className="flex text-amber-400 gap-0.5">
                   {[...Array(5)].map((_, i) => (
-                    <Star key={i} className="h-4 w-4 fill-amber-400" />
+                    <Star key={i} className="h-4 w-4 fill-amber-400 text-amber-400" />
                   ))}
                 </div>
-                <span className="text-xs font-bold text-amber-900">
+                <span className="text-xs font-bold text-[#ae2b2b]">
                   {dbTestimonials.length} Review{dbTestimonials.length > 1 ? "s" : ""}
                 </span>
               </div>
             </div>
 
+            {/* Testimonials Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
               {dbTestimonials.map((t) => {
                 const displayName = t.is_anonymous
@@ -1064,49 +1066,38 @@ export default function Project() {
                 return (
                   <div
                     key={t.id}
-                    className="relative group rounded-3xl border border-gray-100 bg-white p-6 sm:p-7 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between overflow-hidden"
+                    className="relative group rounded-3xl border border-[#ae2b2b]/10 bg-gradient-to-b from-white to-[#fffcfb] p-6 sm:p-7 shadow-[0_4px_24px_-6px_rgba(174,43,43,0.06)] hover:shadow-xl hover:border-[#ae2b2b]/25 hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between overflow-hidden"
                   >
-                    {/* Top Gradient Bar */}
-                    <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-[#ae2b2b] via-[#d66b3a] to-amber-400 opacity-80 group-hover:opacity-100 transition-opacity" />
+                    {/* Top Accent Line */}
+                    <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-[#ae2b2b] via-[#d66b3a] to-[#ae2b2b] opacity-80 group-hover:opacity-100 transition-opacity" />
 
-                    {/* Quote Watermark Icon */}
-                    <Quote className="absolute right-4 top-4 h-12 w-12 text-[#ae2b2b]/5 pointer-events-none group-hover:text-[#ae2b2b]/10 transition-colors" />
+                    {/* Background Decorative Quote Mark */}
+                    <Quote className="absolute right-4 top-4 h-12 w-12 text-[#ae2b2b]/8 pointer-events-none group-hover:text-[#ae2b2b]/15 transition-colors" />
 
                     <div>
-                      {/* Rating Stars & Verified Tag */}
-                      <div className="flex items-center justify-between gap-2 mb-4">
-                        <div className="flex items-center gap-1">
-                          {[...Array(5)].map((_, i) => (
-                            <Star
-                              key={i}
-                              className={`h-4 w-4 ${
-                                i < ratingCount
-                                  ? "fill-amber-400 text-amber-400"
-                                  : "text-gray-200 fill-gray-100"
-                              }`}
-                            />
-                          ))}
-                        </div>
-                        {t.is_anonymous ? (
-                          <span className="text-[10px] font-bold uppercase tracking-wider bg-gray-100 text-gray-500 px-2.5 py-0.5 rounded-full">
-                            Anonymous
-                          </span>
-                        ) : (
-                          <span className="text-[10px] font-bold uppercase tracking-wider bg-emerald-50 text-emerald-700 border border-emerald-100 px-2.5 py-0.5 rounded-full">
-                            Verified
-                          </span>
-                        )}
+                      {/* Rating Stars */}
+                      <div className="flex items-center gap-1 mb-4">
+                        {[...Array(5)].map((_, i) => (
+                          <Star
+                            key={i}
+                            className={`h-4 w-4 ${
+                              i < ratingCount
+                                ? "fill-amber-400 text-amber-400"
+                                : "text-gray-200 fill-gray-100"
+                            }`}
+                          />
+                        ))}
                       </div>
 
-                      {/* Comment text */}
+                      {/* Feedback Comment */}
                       <p className="text-gray-800 leading-relaxed font-serif text-base sm:text-lg italic wrap-break-word relative z-10">
                         "{t.comments}"
                       </p>
                     </div>
 
-                    {/* Submitter details footer */}
+                    {/* Submitter Info Footer */}
                     <div className="mt-6 pt-4 border-t border-gray-100 flex items-center gap-3">
-                      <div className="h-10 w-10 rounded-full bg-gradient-to-br from-[#ae2b2b] to-[#7f1919] text-white flex items-center justify-center font-bold text-sm shadow-md shrink-0">
+                      <div className="h-10 w-10 rounded-full bg-gradient-to-br from-[#ae2b2b] to-[#5c1212] text-white flex items-center justify-center font-bold text-sm shadow-md shadow-red-900/20 ring-2 ring-[#ae2b2b]/10 shrink-0">
                         {initial}
                       </div>
                       <div className="flex flex-col min-w-0">
@@ -1114,7 +1105,7 @@ export default function Project() {
                           {displayName}
                         </span>
                         {!t.is_anonymous && t.city && (
-                          <span className="text-xs text-gray-500 truncate">
+                          <span className="text-xs text-[#ae2b2b]/80 font-medium truncate">
                             {t.city}
                           </span>
                         )}
@@ -1366,8 +1357,8 @@ export default function Project() {
 
       {/* Feedback Modal */}
       {isFeedbackOpen && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 backdrop-blur-sm">
-          <div className="w-full max-w-md overflow-hidden rounded-3xl border border-white/60 bg-white shadow-[0_24px_80px_rgba(0,0,0,0.24)] relative">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-3 sm:p-4 z-50 backdrop-blur-sm overflow-y-auto">
+          <div className="w-full max-w-md max-h-[90vh] overflow-y-auto custom-scrollbar rounded-3xl border border-white/60 bg-white shadow-[0_24px_80px_rgba(0,0,0,0.24)] relative my-auto">
             <div className="absolute inset-x-0 top-0 h-1 bg-linear-to-r from-[#ae2b2b] via-[#d66b3a] to-amber-400" />
             <div className="absolute -right-16 -top-16 h-40 w-40 rounded-full bg-[#ae2b2b]/8 blur-3xl pointer-events-none" />
             <div className="p-6 sm:p-7 relative">
