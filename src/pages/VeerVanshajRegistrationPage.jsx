@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import {
@@ -14,6 +14,15 @@ export default function VeerVanshajRegistrationPage({ project }) {
   const [paymentScreenshot, setPaymentScreenshot] = useState(null);
   const [registrationId, setRegistrationId] = useState("");
   const [isQrModalOpen, setIsQrModalOpen] = useState(false);
+  const topRef = useRef(null);
+
+  // Scroll to top whenever the submitted state changes (after form submit)
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+    if (topRef.current) {
+      topRef.current.scrollIntoView({ behavior: "instant" });
+    }
+  }, [submitted]);
 
   const handleDownloadQr = (e) => {
     if (e) e.stopPropagation();
@@ -129,6 +138,7 @@ export default function VeerVanshajRegistrationPage({ project }) {
       }
 
       setSubmitted(true);
+      window.scrollTo({ top: 0, left: 0, behavior: "instant" });
     } catch (err) {
       console.error("Error submitting Veer Vanshaj registration:", err);
       alert("Failed to submit registration. Please try again.");
@@ -149,7 +159,7 @@ export default function VeerVanshajRegistrationPage({ project }) {
 
   if (submitted) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 font-sans">
+      <div ref={topRef} className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 font-sans">
         <div className="max-w-md w-full bg-white p-8 rounded-2xl shadow-xl border border-gray-100 text-center animate-in fade-in zoom-in-95 duration-500">
           <div className="mx-auto flex items-center justify-center h-20 w-20 rounded-full bg-green-100 mb-6">
             <CheckCircle className="h-10 w-10 text-green-600" />
@@ -237,7 +247,7 @@ export default function VeerVanshajRegistrationPage({ project }) {
   }
 
   return (
-    <div className="min-h-screen w-full bg-gray-50 py-6 sm:py-12 px-3 sm:px-6 lg:px-8 font-sans overflow-y-auto touch-pan-y">
+    <div ref={topRef} className="min-h-screen w-full bg-gray-50 py-6 sm:py-12 px-3 sm:px-6 lg:px-8 font-sans overflow-y-auto touch-pan-y">
       <div className="max-w-3xl mx-auto w-full">
         <button
           onClick={() => navigate(-1)}
