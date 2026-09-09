@@ -788,11 +788,19 @@ export default function Project() {
                     </div>
                   ) : project.project_code === "PRJ-002" ? (
                     <div>
+                      <h3 className="font-bold text-gray-900 text-lg">
+                        VEER VANSHAJ 4.0 – BECOME UNSTOPPABLE!
+                      </h3>
                       <div className="flex items-center gap-2 text-gray-700 mt-2">
                         <MapPin className="w-5 h-5 text-[#ae2b2b]" />
-                        <span className="font-medium">
-                          Kasturba Dhiriba Aaradhna Bhavan, Vile Parle East
-                        </span>
+                        <a
+                          href="https://maps.google.com/?q=PlayersTurf+Kothari+Milestone+Mall+Malad+West"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="font-medium hover:text-[#ae2b2b] hover:underline transition-colors"
+                        >
+                          PlayersTurf, Kothari Milestone Mall, SV Road, Malad (W)
+                        </a>
                       </div>
                     </div>
                   ) : null}
@@ -809,29 +817,17 @@ export default function Project() {
                 </div>
 
                 <div className="shrink-0 mt-4 sm:mt-0">
-                  {project.project_code === "PRJ-002" ? (
-                    <a
-                      href="https://docs.google.com/forms/d/e/1FAIpQLSe5cPsvyKeh-h2xLw2j2nThavaQGM_Ov5fYwIHjUphNMemyaA/viewform"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      <Button className="bg-[#ae2b2b] hover:bg-[#8f1f1f] text-white px-8 py-2 border-0">
-                        Click to Register
-                      </Button>
-                    </a>
-                  ) : (
-                    <Link
-                      to={
-                        project.project_code === "PRJ-008"
-                          ? "/projects/e65d8362-e612-4217-b769-cf74719c8d5a/event-registration"
-                          : `/projects/${project.id}/event-registration`
-                      }
-                    >
-                      <Button className="bg-[#ae2b2b] hover:bg-[#8f1f1f] text-white px-8 py-2 border-0">
-                        Click to Register
-                      </Button>
-                    </Link>
-                  )}
+                  <Link
+                    to={
+                      project.project_code === "PRJ-008"
+                        ? "/projects/e65d8362-e612-4217-b769-cf74719c8d5a/event-registration"
+                        : `/projects/${project.id}/event-registration`
+                    }
+                  >
+                    <Button className="bg-[#ae2b2b] hover:bg-[#8f1f1f] text-white px-8 py-2 border-0 cursor-pointer">
+                      Click to Register
+                    </Button>
+                  </Link>
                 </div>
               </div>
             </div>

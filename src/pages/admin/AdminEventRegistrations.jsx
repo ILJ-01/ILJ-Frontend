@@ -102,6 +102,7 @@ const AdminEventRegistrations = () => {
 
     const exportToExcel = (project, regs) => {
         const isReflect = project?.project_code === 'PRJ-008-02';
+        const isVeerVanshaj = project?.project_code === 'PRJ-002';
         let dataToExport = [];
 
         if (isReflect) {
@@ -117,6 +118,22 @@ const AdminEventRegistrations = () => {
                 "How Heard": r.dharmik_education || 'N/A',
                 "Booked Sessions": r.fathers_name || 'N/A',
                 "Address": r.address || 'N/A',
+                "Payment Status": r.payment_screenshot_url ? "Paid (Proof Uploaded)" : "N/A",
+                "Payment Proof Link": r.payment_screenshot_url || 'N/A'
+            }));
+        } else if (isVeerVanshaj) {
+            dataToExport = regs.map(r => ({
+                "Registration ID": r.supported_file_url || 'N/A',
+                "Registration Date": r.created_at ? new Date(r.created_at).toLocaleDateString('en-GB') : 'N/A',
+                "Full Name": r.full_name || 'N/A',
+                "Gender": r.gender || 'N/A',
+                "Date of Birth": r.dob || 'N/A',
+                "WhatsApp Number": r.whatsapp_number || 'N/A',
+                "Email": r.email || 'N/A',
+                "Address": r.address || 'N/A',
+                "Active Vihar Sevak/Sevika": r.is_vihar_sevika ? 'Yes' : 'No',
+                "Vihar Captain Name": r.vihar_seva_head_name || 'N/A',
+                "Vihar Captain Contact": r.vihar_seva_head_contact || 'N/A',
                 "Payment Status": r.payment_screenshot_url ? "Paid (Proof Uploaded)" : "N/A",
                 "Payment Proof Link": r.payment_screenshot_url || 'N/A'
             }));
@@ -144,7 +161,7 @@ const AdminEventRegistrations = () => {
 
         const worksheet = XLSX.utils.json_to_sheet(dataToExport);
         const workbook = XLSX.utils.book_new();
-        const sheetName = isReflect ? "Reflect_Registrations" : "Registrations";
+        const sheetName = isReflect ? "Reflect_Registrations" : isVeerVanshaj ? "Veer_Vanshaj" : "Registrations";
         XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
         
         const safeTitle = (project?.title || 'Event').replace(/[^a-z0-9]/gi, '_').toLowerCase();
@@ -153,7 +170,8 @@ const AdminEventRegistrations = () => {
 
     const exportToPDF = (project, regs) => {
         const isReflect = project?.project_code === 'PRJ-008-02';
-        const doc = new jsPDF(isReflect ? 'l' : 'p', 'mm', 'a4');
+        const isVeerVanshaj = project?.project_code === 'PRJ-002';
+        const doc = new jsPDF((isReflect || isVeerVanshaj) ? 'l' : 'p', 'mm', 'a4');
         
         const crimson = [174, 43, 43];
         const darkGray = [30, 30, 30];
@@ -212,6 +230,32 @@ const AdminEventRegistrations = () => {
                 6: { cellWidth: 22 },
                 7: { cellWidth: 40 },
                 8: { cellWidth: 'auto' }
+            };
+        } else if (isVeerVanshaj) {
+            tableHeaders = [["Reg ID", "Name", "Gender", "DOB", "WhatsApp", "Email", "Vihar Sevak", "Captain Info", "Address", "Payment"]];
+            tableData = regs.map(r => [
+                r.supported_file_url || 'N/A',
+                r.full_name || 'N/A',
+                r.gender || 'N/A',
+                r.dob || 'N/A',
+                r.whatsapp_number || 'N/A',
+                r.email || 'N/A',
+                r.is_vihar_sevika ? 'Yes' : 'No',
+                r.is_vihar_sevika ? `${r.vihar_seva_head_name || ''} (${r.vihar_seva_head_contact || ''})` : '-',
+                r.address || 'N/A',
+                r.payment_screenshot_url ? 'Paid' : 'N/A'
+            ]);
+            columnStyles = {
+                0: { cellWidth: 18 },
+                1: { cellWidth: 35 },
+                2: { cellWidth: 18 },
+                3: { cellWidth: 20 },
+                4: { cellWidth: 24 },
+                5: { cellWidth: 35 },
+                6: { cellWidth: 20 },
+                7: { cellWidth: 35 },
+                8: { cellWidth: 'auto' },
+                9: { cellWidth: 18 }
             };
         } else {
             tableHeaders = [["Reg ID", "Name", "Age/DOB", "WhatsApp", "Sangh", "Address", "Payment"]];
@@ -476,6 +520,12 @@ const AdminEventRegistrations = () => {
                                     <div>
                                         <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Date of Birth</p>
                                         <p className="font-medium text-gray-900">{selectedReg.dob}</p>
+                                    </div>
+                                )}
+                                {selectedReg.gender && (
+                                    <div>
+                                        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Gender</p>
+                                        <p className="font-medium text-gray-900">{selectedReg.gender}</p>
                                     </div>
                                 )}
                                 {selectedReg.sangh_name && (

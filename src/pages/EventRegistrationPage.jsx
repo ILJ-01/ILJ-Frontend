@@ -4,6 +4,7 @@ import { supabase } from "../lib/supabase";
 import { Calendar, User, Users, Phone, Mail, MapPin, Upload, ArrowLeft } from "lucide-react";
 import { downloadICS } from "../lib/ics";
 import ReflectRegistrationPage from "./ReflectRegistrationPage";
+import VeerVanshajRegistrationPage from "./VeerVanshajRegistrationPage";
 import { useAuth } from "../context/AuthContext";
 
 export default function EventRegistrationPage() {
@@ -62,11 +63,6 @@ export default function EventRegistrationPage() {
                 // If registration is disabled AND no registration link is present, kick them out
                 if (!data.is_event_registration_enabled && !data.registration_link) {
                     navigate(`/project/${data.id}`);
-                    return;
-                }
-
-                if (data.project_code === 'PRJ-002') {
-                    window.location.href = 'https://docs.google.com/forms/d/e/1FAIpQLSe5cPsvyKeh-h2xLw2j2nThavaQGM_Ov5fYwIHjUphNMemyaA/viewform';
                     return;
                 }
 
@@ -193,6 +189,10 @@ export default function EventRegistrationPage() {
 
     if (project?.project_code === 'PRJ-008-02') {
         return <ReflectRegistrationPage project={project} />;
+    }
+
+    if (project?.project_code === 'PRJ-002') {
+        return <VeerVanshajRegistrationPage project={project} />;
     }
 
     if (submitted) {
