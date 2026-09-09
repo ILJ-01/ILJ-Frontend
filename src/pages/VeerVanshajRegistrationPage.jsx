@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import {
   Calendar, User, Phone, Mail, MapPin, ArrowLeft, Clock,
-  CheckCircle, Upload, Shield, Award, AlertCircle, Sparkles
+  CheckCircle, Upload, Shield, Award, AlertCircle, Sparkles, ZoomIn, X, Download
 } from "lucide-react";
 import { downloadICS } from "../lib/ics";
 
@@ -13,6 +13,17 @@ export default function VeerVanshajRegistrationPage({ project }) {
   const [submitted, setSubmitted] = useState(false);
   const [paymentScreenshot, setPaymentScreenshot] = useState(null);
   const [registrationId, setRegistrationId] = useState("");
+  const [isQrModalOpen, setIsQrModalOpen] = useState(false);
+
+  const handleDownloadQr = (e) => {
+    if (e) e.stopPropagation();
+    const link = document.createElement("a");
+    link.href = "/veer_vanshaj_qr.jpeg";
+    link.download = "Veer_Vanshaj_Payment_QR.jpeg";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   const [form, setForm] = useState({
     full_name: "",
@@ -104,8 +115,12 @@ export default function VeerVanshajRegistrationPage({ project }) {
               to: form.email,
               applicant_name: form.full_name,
               project_title: "VEER VANSHAJ 4.0 – BECOME UNSTOPPABLE!",
-              event_date: "30th Sept – 11th Oct 2026 (6:30 AM – 8:00 AM)"
-              // No whatsapp_link provided intentionally
+              registration_id: generatedRegId,
+              event_date: "30th Sept – 11th Oct 2026 (12 Days)",
+              timing: "6:30 AM – 8:00 AM",
+              venue: "PlayersTurf, Kothari Milestone Mall, SV Road, Malad (W)",
+              amount_paid: "₹5,000/-",
+              whatsapp_link: "https://chat.whatsapp.com/KJLMyKgLxbzAV4wgVBgHsf?s=cl&p=a&mlu=4&ilr=4"
             }
           });
         } catch (emailErr) {
@@ -184,6 +199,30 @@ export default function VeerVanshajRegistrationPage({ project }) {
               <Calendar className="h-4 w-4 mr-2 text-gray-500" />
               Add to Calendar
             </button>
+          </div>
+
+          <div className="bg-emerald-50 border-2 border-emerald-400/80 p-5 rounded-xl mb-6 text-left shadow-sm">
+            <div className="flex items-center justify-center gap-2 mb-1">
+              <span className="text-xl">🚨</span>
+              <h3 className="text-emerald-900 font-bold text-base text-center">Important Next Step</h3>
+            </div>
+            <p className="text-emerald-800 text-sm mb-4 text-center leading-relaxed">
+              Please join the official WhatsApp group for daily schedule updates, instructor notices, and workshop instructions!
+            </p>
+            <a
+              href="https://chat.whatsapp.com/KJLMyKgLxbzAV4wgVBgHsf?s=cl&p=a&mlu=4&ilr=4"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full flex justify-center items-center gap-2 py-3.5 px-4 rounded-xl shadow-md text-base font-bold text-white bg-[#25D366] hover:bg-[#128C7E] active:scale-[0.98] transition-all cursor-pointer"
+            >
+              <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
+                <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/>
+              </svg>
+              <span>Join WhatsApp Group</span>
+            </a>
+            <p className="text-[12px] text-emerald-700/80 text-center mt-2.5 break-all">
+              Link: <a href="https://chat.whatsapp.com/KJLMyKgLxbzAV4wgVBgHsf?s=cl&p=a&mlu=4&ilr=4" target="_blank" rel="noopener noreferrer" className="underline font-medium hover:text-emerald-900">https://chat.whatsapp.com/KJLMyKgLxbzAV4wgVBgHsf...</a>
+            </p>
           </div>
 
           <button
@@ -360,8 +399,8 @@ export default function VeerVanshajRegistrationPage({ project }) {
                     <label className="text-xs font-bold text-gray-700 uppercase tracking-wider">
                       Gender <span className="text-[#ae2b2b]">*</span>
                     </label>
-                    <div className="grid grid-cols-3 gap-2">
-                      {["Male", "Female", "Other"].map((genderOption) => (
+                    <div className="grid grid-cols-2 gap-2">
+                      {["Male", "Female"].map((genderOption) => (
                         <label
                           key={genderOption}
                           className={`flex items-center justify-center p-3 rounded-xl border cursor-pointer transition-all text-sm font-semibold select-none ${form.gender === genderOption
@@ -533,12 +572,34 @@ export default function VeerVanshajRegistrationPage({ project }) {
                 </div>
 
                 <div className="flex flex-col md:flex-row items-center gap-6 bg-gray-50/50 p-5 rounded-xl border border-gray-100 shadow-sm">
-                  <div className="bg-white p-3 rounded-xl border border-gray-100 shadow-sm shrink-0">
-                    <img
-                      src="/veer_vanshaj_qr.jpeg"
-                      alt="Veer Vanshaj Payment QR Code"
-                      className="w-48 h-56 sm:w-52 sm:h-60 object-contain rounded-lg"
-                    />
+                  <div className="flex flex-col items-center shrink-0 w-full sm:w-auto">
+                    <div 
+                      onClick={() => setIsQrModalOpen(true)}
+                      className="relative bg-white p-3 rounded-xl border border-gray-200 shadow-sm shrink-0 cursor-pointer group hover:border-[#ae2b2b]/50 hover:shadow-md transition-all"
+                      title="Click to enlarge QR Code"
+                    >
+                      <img
+                        src="/veer_vanshaj_qr.jpeg"
+                        alt="Veer Vanshaj Payment QR Code"
+                        className="w-48 h-56 sm:w-52 sm:h-60 object-contain rounded-lg"
+                      />
+                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-xl flex flex-col items-center justify-center text-white text-xs font-bold gap-1.5 backdrop-blur-[1px]">
+                        <ZoomIn className="h-7 w-7 text-white" />
+                        <span>Click to Enlarge</span>
+                      </div>
+                      <div className="mt-2 text-center text-[11px] text-[#ae2b2b] font-semibold flex items-center justify-center gap-1 group-hover:underline">
+                        <ZoomIn className="h-3.5 w-3.5" /> Tap to zoom QR
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={handleDownloadQr}
+                      className="mt-2.5 w-full py-2 px-3 bg-white hover:bg-gray-100 text-gray-800 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 border border-gray-300 shadow-sm transition-colors cursor-pointer"
+                    >
+                      <Download className="h-3.5 w-3.5 text-[#ae2b2b]" />
+                      Download QR Code
+                    </button>
                   </div>
                   <div className="text-center md:text-left space-y-2">
                     <div className="inline-block bg-amber-100 text-amber-800 font-bold text-xs px-3 py-1 rounded-full uppercase tracking-wider">
@@ -585,6 +646,58 @@ export default function VeerVanshajRegistrationPage({ project }) {
           </div>
         </div>
       </div>
+
+      {/* QR Code Lightbox Modal */}
+      {isQrModalOpen && (
+        <div 
+          className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200"
+          onClick={() => setIsQrModalOpen(false)}
+        >
+          <div 
+            className="relative max-w-sm sm:max-w-md w-full bg-white rounded-2xl p-5 sm:p-6 shadow-2xl flex flex-col items-center animate-in zoom-in-95 duration-200"
+            onClick={e => e.stopPropagation()}
+          >
+            <button
+              onClick={() => setIsQrModalOpen(false)}
+              className="absolute top-3.5 right-3.5 p-2 text-gray-400 hover:text-gray-900 bg-gray-100 hover:bg-gray-200 rounded-full transition-colors cursor-pointer"
+              aria-label="Close QR Modal"
+            >
+              <X className="h-5 w-5" />
+            </button>
+
+            <h4 className="font-bold text-gray-900 text-lg sm:text-xl font-serif mb-1">Scan to Pay ₹5,000/-</h4>
+            <p className="text-xs text-gray-500 mb-4 text-center">
+              Prakash Kaspale • <span className="font-mono text-gray-800 font-semibold">prakashkaspale@okhdfcbank</span>
+            </p>
+
+            <div className="w-full bg-gray-50 p-2 sm:p-4 rounded-xl border border-gray-200 flex justify-center items-center shadow-inner">
+              <img
+                src="/veer_vanshaj_qr.jpeg"
+                alt="Enlarged Veer Vanshaj QR Code"
+                className="w-full max-h-[60vh] object-contain rounded-lg shadow-sm select-none"
+              />
+            </div>
+
+            <div className="flex gap-2 w-full mt-4">
+              <button
+                type="button"
+                onClick={handleDownloadQr}
+                className="flex-1 py-2.5 px-4 bg-[#ae2b2b] hover:bg-[#8f1f1f] text-white rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-2 shadow-md transition-all cursor-pointer"
+              >
+                <Download className="h-4 w-4" />
+                Download QR Code
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsQrModalOpen(false)}
+                className="py-2.5 px-4 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-xs sm:text-sm font-semibold transition-colors cursor-pointer"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
