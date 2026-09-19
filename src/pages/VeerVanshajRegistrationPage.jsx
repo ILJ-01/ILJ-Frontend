@@ -127,7 +127,7 @@ export default function VeerVanshajRegistrationPage({ project }) {
               registration_id: generatedRegId,
               event_date: "30th Sept – 11th Oct 2026 (12 Days)",
               timing: "6:30 AM – 8:00 AM",
-              venue: "PlayersTurf, Kothari Milestone Mall, SV Road, Malad (W)",
+              venue: "Terrace Area, StarOm Sejal, Opp Malad Gymkhana, Nr Aspee Auditorium, Marve Road, Malad W",
               amount_paid: "₹5,000/-",
               whatsapp_link: "https://chat.whatsapp.com/KJLMyKgLxbzAV4wgVBgHsf?s=cl&p=a&mlu=4&ilr=4"
             }
@@ -150,7 +150,7 @@ export default function VeerVanshajRegistrationPage({ project }) {
   const handleDownloadCalendar = () => {
     const event = {
       title: "VEER VANSHAJ 4.0 – Krav Maga Self-Defence Workshop",
-      description: "12-Day Intensive Self-Defence Workshop at PlayersTurf, Malad (W). 6:30 AM - 8:00 AM daily.",
+      description: "12-Day Intensive Self-Defence Workshop at Terrace Area, StarOm Sejal, Opp Malad Gymkhana, Nr Aspee Auditorium, Marve Road, Malad W. 6:30 AM - 8:00 AM daily.",
       startTime: new Date("2026-09-30T06:30:00"),
       endTime: new Date("2026-10-11T08:00:00")
     };
@@ -189,7 +189,7 @@ export default function VeerVanshajRegistrationPage({ project }) {
             </div>
             <div className="flex items-start gap-2">
               <span className="text-base">📍</span>
-              <span><strong>Venue:</strong> PlayersTurf, Kothari Milestone Mall, SV Road, Malad (W)</span>
+              <span><strong>Venue:</strong> Terrace Area, StarOm Sejal, Opp Malad Gymkhana, Nr Aspee Auditorium, Marve Road, Malad W</span>
             </div>
             <div className="flex items-center gap-2">
               <span className="text-base">👥</span>
@@ -315,7 +315,7 @@ export default function VeerVanshajRegistrationPage({ project }) {
                   <span className="text-2xl shrink-0">📍</span>
                   <div>
                     <span className="text-white/70 block uppercase font-bold text-[10px] tracking-wider">Venue</span>
-                    <span className="font-bold text-white text-sm">PlayersTurf, Kothari Milestone Mall, SV Road, Malad (W)</span>
+                    <span className="font-bold text-white text-sm">Terrace Area, StarOm Sejal, Opp Malad Gymkhana, Nr Aspee Auditorium, Marve Road, Malad W</span>
                   </div>
                 </div>
 
@@ -363,12 +363,12 @@ export default function VeerVanshajRegistrationPage({ project }) {
                 <div>
                   <strong className="text-gray-900 block">Venue:</strong>
                   <a
-                    href="https://maps.google.com/?q=PlayersTurf+Kothari+Milestone+Mall+Malad+West"
+                    href="https://maps.google.com/?q=StarOm+Sejal+Opp+Malad+Gymkhana+Nr+Aspee+Auditorium+Marve+Road+Malad+West"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-[#ae2b2b] hover:underline font-medium"
                   >
-                    PlayersTurf, Kothari Milestone Mall, SV Road, Malad (W)
+                    Terrace Area, StarOm Sejal, Opp Malad Gymkhana, Nr Aspee Auditorium, Marve Road, Malad W
                   </a>
                 </div>
               </div>

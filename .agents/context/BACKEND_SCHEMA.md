@@ -2,11 +2,12 @@
 
 > **Project:** `pdcgcqsgzupoyzklvoju` | **Region:** `ap-northeast-1` | **Postgres:** 17.6
 
-## 1. Table Inventory (25 tables, all RLS-enabled)
+## 1. Table Inventory (26 tables, all RLS-enabled)
 
 | Table | Rows | Purpose |
 |---|---|---|
 | `volunteers` | 145 | Core user/volunteer profiles |
+| `birthday_email_logs` | 0 | Tracks sent birthday greeting emails per volunteer per year |
 | `projects` | 14 | Community projects/pods |
 | `project_volunteers` | 10 | Volunteer-to-project assignments |
 | `events` | 0 | Scheduled events |
@@ -348,10 +349,11 @@ erDiagram
 
 ---
 
-## 5. RPC Functions (16 total)
+## 5. RPC Functions (17 total)
 
 | Function | Return Type | Purpose |
 |---|---|---|
+| `get_todays_birthdays` | table | Finds volunteers with birthdays today in IST who haven't received an email this year |
 | `register_volunteer_secure` | json | Registers new volunteer (creates DB record + Auth user) |
 | `login_volunteer` | json | Validates ILJ ID + password, returns user data |
 | `reset_volunteer_password` | json | Resets volunteer password |
@@ -371,10 +373,11 @@ erDiagram
 
 ---
 
-## 6. Edge Functions (6)
+## 6. Edge Functions (7)
 
 | Function | Purpose | JWT Verify |
 |---|---|---|
+| `send-birthday-email` | Sends automated birthday greetings with QR donation code (daily via pg_cron) | No |
 | `send-welcome-email` | Sends welcome email on volunteer registration | No |
 | `send-task-email` | Sends email when task is assigned | No |
 | `send-event-registration-email` | Sends confirmation for event registration | No |

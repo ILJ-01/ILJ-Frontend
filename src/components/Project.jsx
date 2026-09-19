@@ -794,12 +794,12 @@ export default function Project() {
                       <div className="flex items-center gap-2 text-gray-700 mt-2">
                         <MapPin className="w-5 h-5 text-[#ae2b2b]" />
                         <a
-                          href="https://maps.google.com/?q=PlayersTurf+Kothari+Milestone+Mall+Malad+West"
+                          href="https://maps.google.com/?q=StarOm+Sejal+Opp+Malad+Gymkhana+Nr+Aspee+Auditorium+Marve+Road+Malad+West"
                           target="_blank"
                           rel="noopener noreferrer"
                           className="font-medium hover:text-[#ae2b2b] hover:underline transition-colors"
                         >
-                          PlayersTurf, Kothari Milestone Mall, SV Road, Malad (W)
+                          Terrace Area, StarOm Sejal, Opp Malad Gymkhana, Nr Aspee Auditorium, Marve Road, Malad W
                         </a>
                       </div>
                     </div>

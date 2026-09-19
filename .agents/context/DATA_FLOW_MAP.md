@@ -298,6 +298,7 @@ Delegates to child components for each admin tab:
 
 | Edge Function | Called From | Trigger |
 |---|---|---|
+| `send-birthday-email` | Postgres `pg_cron` via `pg_net` | Daily at 08:00 AM IST (`30 2 * * *`) |
 | `send-welcome-email` | `VolunteerForm.jsx` / `supabase.js` | After `register_volunteer_secure` RPC |
 | `send-task-email` | `AdminTasks.jsx` / `ManagerHub.jsx` | After task creation |
 | `send-event-registration-email` | `EventRegistrationPage.jsx` | After event registration |
