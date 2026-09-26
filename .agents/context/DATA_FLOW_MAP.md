@@ -221,6 +221,9 @@ This document maps every frontend page/component to the exact Supabase tables, q
 | Tab | Backend | Details |
 |---|---|---|
 | Volunteers | SELECT `volunteers` | Full CRUD + search/filter |
+| Suspend Account | RPC `suspend_volunteer` | Temporary deactivation; sets activity_status='Suspended' & bans in Auth |
+| Reactivate Account | RPC `reactivate_volunteer` | Restores account login access; sets activity_status='Active' & clears Auth ban |
+| Terminate Account | RPC `terminate_volunteer` | Permanent deletion; cleans up project manager links, cascades records, deletes Auth user |
 | Projects | SELECT `projects` | View/navigate to edit |
 
 Delegates to child components for each admin tab:

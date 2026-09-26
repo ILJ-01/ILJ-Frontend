@@ -34,6 +34,16 @@ ILJ uses a **hybrid authentication model** that bridges a custom `volunteers` ta
   - `handle_new_volunteer()` — creates Auth user on volunteer INSERT
   - `sync_volunteer_password_to_auth()` — syncs password changes to Auth
 
+### Account Suspension & Termination
+- **Account Suspension (Temporary)**:
+  - Admin executes `suspend_volunteer(volunteer_id)`.
+  - Sets `volunteers.activity_status = 'Suspended'` and bans the user in `auth.users` (`banned_until = '3000-01-01'`).
+  - `login_volunteer` RPC and frontend session checks reject login: *"Your account has been suspended. Please contact the administrator."*
+  - Admin can restore access anytime via `reactivate_volunteer(volunteer_id)`.
+- **Account Termination (Permanent Deletion)**:
+  - Admin executes `terminate_volunteer(volunteer_id)`.
+  - Unlinks managed projects/sub-heads, removes `app_roles`, cascades delete on `volunteers`, and permanently deletes the identity from `auth.users`.
+
 ---
 
 ## 2. User Roles & Permissions

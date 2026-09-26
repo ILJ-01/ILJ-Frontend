@@ -46,6 +46,8 @@ export default function VeerVanshajRegistrationPage({ project }) {
     vihar_seva_head_contact: ""
   });
 
+  const isViharSevak = form.is_vihar_sevika === "Yes";
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -128,7 +130,7 @@ export default function VeerVanshajRegistrationPage({ project }) {
               event_date: "30th Sept – 11th Oct 2026 (12 Days)",
               timing: "6:30 AM – 8:00 AM",
               venue: "Terrace Area, StarOm Sejal, Opp Malad Gymkhana, Nr Aspee Auditorium, Marve Road, Malad W",
-              amount_paid: "₹5,000/-",
+              amount_paid: isViharSevak ? "₹1,000/- (Refundable Deposit for Vihar Sevak)" : "₹5,000/-",
               whatsapp_link: "https://chat.whatsapp.com/KJLMyKgLxbzAV4wgVBgHsf?s=cl&p=a&mlu=4&ilr=4"
             }
           });
@@ -197,7 +199,12 @@ export default function VeerVanshajRegistrationPage({ project }) {
             </div>
             <div className="flex items-center gap-2">
               <span className="text-base">💸</span>
-              <span><strong>Investment:</strong> ₹5,000 (approx ₹300 per hour)</span>
+              <span>
+                <strong>Investment:</strong>{" "}
+                {isViharSevak
+                  ? "₹1,000 (Refundable Deposit for Vihar Sevak)"
+                  : "₹5,000 (approx ₹300 per hour)"}
+              </span>
             </div>
           </div>
 
@@ -324,6 +331,7 @@ export default function VeerVanshajRegistrationPage({ project }) {
                   <div>
                     <span className="text-white/70 block uppercase font-bold text-[10px] tracking-wider">Investment</span>
                     <span className="font-bold text-white text-sm">₹5,000 <span className="text-[11px] font-normal text-white/80">(approx ₹300 per hour)</span></span>
+                    <span className="text-[11px] text-amber-300 block font-medium mt-0.5">₹1,000 refundable deposit only for Vihar Sevak</span>
                   </div>
                 </div>
               </div>
@@ -508,9 +516,14 @@ export default function VeerVanshajRegistrationPage({ project }) {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-gray-700 uppercase tracking-wider block">
-                    Are you an active vihar sevak / sevika? <span className="text-[#ae2b2b]">*</span>
-                  </label>
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
+                    <label className="text-xs font-bold text-gray-700 uppercase tracking-wider block">
+                      Are you an active vihar sevak / sevika? <span className="text-[#ae2b2b]">*</span>
+                    </label>
+                    <span className="text-xs text-amber-800 font-semibold bg-amber-100/90 border border-amber-300 px-2.5 py-0.5 rounded-full inline-block">
+                      ₹1,000 refundable deposit only for Vihar Sevak
+                    </span>
+                  </div>
                   <div className="grid grid-cols-2 gap-3 max-w-md">
                     {["No", "Yes"].map((option) => (
                       <label
@@ -532,6 +545,18 @@ export default function VeerVanshajRegistrationPage({ project }) {
                       </label>
                     ))}
                   </div>
+                  {isViharSevak ? (
+                    <div className="p-3 bg-amber-50/90 border border-amber-300/80 rounded-xl text-xs text-amber-900 flex items-start gap-2 shadow-sm animate-in fade-in duration-200">
+                      <Sparkles className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
+                      <div>
+                        <strong className="font-bold">Vihar Sevak Deposit Applied:</strong> You are eligible for the <strong>₹1,000 refundable deposit</strong> (instead of the regular ₹5,000 fee).
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="text-[11px] text-gray-500">
+                      Note: Active Vihar Sevaks/Sevikas pay only a ₹1,000 refundable deposit.
+                    </p>
+                  )}
                 </div>
 
                 {form.is_vihar_sevika === "Yes" && (
@@ -613,11 +638,26 @@ export default function VeerVanshajRegistrationPage({ project }) {
                   </div>
                   <div className="text-center md:text-left space-y-2">
                     <div className="inline-block bg-amber-100 text-amber-800 font-bold text-xs px-3 py-1 rounded-full uppercase tracking-wider">
-                      12-Day Intensive Training
+                      {isViharSevak ? "Vihar Sevak Special: ₹1,000 Refundable Deposit" : "12-Day Intensive Training"}
                     </div>
-                    <h4 className="font-bold text-gray-900 text-xl font-serif">Scan to Pay ₹5,000/-</h4>
+                    <h4 className="font-bold text-gray-900 text-xl font-serif">
+                      Scan to Pay {isViharSevak ? "₹1,000/-" : "₹5,000/-"}
+                      {isViharSevak && (
+                        <span className="text-xs font-sans text-amber-700 block font-semibold mt-0.5">
+                          (₹1,000 Refundable Deposit only for Vihar Sevak)
+                        </span>
+                      )}
+                    </h4>
                     <p className="text-gray-600 text-sm leading-relaxed">
-                      Please use any UPI app (GPay, PhonePe, Paytm, etc.) to scan this QR code or pay directly to UPI ID: <strong className="text-gray-900 font-mono">prakashkaspale@okhdfcbank</strong> to complete the workshop fee of <strong>₹5,000</strong>.
+                      {isViharSevak ? (
+                        <>
+                          As an active Vihar Sevak, you are only required to pay a <strong>₹1,000 refundable deposit</strong>. Please use any UPI app (GPay, PhonePe, Paytm, etc.) to scan this QR code or pay directly to UPI ID: <strong className="text-gray-900 font-mono">prakashkaspale@okhdfcbank</strong> to complete your deposit.
+                        </>
+                      ) : (
+                        <>
+                          Please use any UPI app (GPay, PhonePe, Paytm, etc.) to scan this QR code or pay directly to UPI ID: <strong className="text-gray-900 font-mono">prakashkaspale@okhdfcbank</strong> to complete the workshop fee of <strong>₹5,000</strong>.
+                        </>
+                      )}
                     </p>
                     <div className="bg-red-50 text-[#ae2b2b] p-3 rounded-lg border border-red-100 inline-block text-xs font-semibold">
                       After successful payment, please upload the screenshot below for verification.
@@ -648,7 +688,11 @@ export default function VeerVanshajRegistrationPage({ project }) {
                   disabled={isSubmitting}
                   className="w-full flex justify-center py-4 px-4 border border-transparent rounded-xl shadow-lg text-base font-bold text-white bg-[#ae2b2b] hover:bg-[#8f1f1f] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#ae2b2b] transition-all disabled:opacity-50 cursor-pointer"
                 >
-                  {isSubmitting ? "Processing registration..." : "Confirm & Book Your Spot (₹5,000)"}
+                  {isSubmitting
+                    ? "Processing registration..."
+                    : isViharSevak
+                      ? "Confirm & Book Your Spot (₹1,000 Refundable Deposit)"
+                      : "Confirm & Book Your Spot (₹5,000)"}
                 </button>
               </div>
 
@@ -675,7 +719,14 @@ export default function VeerVanshajRegistrationPage({ project }) {
               <X className="h-5 w-5" />
             </button>
 
-            <h4 className="font-bold text-gray-900 text-lg sm:text-xl font-serif mb-1">Scan to Pay ₹5,000/-</h4>
+            <h4 className="font-bold text-gray-900 text-lg sm:text-xl font-serif mb-1">
+              Scan to Pay {isViharSevak ? "₹1,000/-" : "₹5,000/-"}
+            </h4>
+            {isViharSevak && (
+              <span className="text-xs text-amber-800 bg-amber-100 border border-amber-300 px-2.5 py-0.5 rounded-full font-semibold mb-2">
+                ₹1,000 Refundable Deposit only for Vihar Sevak
+              </span>
+            )}
             <p className="text-xs text-gray-500 mb-4 text-center">
               Prakash Kaspale • <span className="font-mono text-gray-800 font-semibold">prakashkaspale@okhdfcbank</span>
             </p>

@@ -349,13 +349,16 @@ erDiagram
 
 ---
 
-## 5. RPC Functions (17 total)
+## 5. RPC Functions (20 total)
 
 | Function | Return Type | Purpose |
 |---|---|---|
+| `suspend_volunteer` | json | Suspends volunteer account (sets activity_status='Suspended' and bans in auth.users) |
+| `reactivate_volunteer` | json | Reactivates suspended volunteer account (sets activity_status='Active' and clears auth ban) |
+| `terminate_volunteer` | json | Permanently terminates volunteer account (unlinks projects, deletes volunteer + auth records) |
 | `get_todays_birthdays` | table | Finds volunteers with birthdays today in IST who haven't received an email this year |
 | `register_volunteer_secure` | json | Registers new volunteer (creates DB record + Auth user) |
-| `login_volunteer` | json | Validates ILJ ID + password, returns user data |
+| `login_volunteer` | json | Validates ILJ ID + password, blocks suspended accounts, returns user data |
 | `reset_volunteer_password` | json | Resets volunteer password |
 | `force_sync_auth_password` | json | Force-syncs volunteer password to Supabase Auth |
 | `generate_ilj_id` | trigger | Auto-generates sequential ILJ IDs |

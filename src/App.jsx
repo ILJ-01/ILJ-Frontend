@@ -24,6 +24,7 @@ import TermsOfService from "./pages/TermsOfService";
 import LibraryPage from "./pages/LibraryPage";
 import LibraryRegistrationPage from "./pages/LibraryRegistrationPage";
 import ReflectAskQuestionPage from "./pages/ReflectAskQuestionPage";
+import ReconnectRegistrationPage from "./pages/ReconnectRegistrationPage";
 import "./styles/global.css";
 
 // Dashboard Imports
@@ -98,6 +99,7 @@ function App() {
             <Route path="/library-registartion" element={<Navigate to="/library-registration" replace />} />
             <Route path="/reflect-questions" element={<MainLayout><ReflectAskQuestionPage /></MainLayout>} />
             <Route path="/reflect/ask-question" element={<MainLayout><ReflectAskQuestionPage /></MainLayout>} />
+            <Route path="/reconnect-registration" element={<ReconnectRegistrationPage />} />
 
             {/* Admin Routes */}
             <Route path="/admin" element={<AdminLogin />} />

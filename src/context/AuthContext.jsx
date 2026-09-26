@@ -13,6 +13,12 @@ export function AuthProvider({ children }) {
         if (storedUser) {
             try {
                 const parsedUser = JSON.parse(storedUser);
+                if (parsedUser.activity_status === 'Suspended') {
+                    console.warn("Volunteer account is suspended. Logging out...");
+                    logout();
+                    setLoading(false);
+                    return;
+                }
                 setUser(parsedUser);
 
                 // Verify that Supabase Auth session is also active to keep them in sync.
@@ -168,6 +174,12 @@ export function AuthProvider({ children }) {
 
             if (userError) {
                 console.error("Error fetching updated user data:", userError);
+            }
+
+            if (updatedUserData?.activity_status === 'Suspended') {
+                console.warn("User account suspended during session refresh. Logging out...");
+                logout();
+                return;
             }
 
             const mergedUser = updatedUserData || currentUser;

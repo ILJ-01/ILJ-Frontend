@@ -6,7 +6,8 @@ import autoTable from 'jspdf-autotable';
 import {
     Search, Filter, LogOut, MapPin, Mail, Phone,
     X, User, Briefcase, Heart, BookOpen, Plus, LayoutGrid, Users,
-    Calendar, CheckSquare, Clock, Menu, Trash2, Shield, Award, TrendingUp, Download, Ticket, Lightbulb, Activity
+    Calendar, CheckSquare, Clock, Menu, Trash2, Shield, Award, TrendingUp, Download, Ticket, Lightbulb, Activity,
+    Ban, AlertTriangle, CheckCircle2
 } from 'lucide-react';
 
 import AdminEvents from './admin/AdminEvents';
@@ -720,6 +721,17 @@ const AdminDashboard = () => {
                                                                     {volunteer.secondary_designation}
                                                                 </span>
                                                             )}
+                                                            {volunteer.activity_status === 'Suspended' ? (
+                                                                <span className="text-xs font-bold bg-red-100 text-red-700 px-2 py-0.5 rounded border border-red-200 flex items-center gap-1 uppercase tracking-tight">
+                                                                    <Ban className="h-3 w-3" />
+                                                                    Suspended
+                                                                </span>
+                                                            ) : (
+                                                                <span className="text-xs font-semibold bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded border border-emerald-100 flex items-center gap-1 uppercase tracking-tight">
+                                                                    <CheckCircle2 className="h-3 w-3" />
+                                                                    Active
+                                                                </span>
+                                                            )}
                                                         </div>
                                                     </div>
                                                 </div>
@@ -919,6 +931,24 @@ const AdminDashboard = () => {
                                                 </div>
                                             </>
                                         )}
+                                        <span className="h-4 w-px bg-gray-300"></span>
+                                        <span className={`text-xs font-bold px-2.5 py-0.5 rounded-full border uppercase tracking-wider flex items-center gap-1 ${
+                                            selectedVolunteer.activity_status === 'Suspended'
+                                                ? 'bg-red-100 text-red-700 border-red-300'
+                                                : 'bg-emerald-100 text-emerald-800 border-emerald-300'
+                                        }`}>
+                                            {selectedVolunteer.activity_status === 'Suspended' ? (
+                                                <>
+                                                    <Ban className="h-3.5 w-3.5" />
+                                                    Suspended
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <CheckCircle2 className="h-3.5 w-3.5" />
+                                                    Active
+                                                </>
+                                            )}
+                                        </span>
                                     </div>
                                 </div>
                             </div>
@@ -1454,6 +1484,157 @@ const AdminDashboard = () => {
                                                     <p className="text-[11px] text-gray-400 mt-2">Checking a pod updates the pod's manager to this volunteer in real-time. Unchecking removes them as manager.</p>
                                                 </div>
                                             )}
+                                        </div>
+                                    </div>
+
+                                    {/* Account Management & Security: Suspension & Termination */}
+                                    <div className="space-y-4 md:col-span-2">
+                                        <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                                            <div className="bg-gray-50 border-b border-gray-200 p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                                                <div className="flex items-center gap-2">
+                                                    <Shield className="h-5 w-5 text-gray-700" />
+                                                    <h4 className="text-sm font-bold text-gray-900 uppercase tracking-wider">
+                                                        Account Management & Security
+                                                    </h4>
+                                                </div>
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-xs font-medium text-gray-500">Current Login Status:</span>
+                                                    <span className={`text-xs font-bold px-2.5 py-0.5 rounded-full border uppercase tracking-wider ${
+                                                        selectedVolunteer.activity_status === 'Suspended'
+                                                            ? 'bg-red-100 text-red-800 border-red-300'
+                                                            : 'bg-emerald-100 text-emerald-800 border-emerald-300'
+                                                    }`}>
+                                                        {selectedVolunteer.activity_status === 'Suspended' ? 'Suspended (Login Blocked)' : 'Active (Login Allowed)'}
+                                                    </span>
+                                                </div>
+                                            </div>
+
+                                            <div className="p-5 grid grid-cols-1 md:grid-cols-2 gap-6">
+                                                {/* Option 1: Account Suspension */}
+                                                <div className="p-4 rounded-xl border border-amber-200 bg-amber-50/40 flex flex-col justify-between">
+                                                    <div>
+                                                        <div className="flex items-center gap-2 mb-2">
+                                                            <Ban className="h-5 w-5 text-amber-600" />
+                                                            <h5 className="font-bold text-gray-900 text-sm">1. Account Suspension</h5>
+                                                        </div>
+                                                        <p className="text-xs text-gray-600 leading-relaxed mb-4">
+                                                            {selectedVolunteer.activity_status === 'Suspended' ? (
+                                                                <span className="text-red-700 font-medium">
+                                                                    This volunteer account is currently <strong>Suspended</strong>. The volunteer is blocked from logging in. Click below to reactivate and restore their access.
+                                                                </span>
+                                                            ) : (
+                                                                <span>
+                                                                    Temporary deactivation. The volunteer will be <strong>blocked from logging in</strong> to the portal. All contribution data, timesheets, and assignments remain intact.
+                                                                </span>
+                                                            )}
+                                                        </p>
+                                                    </div>
+                                                    <div>
+                                                        {selectedVolunteer.activity_status === 'Suspended' ? (
+                                                            <button
+                                                                type="button"
+                                                                onClick={async () => {
+                                                                    if (window.confirm(`Reactivate account for ${selectedVolunteer.first_name} ${selectedVolunteer.last_name}? They will be able to log in again.`)) {
+                                                                        try {
+                                                                            const { data, error } = await supabase.rpc('reactivate_volunteer', {
+                                                                                p_volunteer_id: selectedVolunteer.id
+                                                                            });
+                                                                            if (error || !data?.success) throw new Error(error?.message || data?.error || 'Failed to reactivate account');
+
+                                                                            const updated = { ...selectedVolunteer, activity_status: 'Active' };
+                                                                            setSelectedVolunteer(updated);
+                                                                            setVolunteers(prev => prev.map(vol => vol.id === updated.id ? updated : vol));
+                                                                            alert(`Account for ${selectedVolunteer.first_name} has been reactivated successfully.`);
+                                                                        } catch (err) {
+                                                                            alert(`Error reactivating account: ${err.message}`);
+                                                                        }
+                                                                    }
+                                                                }}
+                                                                className="w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold flex items-center justify-center gap-2 shadow-sm transition-colors cursor-pointer"
+                                                            >
+                                                                <CheckCircle2 className="h-4 w-4" />
+                                                                Reactivate Account (Restore Login)
+                                                            </button>
+                                                        ) : (
+                                                            <button
+                                                                type="button"
+                                                                onClick={async () => {
+                                                                    if (window.confirm(`Are you sure you want to suspend ${selectedVolunteer.first_name} ${selectedVolunteer.last_name} (${selectedVolunteer.ilj_id})?\n\nThis will temporarily deactivate their account and prevent them from logging into the portal.`)) {
+                                                                        try {
+                                                                            const { data, error } = await supabase.rpc('suspend_volunteer', {
+                                                                                p_volunteer_id: selectedVolunteer.id
+                                                                            });
+                                                                            if (error || !data?.success) throw new Error(error?.message || data?.error || 'Failed to suspend account');
+
+                                                                            const updated = { ...selectedVolunteer, activity_status: 'Suspended' };
+                                                                            setSelectedVolunteer(updated);
+                                                                            setVolunteers(prev => prev.map(vol => vol.id === updated.id ? updated : vol));
+                                                                            alert(`Account for ${selectedVolunteer.first_name} is now suspended.`);
+                                                                        } catch (err) {
+                                                                            alert(`Error suspending account: ${err.message}`);
+                                                                        }
+                                                                    }
+                                                                }}
+                                                                className="w-full py-2.5 px-4 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-xs font-bold flex items-center justify-center gap-2 shadow-sm transition-colors cursor-pointer"
+                                                            >
+                                                                <Ban className="h-4 w-4" />
+                                                                Suspend Account (Block Login)
+                                                            </button>
+                                                        )}
+                                                    </div>
+                                                </div>
+
+                                                {/* Option 2: Account Termination */}
+                                                <div className="p-4 rounded-xl border border-red-200 bg-red-50/40 flex flex-col justify-between">
+                                                    <div>
+                                                        <div className="flex items-center gap-2 mb-2">
+                                                            <Trash2 className="h-5 w-5 text-red-600" />
+                                                            <h5 className="font-bold text-gray-900 text-sm">2. Account Termination</h5>
+                                                        </div>
+                                                        <p className="text-xs text-gray-600 leading-relaxed mb-4">
+                                                            Permanent deletion. Permanently purges this volunteer profile, unlinks managed pods, cascades records, and permanently deletes Supabase Auth credentials. <strong className="text-red-700">This action cannot be undone.</strong>
+                                                        </p>
+                                                    </div>
+                                                    <div>
+                                                        <button
+                                                            type="button"
+                                                            onClick={async () => {
+                                                                const expectedId = (selectedVolunteer.ilj_id || '').trim();
+                                                                const confirmInput = window.prompt(
+                                                                    `⚠️ PERMANENT TERMINATION WARNING ⚠️\n\nAre you sure you want to permanently delete ${selectedVolunteer.first_name} ${selectedVolunteer.last_name}?\n\nTo confirm, type their ILJ ID "${expectedId}" below:`
+                                                                );
+
+                                                                if (!confirmInput) return;
+
+                                                                if (confirmInput.trim().toUpperCase() !== expectedId.toUpperCase()) {
+                                                                    alert("Confirmation ILJ ID did not match. Termination cancelled.");
+                                                                    return;
+                                                                }
+
+                                                                try {
+                                                                    const { data, error } = await supabase.rpc('terminate_volunteer', {
+                                                                        p_volunteer_id: selectedVolunteer.id
+                                                                    });
+
+                                                                    if (error || !data?.success) throw new Error(error?.message || data?.error || 'Failed to terminate account');
+
+                                                                    const deletedId = selectedVolunteer.id;
+                                                                    const deletedName = `${selectedVolunteer.first_name} ${selectedVolunteer.last_name}`;
+                                                                    setSelectedVolunteer(null);
+                                                                    setVolunteers(prev => prev.filter(vol => vol.id !== deletedId));
+                                                                    alert(`Account for ${deletedName} has been permanently terminated.`);
+                                                                } catch (err) {
+                                                                    alert(`Error terminating account: ${err.message}`);
+                                                                }
+                                                            }}
+                                                            className="w-full py-2.5 px-4 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs font-bold flex items-center justify-center gap-2 shadow-sm transition-colors cursor-pointer"
+                                                        >
+                                                            <Trash2 className="h-4 w-4" />
+                                                            Terminate Account (Permanent Deletion)
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
 
