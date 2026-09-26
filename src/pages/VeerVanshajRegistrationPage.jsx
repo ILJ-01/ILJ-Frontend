@@ -233,7 +233,7 @@ export default function VeerVanshajRegistrationPage({ project }) {
               className="w-full flex justify-center items-center gap-2 py-3.5 px-4 rounded-xl shadow-md text-base font-bold text-white bg-[#25D366] hover:bg-[#128C7E] active:scale-[0.98] transition-all cursor-pointer"
             >
               <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
-                <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/>
+                <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z" />
               </svg>
               <span>Join WhatsApp Group</span>
             </a>
@@ -422,8 +422,8 @@ export default function VeerVanshajRegistrationPage({ project }) {
                         <label
                           key={genderOption}
                           className={`flex items-center justify-center p-3 rounded-xl border cursor-pointer transition-all text-sm font-semibold select-none ${form.gender === genderOption
-                              ? "bg-[#ae2b2b]/10 border-[#ae2b2b] text-[#ae2b2b]"
-                              : "bg-gray-50/50 border-gray-200 text-gray-700 hover:bg-gray-100"
+                            ? "bg-[#ae2b2b]/10 border-[#ae2b2b] text-[#ae2b2b]"
+                            : "bg-gray-50/50 border-gray-200 text-gray-700 hover:bg-gray-100"
                             }`}
                         >
                           <input
@@ -520,17 +520,15 @@ export default function VeerVanshajRegistrationPage({ project }) {
                     <label className="text-xs font-bold text-gray-700 uppercase tracking-wider block">
                       Are you an active vihar sevak / sevika? <span className="text-[#ae2b2b]">*</span>
                     </label>
-                    <span className="text-xs text-amber-800 font-semibold bg-amber-100/90 border border-amber-300 px-2.5 py-0.5 rounded-full inline-block">
-                      ₹1,000 refundable deposit only for Vihar Sevak
-                    </span>
+
                   </div>
                   <div className="grid grid-cols-2 gap-3 max-w-md">
                     {["No", "Yes"].map((option) => (
                       <label
                         key={option}
                         className={`flex items-center justify-center p-3 rounded-xl border cursor-pointer transition-all text-sm font-semibold select-none ${form.is_vihar_sevika === option
-                            ? "bg-amber-50 border-amber-400 text-amber-900 shadow-sm"
-                            : "bg-gray-50/50 border-gray-200 text-gray-700 hover:bg-gray-100"
+                          ? "bg-amber-50 border-amber-400 text-amber-900 shadow-sm"
+                          : "bg-gray-50/50 border-gray-200 text-gray-700 hover:bg-gray-100"
                           }`}
                       >
                         <input
@@ -545,17 +543,11 @@ export default function VeerVanshajRegistrationPage({ project }) {
                       </label>
                     ))}
                   </div>
-                  {isViharSevak ? (
+                  {isViharSevak && (
                     <div className="p-3 bg-amber-50/90 border border-amber-300/80 rounded-xl text-xs text-amber-900 flex items-start gap-2 shadow-sm animate-in fade-in duration-200">
                       <Sparkles className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
-                      <div>
-                        <strong className="font-bold">Vihar Sevak Deposit Applied:</strong> You are eligible for the <strong>₹1,000 refundable deposit</strong> (instead of the regular ₹5,000 fee).
-                      </div>
+                      <span>Vihar sevaks and sevikas are eligible for the refundable ₹1,000 deposit. Please provide your group captain’s details below.</span>
                     </div>
-                  ) : (
-                    <p className="text-[11px] text-gray-500">
-                      Note: Active Vihar Sevaks/Sevikas pay only a ₹1,000 refundable deposit.
-                    </p>
                   )}
                 </div>
 
@@ -608,7 +600,7 @@ export default function VeerVanshajRegistrationPage({ project }) {
 
                 <div className="flex flex-col md:flex-row items-center gap-6 bg-gray-50/50 p-5 rounded-xl border border-gray-100 shadow-sm">
                   <div className="flex flex-col items-center shrink-0 w-full sm:w-auto">
-                    <div 
+                    <div
                       onClick={() => setIsQrModalOpen(true)}
                       className="relative bg-white p-3 rounded-xl border border-gray-200 shadow-sm shrink-0 cursor-pointer group hover:border-[#ae2b2b]/50 hover:shadow-md transition-all"
                       title="Click to enlarge QR Code"
@@ -703,11 +695,11 @@ export default function VeerVanshajRegistrationPage({ project }) {
 
       {/* QR Code Lightbox Modal */}
       {isQrModalOpen && (
-        <div 
+        <div
           className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200"
           onClick={() => setIsQrModalOpen(false)}
         >
-          <div 
+          <div
             className="relative max-w-sm sm:max-w-md w-full bg-white rounded-2xl p-5 sm:p-6 shadow-2xl flex flex-col items-center animate-in zoom-in-95 duration-200"
             onClick={e => e.stopPropagation()}
           >
@@ -722,11 +714,7 @@ export default function VeerVanshajRegistrationPage({ project }) {
             <h4 className="font-bold text-gray-900 text-lg sm:text-xl font-serif mb-1">
               Scan to Pay {isViharSevak ? "₹1,000/-" : "₹5,000/-"}
             </h4>
-            {isViharSevak && (
-              <span className="text-xs text-amber-800 bg-amber-100 border border-amber-300 px-2.5 py-0.5 rounded-full font-semibold mb-2">
-                ₹1,000 Refundable Deposit only for Vihar Sevak
-              </span>
-            )}
+
             <p className="text-xs text-gray-500 mb-4 text-center">
               Prakash Kaspale • <span className="font-mono text-gray-800 font-semibold">prakashkaspale@okhdfcbank</span>
             </p>
