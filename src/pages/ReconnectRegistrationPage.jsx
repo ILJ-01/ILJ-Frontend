@@ -109,7 +109,7 @@ export default function ReconnectRegistrationPage() {
               event_date: "5th – 7th November 2026 (3 Days)",
               timing: "8:00 AM – 7:00 PM",
               venue: "Shree Riddhi Siddhi Aadarsh Shwetambar Murtipujak Jain Sangh, Marve Road, Malad (W)",
-              amount_paid: "₹100/- (Non-refundable)",
+              amount_paid: "₹100/- (refundable)",
               whatsapp_link: WHATSAPP_GROUP_URL,
             },
           });
@@ -191,7 +191,7 @@ export default function ReconnectRegistrationPage() {
               [CalendarDays, "Dates", "5–7 November 2026"],
               [Clock3, "Time", "8 AM to 7 PM"],
               [Users, "For", "Boys and girls · Age 11–18"],
-              [IndianRupee, "Fees", "₹100 · Non-refundable"],
+              [IndianRupee, "Fees", "₹100 · refundable"],
               [Utensils, "Included", "Breakfast, lunch & dinner"],
               [MapPin, "Venue", "Malad (W), Mumbai"],
             ].map(([Icon, label, value]) => (
@@ -278,7 +278,7 @@ export default function ReconnectRegistrationPage() {
                 <div className="min-w-0 text-center xl:text-left">
                   <span className="inline-block rounded-full bg-amber-100 px-3 py-1 text-xs font-bold uppercase tracking-wider text-amber-800">Reconnect · 3-day Diwali camp</span>
                   <h4 className="mt-3 font-serif text-xl font-bold text-gray-900">Scan to pay ₹100</h4>
-                  <p className="mt-2 text-sm leading-6 text-gray-600">Use any UPI app—GPay, PhonePe, Paytm, or your banking app—to scan this QR code. The fee is non-refundable.</p>
+                  <p className="mt-2 text-sm leading-6 text-gray-600">Use any UPI app—GPay, PhonePe, Paytm, or your banking app—to scan this QR code. The fee is refundable.</p>
                   <p className="mt-3 inline-block rounded-lg border border-red-100 bg-red-50 p-3 text-xs font-semibold text-[#ae2b2b]">After successful payment, upload the screenshot below for verification.</p>
                   <div className="mt-4 flex flex-wrap justify-center gap-2 text-xs font-medium text-gray-600 xl:justify-start">
                     <span className="rounded-full bg-white px-3 py-1.5 shadow-sm">1. Scan &amp; pay</span>
