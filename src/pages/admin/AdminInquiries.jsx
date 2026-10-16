@@ -11,7 +11,7 @@ import { Navigate } from "react-router-dom";
 
 export default function AdminInquiries() {
     const { user, loading: authLoading } = useAuth();
-    const [activeTab, setActiveTab] = useState("inquiries"); // 'inquiries', 'feedback', or 'reflect_questions'
+    const [activeTab, setActiveTab] = useState("inquiries"); // 'inquiries', 'feedback', 'reflect_questions', or 'questions'
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(true);
     const [projects, setProjects] = useState({});
@@ -50,7 +50,9 @@ export default function AdminInquiries() {
                 ? 'project_inquiries' 
                 : activeTab === 'reflect_questions' 
                     ? 'reflect_questions' 
-                    : 'project_feedback';
+                    : activeTab === 'questions'
+                        ? 'questions'
+                        : 'project_feedback';
                     
             const { data: result, error } = await supabase
                 .from(table)
@@ -73,7 +75,9 @@ export default function AdminInquiries() {
                 ? 'project_inquiries' 
                 : activeTab === 'reflect_questions' 
                     ? 'reflect_questions' 
-                    : 'project_feedback';
+                    : activeTab === 'questions'
+                        ? 'questions'
+                        : 'project_feedback';
                     
             const { error } = await supabase.from(table).delete().eq('id', id);
             if (error) throw error;
@@ -94,12 +98,18 @@ export default function AdminInquiries() {
         const repliedAtIso = new Date().toISOString();
 
         try {
+            const table = activeTab === 'questions' ? 'questions' : 'reflect_questions';
+            const updatePayload = {
+                admin_reply: replyText.trim(),
+                replied_at: repliedAtIso
+            };
+            if (activeTab === 'questions') {
+                updatePayload.status = 'answered';
+            }
+
             const { error } = await supabase
-                .from('reflect_questions')
-                .update({
-                    admin_reply: replyText.trim(),
-                    replied_at: repliedAtIso
-                })
+                .from(table)
+                .update(updatePayload)
                 .eq('id', questionId);
 
             if (error) throw error;
@@ -108,7 +118,8 @@ export default function AdminInquiries() {
             setData(prev => prev.map(item => item.id === questionId ? {
                 ...item,
                 admin_reply: replyText.trim(),
-                replied_at: repliedAtIso
+                replied_at: repliedAtIso,
+                status: activeTab === 'questions' ? 'answered' : item.status
             } : item));
 
             setReplyingId(null);
@@ -148,6 +159,20 @@ export default function AdminInquiries() {
                     City: item.is_anonymous ? 'N/A' : (item.city || 'N/A'),
                     Created_At: new Date(item.created_at).toLocaleString()
                 };
+            } else if (activeTab === 'questions') {
+                return {
+                    Name: item.name,
+                    Phone: item.phone_no,
+                    Email: item.email || 'N/A',
+                    Gender: item.gender || 'N/A',
+                    Age: item.age || 'N/A',
+                    Address: item.address || 'N/A',
+                    Question: item.question,
+                    Status: item.status || 'pending',
+                    Admin_Reply: item.admin_reply || 'Pending',
+                    Replied_At: item.replied_at ? new Date(item.replied_at).toLocaleString() : 'N/A',
+                    Created_At: new Date(item.created_at).toLocaleString()
+                };
             } else {
                 return {
                     Pod: projects[item.project_id] || 'Unknown',
@@ -166,7 +191,9 @@ export default function AdminInquiries() {
             ? "Inquiries" 
             : activeTab === 'reflect_questions' 
                 ? "Reflect Questions" 
-                : "Feedback";
+                : activeTab === 'questions'
+                    ? "Questions"
+                    : "Feedback";
 
         XLSX.utils.book_append_sheet(wb, ws, sheetName);
         XLSX.writeFile(wb, `${activeTab}_${new Date().toISOString().split('T')[0]}.xlsx`);
@@ -183,12 +210,16 @@ export default function AdminInquiries() {
                             ? 'Pod Inquiries' 
                             : activeTab === 'reflect_questions'
                                 ? 'Reflect Workshop Questions'
-                                : 'Feedback & Reviews'}
+                                : activeTab === 'questions'
+                                    ? 'Life & Jainism Questions'
+                                    : 'Feedback & Reviews'}
                     </h1>
                     <p className="text-gray-500">
                         {activeTab === 'reflect_questions' 
                             ? 'Questions submitted by people regarding Reflect Workshop (Admin Only).'
-                            : 'Manage incoming requests and feedback.'}
+                            : activeTab === 'questions'
+                                ? 'Questions & doubts submitted through the "Have a Question?" portal.'
+                                : 'Manage incoming requests and feedback.'}
                     </p>
                 </div>
                 <div className="flex gap-3">
@@ -225,6 +256,13 @@ export default function AdminInquiries() {
                 >
                     <HelpCircle className="h-4 w-4" /> Reflect Questions
                 </button>
+                <button
+                    onClick={() => setActiveTab("questions")}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 cursor-pointer
+                        ${activeTab === "questions" ? "bg-[#ae2b2b] text-white shadow" : "text-gray-500 hover:text-gray-900"}`}
+                >
+                    <MessageSquareQuote className="h-4 w-4" /> Life & Jainism Questions
+                </button>
             </div>
 
             {/* Content Table/List */}
@@ -248,7 +286,27 @@ export default function AdminInquiries() {
                                 <div className="space-y-3 flex-1 w-full">
                                     {/* Top Header Tags */}
                                     <div className="flex flex-wrap items-center gap-2">
-                                        {activeTab === 'reflect_questions' ? (
+                                        {activeTab === 'questions' ? (
+                                            <>
+                                                <span className="text-xs font-bold uppercase tracking-wide px-2.5 py-1 bg-rose-50 text-[#ae2b2b] rounded-md border border-rose-100">
+                                                    Life & Jainism Question
+                                                </span>
+                                                {item.status === 'answered' ? (
+                                                    <span className="text-xs font-semibold px-2.5 py-1 bg-emerald-50 text-emerald-700 rounded-md border border-emerald-100">
+                                                        Answered
+                                                    </span>
+                                                ) : (
+                                                    <span className="text-xs font-semibold px-2.5 py-1 bg-amber-50 text-amber-700 rounded-md border border-amber-100">
+                                                        Pending
+                                                    </span>
+                                                )}
+                                                {item.gender && (
+                                                    <span className="text-xs font-medium px-2 py-0.5 bg-gray-100 text-gray-700 rounded">
+                                                        {item.gender}
+                                                    </span>
+                                                )}
+                                            </>
+                                        ) : activeTab === 'reflect_questions' ? (
                                             <>
                                                 {item.reference_code && (
                                                     <span className="text-xs font-mono font-bold uppercase tracking-wide px-2.5 py-1 bg-amber-100 text-amber-900 rounded-md border border-amber-200">
@@ -284,7 +342,102 @@ export default function AdminInquiries() {
                                     </div>
 
                                     {/* Main Content Area */}
-                                    {activeTab === 'inquiries' ? (
+                                    {activeTab === 'questions' ? (
+                                        <div className="space-y-3 w-full">
+                                            {/* Submitter Details */}
+                                            <div className="text-xs text-gray-600 flex flex-wrap gap-x-4 gap-y-1.5 font-medium bg-gray-50/70 p-3 rounded-xl border border-gray-100">
+                                                <span><strong>Name:</strong> {item.name}</span>
+                                                <span><strong>Phone:</strong> {item.phone_no}</span>
+                                                {item.email && <span><strong>Email:</strong> {item.email}</span>}
+                                                {item.gender && <span><strong>Gender:</strong> {item.gender}</span>}
+                                                {item.age && <span><strong>Age:</strong> {item.age}</span>}
+                                                {item.address && <span><strong>Address:</strong> {item.address}</span>}
+                                            </div>
+
+                                            {/* Question Text */}
+                                            <div className="bg-amber-50/40 p-4 rounded-xl border border-amber-100/80">
+                                                <span className="text-[10px] font-bold uppercase tracking-wider text-amber-900/70 block mb-1">
+                                                    Question / Doubt:
+                                                </span>
+                                                <p className="text-gray-900 font-serif text-base leading-relaxed whitespace-pre-line">
+                                                    "{item.question}"
+                                                </p>
+                                            </div>
+
+                                            {/* Existing Admin Reply Box */}
+                                            {item.admin_reply && replyingId !== item.id && (
+                                                <div className="bg-gradient-to-br from-[#ae2b2b]/5 to-[#ae2b2b]/10 border-l-4 border-[#ae2b2b] p-4 rounded-r-xl space-y-1.5 animate-in fade-in">
+                                                    <div className="flex items-center justify-between gap-2">
+                                                        <span className="inline-flex items-center gap-1.5 text-xs font-bold text-[#ae2b2b]">
+                                                            <ShieldCheck className="h-4 w-4" /> Official Reply / Guidance:
+                                                        </span>
+                                                        {item.replied_at && (
+                                                            <span className="text-xs text-gray-400">
+                                                                {new Date(item.replied_at).toLocaleString()}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    <p className="text-gray-900 font-medium text-sm leading-relaxed whitespace-pre-line">
+                                                        {item.admin_reply}
+                                                    </p>
+                                                </div>
+                                            )}
+
+                                            {/* Reply Action / Form */}
+                                            {replyingId === item.id ? (
+                                                <div className="space-y-3 bg-red-50/30 p-4 rounded-xl border border-[#ae2b2b]/20 animate-in fade-in">
+                                                    <label className="block text-xs font-bold text-[#ae2b2b] uppercase tracking-wider">
+                                                        Write Reply / Notes:
+                                                    </label>
+                                                    <textarea
+                                                        rows="4"
+                                                        placeholder="Write response or guidance here..."
+                                                        value={replyText}
+                                                        onChange={(e) => setReplyText(e.target.value)}
+                                                        className="w-full p-3 border border-gray-300 rounded-xl bg-white focus:ring-2 focus:ring-[#ae2b2b]/20 focus:border-[#ae2b2b] outline-none text-sm font-medium"
+                                                    />
+                                                    <div className="flex gap-2">
+                                                        <button
+                                                            onClick={() => handleSaveReply(item.id)}
+                                                            disabled={isSavingReply}
+                                                            className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#ae2b2b] hover:bg-[#8f1f1f] text-white font-bold text-xs shadow-md transition-all cursor-pointer disabled:opacity-50"
+                                                        >
+                                                            <Send className="h-3.5 w-3.5" /> Save Reply
+                                                        </button>
+                                                        <button
+                                                            onClick={() => {
+                                                                setReplyingId(null);
+                                                                setReplyText("");
+                                                            }}
+                                                            className="px-4 py-2 rounded-xl border border-gray-300 bg-white text-gray-700 font-semibold text-xs hover:bg-gray-50 transition-colors cursor-pointer"
+                                                        >
+                                                            Cancel
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                <div className="pt-1">
+                                                    <button
+                                                        onClick={() => {
+                                                            setReplyingId(item.id);
+                                                            setReplyText(item.admin_reply || "");
+                                                        }}
+                                                        className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-[#ae2b2b]/10 text-[#ae2b2b] hover:bg-[#ae2b2b] hover:text-white font-bold text-xs transition-all cursor-pointer border border-[#ae2b2b]/20"
+                                                    >
+                                                        {item.admin_reply ? (
+                                                            <>
+                                                                <Edit3 className="h-3.5 w-3.5" /> Edit Reply
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                <MessageSquareQuote className="h-3.5 w-3.5" /> Reply / Add Guidance
+                                                            </>
+                                                        )}
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </div>
+                                    ) : activeTab === 'inquiries' ? (
                                         <>
                                             <h3 className="font-bold text-gray-900">{item.name} <span className="text-gray-400 font-normal">({item.mobile})</span></h3>
                                             <p className="text-sm text-gray-600 font-medium">{item.email}</p>

@@ -160,6 +160,8 @@ src/
 | `/policies` | `PoliciesPage` | Organization policies |
 | `/library` | `LibraryPage` | Sanskar Library catalog |
 | `/library-registration` | `LibraryRegistrationPage` | Library registration |
+| `/ask-question` | `AskQuestionPage` | General questions about Jainism & Life |
+| `/samarpanam` | `SamarpanamPage` | SAMARPANAM event nomination form |
 
 ### Admin Routes (standalone layout)
 | Route | Component | Purpose |

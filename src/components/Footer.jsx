@@ -88,6 +88,8 @@ export default function Footer() {
             <li><Link to="/policies" className="hover:text-white transition">Privacy Policy</Link></li>
             <li><Link to="/projects" className="hover:text-white transition">Projects</Link></li>
             <li><Link to="/aboutus" className="hover:text-white transition">About Us</Link></li>
+            <li><Link to="/ask-question" className="hover:text-white transition">Have a Question?</Link></li>
+            <li><Link to="/samarpanam" className="hover:text-white transition">SAMARPANAM Nomination</Link></li>
           </ul>
         </div>
 

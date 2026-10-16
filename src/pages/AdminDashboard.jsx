@@ -20,6 +20,7 @@ import AdminIdeas from './admin/AdminIdeas';
 import AdminSTC from './admin/AdminSTC';
 import AdminKalyanMitras from './admin/AdminKalyanMitras';
 import AdminOpportunities from './admin/AdminOpportunities';
+import AdminSamarpanam from './admin/AdminSamarpanam';
 
 const RANKS = [
     { title: "Volunteer", minHours: 0, minSTC: 0, order: 0 },
@@ -480,6 +481,7 @@ const AdminDashboard = () => {
                                 { id: 'ideas', label: 'Ideas', icon: Lightbulb },
                                 { id: 'stc', label: 'Spiritual Tasks', icon: Activity },
                                 { id: 'opportunities', label: 'Opportunities', icon: Briefcase },
+                                { id: 'samarpanam', label: 'Samarpanam', icon: Heart },
                             ].map((item) => {
                                 const Icon = item.icon;
                                 const isActive = activeTab === item.id;
@@ -570,6 +572,9 @@ const AdminDashboard = () => {
                             </button>
                             <button onClick={() => setActiveTab('opportunities')} className={`flex items-center gap-2 px-3 py-2 rounded-md font-medium text-sm whitespace-nowrap transition-all ${activeTab === 'opportunities' ? 'bg-white text-[#ae2b2b] shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}>
                                 <Briefcase className="h-4 w-4" /> Opportunities
+                            </button>
+                            <button onClick={() => setActiveTab('samarpanam')} className={`flex items-center gap-2 px-3 py-2 rounded-md font-medium text-sm whitespace-nowrap transition-all ${activeTab === 'samarpanam' ? 'bg-white text-[#ae2b2b] shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}>
+                                <Heart className="h-4 w-4" /> Samarpanam
                             </button>
                         </div>
 
@@ -889,6 +894,11 @@ const AdminDashboard = () => {
                 {activeTab === 'opportunities' && (
                     <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
                         <AdminOpportunities />
+                    </div>
+                )}
+                {activeTab === 'samarpanam' && (
+                    <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
+                        <AdminSamarpanam />
                     </div>
                 )}
             </main>

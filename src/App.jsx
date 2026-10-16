@@ -25,6 +25,8 @@ import LibraryPage from "./pages/LibraryPage";
 import LibraryRegistrationPage from "./pages/LibraryRegistrationPage";
 import ReflectAskQuestionPage from "./pages/ReflectAskQuestionPage";
 import ReconnectRegistrationPage from "./pages/ReconnectRegistrationPage";
+import AskQuestionPage from "./pages/AskQuestionPage";
+import SamarpanamPage from "./pages/SamarpanamPage";
 import "./styles/global.css";
 
 // Dashboard Imports
@@ -100,6 +102,11 @@ function App() {
             <Route path="/reflect-questions" element={<MainLayout><ReflectAskQuestionPage /></MainLayout>} />
             <Route path="/reflect/ask-question" element={<MainLayout><ReflectAskQuestionPage /></MainLayout>} />
             <Route path="/reconnect-registration" element={<ReconnectRegistrationPage />} />
+            <Route path="/ask-question" element={<MainLayout><AskQuestionPage /></MainLayout>} />
+            <Route path="/have-a-question" element={<Navigate to="/ask-question" replace />} />
+            <Route path="/ask" element={<Navigate to="/ask-question" replace />} />
+            <Route path="/samarpanam" element={<MainLayout><SamarpanamPage /></MainLayout>} />
+            <Route path="/samarpanam-nomination" element={<Navigate to="/samarpanam" replace />} />
 
             {/* Admin Routes */}
             <Route path="/admin" element={<AdminLogin />} />

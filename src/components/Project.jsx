@@ -64,11 +64,7 @@ const getGalleryImages = (projectId) => {
 };
 
 const SHIBIR_SESSIONS = [
-  "2 August – What if you are Wrong?",
-  "9 August – Autopilot Mode: Off",
-  "16 August – Simple is Ample",
-  "23 August – Darr ke Aage Jeet Hai",
-  "30 August – Shasan: Present To Future",
+  "17th Oct: Overcoming Fear Session",
 ];
 
 export default function Project() {

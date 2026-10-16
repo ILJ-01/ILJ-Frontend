@@ -32,6 +32,8 @@
 | `library_books` | 1 | Sanskar Library book catalog |
 | `pathshala_assignments` | 1 | Library book set assignments |
 | `kiva_sessions` | 2 | Kiva session scheduling |
+| `questions` | 0 | General questions & doubts about Jainism and Life |
+| `samarpanam_nominations` | 0 | SAMARPANAM event nominations |
 
 ---
 
@@ -292,6 +294,12 @@ Fields: `book_no`, `book_name`, `author`, `publisher`, `language`, `set_no`
 
 #### `app_roles`
 Fields: `user_id`, `role`
+
+#### `questions` — General questions about Jainism & Life
+Key fields: `id`, `name`, `phone_no`, `email`, `gender`, `address`, `age`, `question`, `status`, `admin_reply`, `replied_at`, `created_at`
+
+#### `samarpanam_nominations` — Nominations for SAMARPANAM event
+Key fields: `id`, `nominator_name`, `nominator_mobile`, `nominator_age`, `nominator_gender`, `nominator_address`, `relationship_with_nominee`, `relationship_other`, `nominee_name`, `nominee_mobile`, `nominee_age`, `nominee_address`, `nominee_marital_status`, `nominee_marital_status_other`, `nominee_wife_name`, `nominee_wife_mobile`, `seva_areas`, `seva_areas_other`, `sangh_name`, `sangh_head_contact`, `involvement_duration`, `hours_per_week`, `total_hours_till_date`, `contribution_description`, `initiatives_achievements`, `wife_support_description`, `wife_incident_story`, `status`, `admin_notes`, `created_at`
 
 ---
 
