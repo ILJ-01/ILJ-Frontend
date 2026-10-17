@@ -84,7 +84,7 @@ export default function Footer() {
           <h3 className="text-xl font-bold mb-4 text-white uppercase tracking-wider">Quick Links</h3>
           <ul className="space-y-2 text-sm text-gray-200">
             <li><Link to="/" className="hover:text-white transition">Home</Link></li>
-            <li><Link to="/blogs" className="hover:text-white transition">Articles</Link></li>
+            <li><Link to="/articles" className="hover:text-white transition">Articles</Link></li>
             <li><Link to="/policies" className="hover:text-white transition">Privacy Policy</Link></li>
             <li><Link to="/projects" className="hover:text-white transition">Projects</Link></li>
             <li><Link to="/aboutus" className="hover:text-white transition">About Us</Link></li>

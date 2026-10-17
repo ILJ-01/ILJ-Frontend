@@ -48,7 +48,6 @@ const Projects = () => {
             "Sanskaar Library",
             "Jainific",
             "Digital Jainism",
-            "Blogs",
             "Website Development"
           ];
 
