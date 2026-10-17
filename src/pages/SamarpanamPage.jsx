@@ -167,6 +167,7 @@ export default function SamarpanamPage() {
     // Validate Mandatory Fields
     if (!form.nominator_name.trim()) return setError("Please enter Nominator's Full Name.");
     if (!form.nominator_mobile.trim()) return setError("Please enter Nominator's Mobile Number.");
+    if (!form.nominator_age || !String(form.nominator_age).trim()) return setError("Please enter Nominator's Age.");
     if (!form.nominator_address.trim()) return setError("Please enter Nominator's Residential Address.");
     if (!form.relationship_with_nominee) return setError("Please select Relationship with the Nominee.");
     if (form.relationship_with_nominee === "Other (Please Specify)" && !form.relationship_other.trim()) {
@@ -175,6 +176,7 @@ export default function SamarpanamPage() {
 
     if (!form.nominee_name.trim()) return setError("Please enter Nominee's Full Name.");
     if (!form.nominee_mobile.trim()) return setError("Please enter Nominee's Mobile Number.");
+    if (!form.nominee_age || !String(form.nominee_age).trim()) return setError("Please enter Nominee's Age.");
     if (!form.nominee_address.trim()) return setError("Please enter Nominee's Residential Address.");
     if (!form.nominee_marital_status) return setError("Please select Nominee's Marital Status.");
     if (form.nominee_marital_status === "Other (Please Specify)" && !form.nominee_marital_status_other.trim()) {
@@ -475,11 +477,12 @@ export default function SamarpanamPage() {
                 {/* 3. Age */}
                 <div>
                   <label className="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-1.5">
-                    3. Age <span className="text-gray-400 font-normal lowercase">(optional)</span>
+                    3. Age <span className="text-[#ae2b2b]">*</span>
                   </label>
                   <input
                     type="number"
                     name="nominator_age"
+                    required
                     min="15"
                     max="120"
                     value={form.nominator_age}
@@ -623,11 +626,12 @@ export default function SamarpanamPage() {
                 {/* 9. Age */}
                 <div>
                   <label className="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-1.5">
-                    9. Age <span className="text-gray-400 font-normal lowercase">(optional)</span>
+                    9. Age <span className="text-[#ae2b2b]">*</span>
                   </label>
                   <input
                     type="number"
                     name="nominee_age"
+                    required
                     min="18"
                     max="120"
                     value={form.nominee_age}
@@ -1063,6 +1067,23 @@ export default function SamarpanamPage() {
                     </span>
                   </label>
                 </div>
+              </div>
+
+              {/* Official Communication Notice */}
+              <div className="mt-6 p-4 sm:p-5 rounded-2xl bg-[#ae2b2b]/5 border border-[#ae2b2b]/20 text-gray-800 text-xs sm:text-sm leading-relaxed space-y-2">
+                <div className="flex items-center gap-2 font-bold text-[#ae2b2b]">
+                  <Phone className="h-4 w-4 shrink-0" />
+                  <span>Important Notice</span>
+                </div>
+                <p>
+                  Please note that all official communications, updates, and inquiries related to SAMARPANAM will be conducted through the official Team I ❤️ Jinshasan contact number:{" "}
+                  <a href="tel:+917045355421" className="font-bold text-[#ae2b2b] hover:underline whitespace-nowrap">
+                    +91 7045355421
+                  </a>.
+                </p>
+                <p className="text-gray-600">
+                  We request you to save this number and rely solely on updates sent from it for all official information regarding the event.
+                </p>
               </div>
 
               {/* Submit Button */}
