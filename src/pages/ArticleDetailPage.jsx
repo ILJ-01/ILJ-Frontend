@@ -450,8 +450,7 @@ export default function ArticleDetailPage() {
               Part 2 • Coming Soon
             </span>
             <h4 className="text-lg sm:text-xl font-serif font-bold text-gray-900">
-              How Does Our Mind Turn a Small Event Into a Major Conflict?
-            </h4>
+Are We Angry at What Happened or What We Think Happened?            </h4>
             <p className="text-xs sm:text-sm text-gray-500 mt-1">
               Exploring the cognitive divide between what actually happened and what we thought happened.
             </p>

@@ -322,8 +322,8 @@ export default function SamarpanamPage() {
         {/* Header & Hero */}
         <div className="text-center mb-10 sm:mb-12">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#ae2b2b]/10 text-[#ae2b2b] text-xs font-bold tracking-widest uppercase mb-4 shadow-xs">
-            <Heart className="h-3.5 w-3.5 fill-[#ae2b2b]" />
-            A Jinshasan Initiative
+            A I <Heart className="h-3.5 w-3.5 fill-[#ae2b2b]" />
+             Jinshasan Initiative
           </div>
 
           <h1 className="text-3xl sm:text-5xl font-bold text-gray-900 font-serif tracking-tight leading-tight">
@@ -372,6 +372,18 @@ export default function SamarpanamPage() {
                   <span className="font-bold text-gray-900 block">Venue</span>
                   Aspee Auditorium, Laxminarayan Mandir Complex, Marve Road, Malad West, Mumbai 400064
                 </div>
+              </div>
+            </div>
+
+            {/* Form Submission Deadline Notice */}
+            <div className="mt-4 pt-3.5 border-t border-[#ae2b2b]/15 bg-[#ae2b2b]/5 -mx-5 -mb-5 sm:-mx-6 sm:-mb-6 p-4 rounded-b-2xl flex items-start gap-2.5">
+              <div className="h-2 w-2 rounded-full bg-[#ae2b2b] shrink-0 mt-1.5" />
+              <div className="text-xs sm:text-sm">
+                <span className="font-bold text-gray-900">Form Submission Deadline: </span>
+                <span className="font-bold text-[#ae2b2b]">31st October 2026</span>
+                <p className="text-gray-600 mt-0.5 font-medium">
+                  We will consider all submissions received up to 31st October.
+                </p>
               </div>
             </div>
           </div>
