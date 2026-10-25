@@ -106,6 +106,7 @@ function App() {
             <Route path="/reflect/ask-question" element={<MainLayout><ReflectAskQuestionPage /></MainLayout>} />
             <Route path="/reconnect-registration" element={<ReconnectRegistrationPage />} />
             <Route path="/ask-question" element={<MainLayout><AskQuestionPage /></MainLayout>} />
+            <Route path="/ask-question/:token" element={<MainLayout><AskQuestionPage /></MainLayout>} />
             <Route path="/have-a-question" element={<Navigate to="/ask-question" replace />} />
             <Route path="/ask" element={<Navigate to="/ask-question" replace />} />
             <Route path="/samarpanam" element={<MainLayout><SamarpanamPage /></MainLayout>} />
