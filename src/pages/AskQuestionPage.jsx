@@ -83,14 +83,26 @@ export default function AskQuestionPage() {
     setLoadingThread(true);
     setThreadError("");
     try {
-      const decodedTicketNo = decodeQuestionToken(token);
+      const cleanToken = (token || "").trim();
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(cleanToken);
+      const decodedTicketNo = decodeQuestionToken(cleanToken);
+
+      // Check if user passed ticket number directly like "1013" or "ILJ-Q1013"
+      const rawNumberMatch = cleanToken.match(/^(?:ILJ-Q)?(\d+)$/i);
+      const rawTicketNo = rawNumberMatch ? parseInt(rawNumberMatch[1], 10) : null;
+      const targetTicketNo = decodedTicketNo || rawTicketNo;
 
       let query = supabase.from("questions").select("*");
-      if (decodedTicketNo) {
-        query = query.or(`access_token.eq.${token},ticket_no.eq.${decodedTicketNo},id.eq.${token}`);
-      } else {
-        query = query.or(`access_token.eq.${token},id.eq.${token}`);
+      const conditions = [`access_token.eq.${cleanToken}`];
+
+      if (targetTicketNo) {
+        conditions.push(`ticket_no.eq.${targetTicketNo}`);
       }
+      if (isUuid) {
+        conditions.push(`id.eq.${cleanToken}`);
+      }
+
+      query = query.or(conditions.join(","));
 
       const { data, error } = await query.maybeSingle();
 
