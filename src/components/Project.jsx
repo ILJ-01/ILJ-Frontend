@@ -39,6 +39,7 @@ import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import Autoplay from "embla-carousel-autoplay";
 import Instagram from "./Instagram";
 import KivaRegForm from "./KivaRegForm";
+import ProjectFeedbackSection from "./ProjectFeedbackSection";
 
 const projectThumbs = import.meta.glob(
   "../assets/projects/*.{png,jpg,jpeg,webp}",
@@ -65,6 +66,16 @@ const getGalleryImages = (projectId) => {
 
 const SHIBIR_SESSIONS = [
   "17th Oct: Overcoming Fear Session",
+];
+
+const JAINIFIC_SESSIONS = [
+  "Jainific 3.0 Malad - 1st November 2026",
+  "Exhibit: Rebirth (Second Adhyay)",
+  "Exhibit: Tripadi (Fifth Adhyay)",
+  "Exhibit: Aura & Leshya (34th Adhyay)",
+  "Exhibit: Psychology of emotions (32nd Adhyay)",
+  "Exhibit: Theory of evolution (Second Adhyay)",
+  "General Exhibition Feedback",
 ];
 
 export default function Project() {
@@ -141,23 +152,29 @@ export default function Project() {
     async function loadData() {
       setLoading(true);
 
-      if (isUuid) {
-        // 1. Fetch from Supabase
-        try {
-          const { data, error } = await supabase
-            .from("projects")
-            .select(
-              `
-              *,
-              manager:manager_id (
-                first_name, last_name, ilj_id, mobile_number, email
-              )
-            `,
+      try {
+        let dbQuery = supabase
+          .from("projects")
+          .select(
+            `
+            *,
+            manager:manager_id (
+              first_name, last_name, ilj_id, mobile_number, email
             )
-            .eq("id", title)
-            .single();
+          `,
+          );
 
-          if (error) throw error;
+        if (isUuid) {
+          dbQuery = dbQuery.eq("id", title);
+        } else {
+          // If title is "Jainific", "jainific", or matches project title
+          dbQuery = dbQuery.ilike("title", title);
+        }
+
+        const { data, error } = await dbQuery.maybeSingle();
+
+        if (data) {
+          const projectId = data.id;
           if (data.status === "archived" && !user?.isITAdmin) {
             setProject(null);
             navigate("/projects");
@@ -168,19 +185,20 @@ export default function Project() {
           const { data: photosData } = await supabase
             .from("project_photos")
             .select("photo_url")
-            .eq("project_id", title);
+            .eq("project_id", projectId);
           if (photosData) setDbGallery(photosData.map((p) => p.photo_url));
 
           const { data: testData } = await supabase
             .from("project_feedback")
             .select("*")
-            .eq("project_id", title);
+            .eq("project_id", projectId)
+            .order("created_at", { ascending: false });
           if (testData) setDbTestimonials(testData);
 
           const { data: subpodsData } = await supabase
             .from("projects")
             .select("*")
-            .eq("parent_project_id", title);
+            .eq("parent_project_id", projectId);
           if (subpodsData) {
             const visibleSubpods = subpodsData.filter((sub) => {
               if (sub.project_code === "PRJ-008-01") return false; // Temporarily hide Reconnect
@@ -222,7 +240,7 @@ export default function Project() {
             const { data: appData, error: appError } = await supabase
               .from("project_volunteers")
               .select("status")
-              .eq("project_id", title)
+              .eq("project_id", projectId)
               .eq("volunteer_id", user.id)
               .single();
 
@@ -230,20 +248,29 @@ export default function Project() {
               setApplicationStatus(appData.status);
             }
           }
-        } catch (err) {
-          console.error("Error loading project:", err);
-          // navigate('/projects'); // Optional: redirect on error
-        }
-      } else {
-        // 1. Fetch from JSON
-        const found = projects.find((p) => p.title === title);
-        if (found) {
-          setProject({ ...found, type: "static" });
         } else {
-          // navigate('/projects');
+          // Fallback to static JSON if not found in DB
+          const found = projects.find(
+            (p) => p.title.toLowerCase() === title.toLowerCase(),
+          );
+          if (found) {
+            setProject({ ...found, type: "static" });
+            // For Jainific static fallback, load its testimonials from DB
+            if (found.title?.toLowerCase().includes("jainific")) {
+              const { data: testData } = await supabase
+                .from("project_feedback")
+                .select("*")
+                .eq("project_id", "134f3fc8-8546-4bb3-b39a-e671bfcb0808")
+                .order("created_at", { ascending: false });
+              if (testData) setDbTestimonials(testData);
+            }
+          }
         }
+      } catch (err) {
+        console.error("Error loading project:", err);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     }
 
     loadData();
@@ -252,10 +279,13 @@ export default function Project() {
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const open =
-      params.get("open") || params.get("modal") || params.get("form");
+      params.get("open") || params.get("modal") || params.get("form") || params.get("feedback");
 
-    if (open === "feedback") {
-      setIsFeedbackOpen(true);
+    if (open === "feedback" || params.get("feedback") === "true") {
+      setTimeout(() => {
+        const el = document.getElementById("feedback-section");
+        if (el) el.scrollIntoView({ behavior: "smooth" });
+      }, 400);
     } else if (open === "inquiry") {
       setIsInquiryOpen(true);
     } else if (open === "qna") {
@@ -364,10 +394,17 @@ export default function Project() {
         city: feedbackForm.is_anonymous ? null : feedbackForm.city || null,
       };
 
-      const { error } = await supabase.from("project_feedback").insert(payload);
+      const { data: insertedFb, error } = await supabase
+        .from("project_feedback")
+        .insert(payload)
+        .select()
+        .single();
       if (error) throw error;
       alert("Thank you for your feedback!");
       setIsFeedbackOpen(false);
+      if (insertedFb) {
+        setDbTestimonials((prev) => [insertedFb, ...prev]);
+      }
       setFeedbackForm({
         rating: 5,
         session: "",
@@ -518,6 +555,17 @@ export default function Project() {
             </div>
           </>
         )}
+
+        <ProjectFeedbackSection
+          project={{
+            ...project,
+            id: project.id || "134f3fc8-8546-4bb3-b39a-e671bfcb0808",
+          }}
+          testimonials={dbTestimonials}
+          onFeedbackAdded={(newFb) =>
+            setDbTestimonials((prev) => [newFb, ...prev])
+          }
+        />
       </div>
     );
   }
@@ -755,17 +803,54 @@ export default function Project() {
               </div>
             )}
 
-          {/* Upcoming Event Registration Banner */}
-          {project.is_event_registration_enabled && project.next_event_date && (
-            <div className="bg-white rounded-2xl p-8 shadow-sm border border-l-4 border-l-[#ae2b2b]">
-              <h2 className="text-2xl font-bold text-[#ae2b2b] mb-4 font-serif flex items-center gap-2">
-                <Calendar className="text-[#ae2b2b] w-6 h-6" /> Upcoming Event
-                Registration
-              </h2>
+          {/* Upcoming Event Registration / Exhibition Banner */}
+          {((project.is_event_registration_enabled && project.next_event_date) ||
+            project.project_code === "PRJ-003" ||
+            project.title?.toLowerCase().includes("jainific")) && (
+            <div className="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-l-4 border-l-[#ae2b2b]">
+              <div className="flex items-center justify-between gap-3 mb-4 border-b border-gray-100 pb-3">
+                <h2 className="text-xl sm:text-2xl font-bold text-[#ae2b2b] font-serif flex items-center gap-2">
+                  <Calendar className="text-[#ae2b2b] w-5 h-5 sm:w-6 sm:h-6" />
+                  {project.project_code === "PRJ-003" || project.title?.toLowerCase().includes("jainific")
+                    ? "Upcoming Exhibition Details"
+                    : "Upcoming Event Registration"}
+                </h2>
+                {(project.project_code === "PRJ-003" || project.title?.toLowerCase().includes("jainific")) && (
+                  <span className="text-xs bg-amber-100 text-amber-800 font-bold px-3 py-1 rounded-full uppercase tracking-wider">
+                    Jainific 3.0
+                  </span>
+                )}
+              </div>
 
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+              <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 p-4 sm:p-5 bg-gradient-to-br from-gray-50 to-amber-50/20 rounded-xl border border-gray-200">
                 <div className="flex-1 space-y-4">
-                  {project.project_code === "PRJ-008" ? (
+                  {project.project_code === "PRJ-003" || project.title?.toLowerCase().includes("jainific") ? (
+                    <div>
+                      <h3 className="font-bold text-gray-900 text-lg sm:text-xl font-serif">
+                        Jainific 3.0 Malad — A Scientific Lens
+                      </h3>
+                      <p className="text-gray-600 text-xs sm:text-sm mt-1">
+                        An interactive exhibition connecting ancient Jain Agamic science with modern physics, biology, and psychology.
+                      </p>
+                      <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-gray-700 mt-3 text-sm">
+                        <div className="flex items-center gap-2">
+                          <MapPin className="w-4 h-4 text-[#ae2b2b] shrink-0" />
+                          <a
+                            href="https://maps.google.com/?q=MKES+Law+College+SV+Road+Malad+West"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="font-medium hover:text-[#ae2b2b] hover:underline transition-colors"
+                          >
+                            MKES Law College, N.K. College Campus, SV Road, Malad (West)
+                          </a>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Clock className="w-4 h-4 text-[#ae2b2b] shrink-0" />
+                          <span className="font-medium text-gray-800">11:00 AM to 8:00 PM</span>
+                        </div>
+                      </div>
+                    </div>
+                  ) : project.project_code === "PRJ-008" ? (
                     <div>
                       <h3 className="font-bold text-gray-900 text-lg">
                         Reflect: Look Beyond your Version
@@ -800,30 +885,58 @@ export default function Project() {
                       </div>
                     </div>
                   ) : null}
+
                   <div>
-                    <p className="text-sm font-bold text-gray-500 uppercase tracking-widest mb-1">
-                      Next Event Date
+                    <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">
+                      Event Date & Timing
                     </p>
-                    <p className="text-xl font-bold text-gray-900">
-                      {project.project_code === "PRJ-008"
+                    <p className="text-lg sm:text-xl font-bold text-gray-900">
+                      {project.project_code === "PRJ-003" || project.title?.toLowerCase().includes("jainific")
+                        ? "📅 1st November 2026 | ⏰ 11:00 AM to 8:00 PM"
+                        : project.project_code === "PRJ-008"
                         ? "Sundays in August 2026 (2nd, 9th, 16th, 23rd, 30th)"
                         : project.next_event_date}
                     </p>
                   </div>
                 </div>
 
-                <div className="shrink-0 mt-4 sm:mt-0">
-                  <Link
-                    to={
-                      project.project_code === "PRJ-008"
-                        ? "/projects/e65d8362-e612-4217-b769-cf74719c8d5a/event-registration"
-                        : `/projects/${project.id}/event-registration`
-                    }
-                  >
-                    <Button className="bg-[#ae2b2b] hover:bg-[#8f1f1f] text-white px-8 py-2 border-0 cursor-pointer">
-                      Click to Register
-                    </Button>
-                  </Link>
+                <div className="shrink-0 w-full sm:w-auto flex flex-col sm:flex-row lg:flex-col gap-2.5">
+                  {project.project_code === "PRJ-003" || project.title?.toLowerCase().includes("jainific") ? (
+                    <>
+                      <Button
+                        onClick={() => {
+                          const fbElem = document.getElementById("feedback-section");
+                          if (fbElem) {
+                            fbElem.scrollIntoView({ behavior: "smooth" });
+                          } else {
+                            setIsFeedbackOpen(true);
+                          }
+                        }}
+                        className="bg-[#ae2b2b] hover:bg-[#8f1f1f] text-white px-6 py-2.5 rounded-xl font-bold border-0 cursor-pointer shadow-md hover:shadow-lg transition-all"
+                      >
+                        <MessageSquare className="w-4 h-4 mr-1.5" /> Share Feedback
+                      </Button>
+                      <Button
+                        variant="outline"
+                        onClick={() => navigate("/sources")}
+                        className="border-[#ae2b2b]/30 text-[#ae2b2b] hover:bg-[#ae2b2b]/10 px-5 py-2.5 rounded-xl font-medium cursor-pointer"
+                      >
+                        5 Scriptural Exhibits →
+                      </Button>
+                    </>
+                  ) : (
+                    <Link
+                      to={
+                        project.project_code === "PRJ-008"
+                          ? "/projects/e65d8362-e612-4217-b769-cf74719c8d5a/event-registration"
+                          : `/projects/${project.id}/event-registration`
+                      }
+                    >
+                      <Button className="bg-[#ae2b2b] hover:bg-[#8f1f1f] text-white px-8 py-2 border-0 cursor-pointer">
+                        Click to Register
+                      </Button>
+                    </Link>
+                  )}
                 </div>
               </div>
             </div>
@@ -1022,93 +1135,18 @@ export default function Project() {
           </div>
         )}
 
-        {dbTestimonials.length > 0 && (
-          <div className="w-full px-2 sm:px-6 md:px-12 mt-12">
-            {/* Header Section */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#ae2b2b]/15 pb-4 mb-8">
-              <div>
-                <span className="text-xs font-bold uppercase tracking-widest text-[#ae2b2b]">
-                  Community Reviews
-                </span>
-                <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 font-serif mt-1">
-                  Voices of Impact
-                </h2>
-              </div>
-              <div className="flex items-center gap-2.5 bg-[#ae2b2b]/5 border border-[#ae2b2b]/15 px-4 py-2 rounded-full w-fit">
-                <div className="flex text-amber-400 gap-0.5">
-                  {[...Array(5)].map((_, i) => (
-                    <Star key={i} className="h-4 w-4 fill-amber-400 text-amber-400" />
-                  ))}
-                </div>
-                <span className="text-xs font-bold text-[#ae2b2b]">
-                  {dbTestimonials.length} Review{dbTestimonials.length > 1 ? "s" : ""}
-                </span>
-              </div>
-            </div>
-
-            {/* Testimonials Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
-              {dbTestimonials.map((t) => {
-                const displayName = t.is_anonymous
-                  ? "Anonymous Member"
-                  : t.name || "Community Participant";
-                const initial = displayName.charAt(0).toUpperCase();
-                const ratingCount = t.rating && t.rating > 0 ? t.rating : 5;
-
-                return (
-                  <div
-                    key={t.id}
-                    className="relative group rounded-3xl border border-[#ae2b2b]/10 bg-gradient-to-b from-white to-[#fffcfb] p-6 sm:p-7 shadow-[0_4px_24px_-6px_rgba(174,43,43,0.06)] hover:shadow-xl hover:border-[#ae2b2b]/25 hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between overflow-hidden"
-                  >
-                    {/* Top Accent Line */}
-                    <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-[#ae2b2b] via-[#d66b3a] to-[#ae2b2b] opacity-80 group-hover:opacity-100 transition-opacity" />
-
-                    {/* Background Decorative Quote Mark */}
-                    <Quote className="absolute right-4 top-4 h-12 w-12 text-[#ae2b2b]/8 pointer-events-none group-hover:text-[#ae2b2b]/15 transition-colors" />
-
-                    <div>
-                      {/* Rating Stars */}
-                      <div className="flex items-center gap-1 mb-4">
-                        {[...Array(5)].map((_, i) => (
-                          <Star
-                            key={i}
-                            className={`h-4 w-4 ${
-                              i < ratingCount
-                                ? "fill-amber-400 text-amber-400"
-                                : "text-gray-200 fill-gray-100"
-                            }`}
-                          />
-                        ))}
-                      </div>
-
-                      {/* Feedback Comment */}
-                      <p className="text-gray-800 leading-relaxed font-serif text-base sm:text-lg italic wrap-break-word relative z-10">
-                        "{t.comments}"
-                      </p>
-                    </div>
-
-                    {/* Submitter Info Footer */}
-                    <div className="mt-6 pt-4 border-t border-gray-100 flex items-center gap-3">
-                      <div className="h-10 w-10 rounded-full bg-gradient-to-br from-[#ae2b2b] to-[#5c1212] text-white flex items-center justify-center font-bold text-sm shadow-md shadow-red-900/20 ring-2 ring-[#ae2b2b]/10 shrink-0">
-                        {initial}
-                      </div>
-                      <div className="flex flex-col min-w-0">
-                        <span className="text-sm font-bold text-gray-900 truncate">
-                          {displayName}
-                        </span>
-                        {!t.is_anonymous && t.city && (
-                          <span className="text-xs text-[#ae2b2b]/80 font-medium truncate">
-                            {t.city}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
+        <ProjectFeedbackSection
+          project={project}
+          testimonials={dbTestimonials}
+          defaultOpenForm={
+            new URLSearchParams(location.search).get("open") === "feedback" ||
+            new URLSearchParams(location.search).get("feedback") === "true" ||
+            location.pathname.includes("feedback")
+          }
+          onFeedbackAdded={(newFb) =>
+            setDbTestimonials((prev) => [newFb, ...prev])
+          }
+        />
       </div>
 
       {project.project_code === "PRJ-001" && (
@@ -1362,45 +1400,57 @@ export default function Project() {
               </button>
               <div className="mb-5 pr-10">
                 <span className="inline-flex items-center rounded-full bg-[#ae2b2b]/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-[#ae2b2b]">
-                  Project Feedback
+                  {project?.project_code === "PRJ-003" || project?.title?.toLowerCase().includes("jainific")
+                    ? "Jainific 3.0 Feedback"
+                    : "Project Feedback"}
                 </span>
                 <h3 className="mt-3 text-2xl font-bold text-gray-900">
-                  Share Feedback
+                  {project?.project_code === "PRJ-003" || project?.title?.toLowerCase().includes("jainific")
+                    ? "Share Feedback for Jainific 3.0"
+                    : "Share Feedback"}
                 </h3>
-                <p className="mt-1 text-sm leading-6 text-gray-500">
-                  Tell us what stood out and how we can make the experience
-                  better.
-                </p>
+                {(project?.project_code === "PRJ-003" || project?.title?.toLowerCase().includes("jainific")) ? (
+                  <div className="mt-2 text-xs bg-amber-50 border border-amber-200/60 p-2.5 rounded-xl text-amber-900 font-medium">
+                    📅 1st November 2026 | ⏰ 11 AM to 8 PM <br />
+                    📍 MKES Law College, N.K. College Campus, SV Road, Malad (West)
+                  </div>
+                ) : (
+                  <p className="mt-1 text-sm leading-6 text-gray-500">
+                    Tell us what stood out and how we can make the experience better.
+                  </p>
+                )}
               </div>
 
               <form onSubmit={handleFeedbackSubmit} className="space-y-4">
-                <div>
-                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">
-                    Select Shibir Session{" "}
-                    <span className="text-gray-400 font-normal lowercase">
-                      (optional)
-                    </span>
-                  </label>
-                  <select
-                    value={feedbackForm.session}
-                    onChange={(e) =>
-                      setFeedbackForm({
-                        ...feedbackForm,
-                        session: e.target.value,
-                      })
-                    }
-                    className="w-full p-3 border border-gray-200 rounded-xl bg-gray-50/50 focus:bg-white focus:ring-2 focus:ring-[#ae2b2b]/20 focus:border-[#ae2b2b] outline-none text-sm font-medium"
-                  >
-                    <option value="">
-                      -- All Sessions / General Feedback --
-                    </option>
-                    {SHIBIR_SESSIONS.map((sess) => (
-                      <option key={sess} value={sess}>
-                        {sess}
+                {!(project?.project_code === "PRJ-003" || project?.title?.toLowerCase().includes("jainific")) && (
+                  <div>
+                    <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">
+                      Select Shibir Session{" "}
+                      <span className="text-gray-400 font-normal lowercase">
+                        (optional)
+                      </span>
+                    </label>
+                    <select
+                      value={feedbackForm.session}
+                      onChange={(e) =>
+                        setFeedbackForm({
+                          ...feedbackForm,
+                          session: e.target.value,
+                        })
+                      }
+                      className="w-full p-3 border border-gray-200 rounded-xl bg-gray-50/50 focus:bg-white focus:ring-2 focus:ring-[#ae2b2b]/20 focus:border-[#ae2b2b] outline-none text-sm font-medium"
+                    >
+                      <option value="">
+                        -- All Sessions / General Feedback --
                       </option>
-                    ))}
-                  </select>
-                </div>
+                      {SHIBIR_SESSIONS.map((sess) => (
+                        <option key={sess} value={sess}>
+                          {sess}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
 
                 <div>
                   <div className="flex items-center justify-between gap-3 mb-2">
@@ -1462,7 +1512,8 @@ export default function Project() {
                     <input
                       type="text"
                       placeholder="Full Name"
-                      className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-[#ae2b2b]/20 outline-none"
+                      required
+                      className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-[#ae2b2b]/20 outline-none text-sm"
                       value={feedbackForm.name}
                       onChange={(e) =>
                         setFeedbackForm({
@@ -1471,23 +1522,11 @@ export default function Project() {
                         })
                       }
                     />
-                    <div className="grid grid-cols-2 gap-3">
-                      <input
-                        type="tel"
-                        placeholder="Mobile Number"
-                        className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-[#ae2b2b]/20 outline-none"
-                        value={feedbackForm.mobile}
-                        onChange={(e) =>
-                          setFeedbackForm({
-                            ...feedbackForm,
-                            mobile: e.target.value,
-                          })
-                        }
-                      />
+                    <div>
                       <input
                         type="number"
                         placeholder="Age"
-                        className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-[#ae2b2b]/20 outline-none"
+                        className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-[#ae2b2b]/20 outline-none text-sm"
                         value={feedbackForm.age}
                         onChange={(e) =>
                           setFeedbackForm({
@@ -1497,32 +1536,48 @@ export default function Project() {
                         }
                       />
                     </div>
-                    <div className="grid grid-cols-2 gap-3">
-                      <input
-                        type="email"
-                        placeholder="Email Address"
-                        className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-[#ae2b2b]/20 outline-none"
-                        value={feedbackForm.email}
-                        onChange={(e) =>
-                          setFeedbackForm({
-                            ...feedbackForm,
-                            email: e.target.value,
-                          })
-                        }
-                      />
-                      <input
-                        type="text"
-                        placeholder="City"
-                        className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-[#ae2b2b]/20 outline-none"
-                        value={feedbackForm.city}
-                        onChange={(e) =>
-                          setFeedbackForm({
-                            ...feedbackForm,
-                            city: e.target.value,
-                          })
-                        }
-                      />
-                    </div>
+                    {!(project?.project_code === "PRJ-003" || project?.title?.toLowerCase().includes("jainific")) && (
+                      <>
+                        <div className="grid grid-cols-2 gap-3">
+                          <input
+                            type="tel"
+                            placeholder="Mobile Number"
+                            className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-[#ae2b2b]/20 outline-none text-sm"
+                            value={feedbackForm.mobile}
+                            onChange={(e) =>
+                              setFeedbackForm({
+                                ...feedbackForm,
+                                mobile: e.target.value,
+                              })
+                            }
+                          />
+                          <input
+                            type="text"
+                            placeholder="City"
+                            className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-[#ae2b2b]/20 outline-none text-sm"
+                            value={feedbackForm.city}
+                            onChange={(e) =>
+                              setFeedbackForm({
+                                ...feedbackForm,
+                                city: e.target.value,
+                              })
+                            }
+                          />
+                        </div>
+                        <input
+                          type="email"
+                          placeholder="Email Address"
+                          className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-[#ae2b2b]/20 outline-none text-sm"
+                          value={feedbackForm.email}
+                          onChange={(e) =>
+                            setFeedbackForm({
+                              ...feedbackForm,
+                              email: e.target.value,
+                            })
+                          }
+                        />
+                      </>
+                    )}
                   </div>
                 )}
 

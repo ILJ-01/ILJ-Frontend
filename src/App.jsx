@@ -28,6 +28,8 @@ import ReflectAskQuestionPage from "./pages/ReflectAskQuestionPage";
 import ReconnectRegistrationPage from "./pages/ReconnectRegistrationPage";
 import AskQuestionPage from "./pages/AskQuestionPage";
 import SamarpanamPage from "./pages/SamarpanamPage";
+import SourceDetailPage from "./pages/SourceDetailPage";
+import SourcesIndexPage from "./pages/SourcesIndexPage";
 import "./styles/global.css";
 
 // Dashboard Imports
@@ -111,6 +113,25 @@ function App() {
             <Route path="/ask" element={<Navigate to="/ask-question" replace />} />
             <Route path="/samarpanam" element={<MainLayout><SamarpanamPage /></MainLayout>} />
             <Route path="/samarpanam-nomination" element={<Navigate to="/samarpanam" replace />} />
+            <Route path="/jainific" element={<Navigate to="/project/134f3fc8-8546-4bb3-b39a-e671bfcb0808" replace />} />
+            <Route path="/jainific-feedback" element={<Navigate to="/project/134f3fc8-8546-4bb3-b39a-e671bfcb0808?open=feedback" replace />} />
+            <Route path="/jainific/feedback" element={<Navigate to="/project/134f3fc8-8546-4bb3-b39a-e671bfcb0808?open=feedback" replace />} />
+
+            {/* Scriptural Source Pages (QR codes) */}
+            <Route path="/sources" element={<MainLayout><SourcesIndexPage /></MainLayout>} />
+            <Route path="/source" element={<Navigate to="/sources" replace />} />
+            <Route path="/source/:slug" element={<MainLayout><SourceDetailPage /></MainLayout>} />
+            <Route path="/sources/:slug" element={<MainLayout><SourceDetailPage /></MainLayout>} />
+            <Route path="/5qr/:slug" element={<MainLayout><SourceDetailPage /></MainLayout>} />
+            <Route path="/rebirth" element={<MainLayout><SourceDetailPage forcedSlug="rebirth" /></MainLayout>} />
+            <Route path="/tripadi" element={<MainLayout><SourceDetailPage forcedSlug="tripadi" /></MainLayout>} />
+            <Route path="/aura" element={<MainLayout><SourceDetailPage forcedSlug="aura-and-leshya" /></MainLayout>} />
+            <Route path="/leshya" element={<MainLayout><SourceDetailPage forcedSlug="aura-and-leshya" /></MainLayout>} />
+            <Route path="/aura-and-leshya" element={<MainLayout><SourceDetailPage forcedSlug="aura-and-leshya" /></MainLayout>} />
+            <Route path="/psychology" element={<MainLayout><SourceDetailPage forcedSlug="psychology-of-emotions" /></MainLayout>} />
+            <Route path="/psychology-of-emotions" element={<MainLayout><SourceDetailPage forcedSlug="psychology-of-emotions" /></MainLayout>} />
+            <Route path="/evolution" element={<MainLayout><SourceDetailPage forcedSlug="theory-of-evolution" /></MainLayout>} />
+            <Route path="/theory-of-evolution" element={<MainLayout><SourceDetailPage forcedSlug="theory-of-evolution" /></MainLayout>} />
 
             {/* Admin Routes */}
             <Route path="/admin" element={<AdminLogin />} />
