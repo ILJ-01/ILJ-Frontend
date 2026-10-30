@@ -15,6 +15,8 @@ import {
   Heart,
   Quote,
   ArrowRight,
+  Share2,
+  Check,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "../lib/supabase";
@@ -35,6 +37,7 @@ export default function ProjectFeedbackSection({
   testimonials = [],
   onFeedbackAdded,
   defaultOpenForm = false,
+  openFormRequest = 0,
 }) {
   const isJainific =
     project?.project_code === "PRJ-003" ||
@@ -53,6 +56,7 @@ export default function ProjectFeedbackSection({
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [filterRating, setFilterRating] = useState("all");
   const [formStep, setFormStep] = useState(1); // 1 = rating, 2 = details
+  const [sharedReviewId, setSharedReviewId] = useState(null);
   const formRef = useRef(null);
 
   const activeRating = hoverRating || rating;
@@ -72,7 +76,40 @@ export default function ProjectFeedbackSection({
     return Number(t.rating) === Number(filterRating);
   });
 
+  const shareReview = async (review, reviewId, reviewText, displayName) => {
+    const shareUrl = `${window.location.origin}${window.location.pathname}#feedback-section`;
+    const message = `“${reviewText}” — ${displayName}, ${Number(review.rating) || 5}/5\n${shareUrl}`;
+
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: `${project?.title || "Project"} feedback`,
+          text: message,
+          url: shareUrl,
+        });
+      } else {
+        await navigator.clipboard.writeText(message);
+        setSharedReviewId(reviewId);
+        window.setTimeout(() => setSharedReviewId(null), 2200);
+      }
+    } catch (error) {
+      if (error?.name !== "AbortError") {
+        try {
+          await navigator.clipboard.writeText(message);
+          setSharedReviewId(reviewId);
+          window.setTimeout(() => setSharedReviewId(null), 2200);
+        } catch (clipboardError) {
+          console.error("Could not share feedback:", clipboardError);
+        }
+      }
+    }
+  };
+
   // Scroll to form when opened
+  useEffect(() => {
+    if (defaultOpenForm || openFormRequest > 0) setIsFormOpen(true);
+  }, [defaultOpenForm, openFormRequest]);
+
   useEffect(() => {
     if (isFormOpen && formRef.current) {
       formRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -151,36 +188,33 @@ export default function ProjectFeedbackSection({
   return (
     <section
       id="feedback-section"
-      className="w-full px-2 sm:px-6 md:px-12 mt-14 scroll-mt-24"
+      className="mx-auto mt-16 w-full max-w-6xl px-4 scroll-mt-24 sm:px-6 lg:px-8"
     >
       {/* ── Jainific 3.0 Event Banner ── */}
       {isJainific && (
-        <div className="relative overflow-hidden rounded-[2rem] mb-12">
+        <div className="relative mb-10 overflow-hidden rounded-[1.75rem] border border-[#eadbd3] bg-[#f4ece5]">
           {/* Background */}
-          <div className="absolute inset-0 bg-gradient-to-br from-[#1a0505] via-[#2d0a0a] to-[#0d0404]" />
-          <div className="absolute inset-0 opacity-[0.04]" style={{backgroundImage: 'url("data:image/svg+xml,%3Csvg width=\'40\' height=\'40\' viewBox=\'0 0 40 40\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cpath d=\'M20 20h20v20H20z\' fill=\'%23ffffff\' fill-opacity=\'0.05\'/%3E%3C/svg%3E")'}} />
-          <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[#ae2b2b]/15 rounded-full blur-[120px] -translate-y-1/2 translate-x-1/3" />
-          <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-amber-500/10 rounded-full blur-[100px] translate-y-1/2 -translate-x-1/4" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(174,43,43,0.12),transparent_48%)]" />
+          <div className="absolute -right-10 -top-20 h-64 w-64 rounded-full border border-[#ae2b2b]/10" />
+          <div className="absolute -right-2 -top-12 h-48 w-48 rounded-full border border-[#ae2b2b]/10" />
 
-          <div className="relative z-10 p-8 sm:p-10 lg:p-12">
+          <div className="relative z-10 p-6 sm:p-9 lg:p-10">
             <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8">
-              <div className="space-y-5 flex-1">
-                <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/[0.07] backdrop-blur-md border border-white/[0.08] text-amber-300/90 text-[11px] font-semibold uppercase tracking-[0.15em]">
-                  <Sparkles className="w-3 h-3" />
+              <div className="flex-1 space-y-4">
+                <div className="inline-flex items-center gap-2 rounded-full border border-[#ae2b2b]/10 bg-white/70 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.16em] text-[#8c2925]">
+                  <Sparkles className="h-3 w-3" />
                   <span>Exhibition 3.0 — Malad Edition</span>
                 </div>
 
-                <h3 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight leading-[1.15]" style={{textWrap: 'balance'}}>
+                <h3 className="text-3xl font-bold leading-tight tracking-tight text-[#271b18] sm:text-4xl" style={{textWrap: 'balance'}}>
                   Jainific 3.0
-                  <span className="block text-lg sm:text-xl font-medium text-white/50 mt-1 tracking-normal">
+                  <span className="mt-1 block text-base font-medium tracking-normal text-[#6d5b54] sm:text-lg">
                     Malad — 1st November 2026
                   </span>
                 </h3>
 
-                <p className="text-white/45 text-sm sm:text-[15px] max-w-xl leading-relaxed">
-                  Experience the convergence of timeless Jain wisdom and modern
-                  science through interactive exhibits, models, and scriptural
-                  evidences.
+                <p className="max-w-xl text-sm leading-relaxed text-[#665650] sm:text-[15px]">
+                  Tell us what stayed with you from the exhibits, experiments, and scriptural stories.
                 </p>
 
                 <div className="flex flex-wrap gap-3 pt-1">
@@ -191,9 +225,9 @@ export default function ProjectFeedbackSection({
                   ].map(({ icon: Icon, text }) => (
                     <div
                       key={text}
-                      className="flex items-center gap-2 text-[13px] text-white/60 bg-white/[0.04] border border-white/[0.06] px-3.5 py-2 rounded-xl"
+                      className="flex items-center gap-2 rounded-xl border border-[#e9dcd4] bg-white/65 px-3.5 py-2 text-[12px] text-[#665650]"
                     >
-                      <Icon className="w-3.5 h-3.5 text-amber-400/70" />
+                      <Icon className="h-3.5 w-3.5 text-[#ae2b2b]" />
                       <span>{text}</span>
                     </div>
                   ))}
@@ -203,17 +237,17 @@ export default function ProjectFeedbackSection({
               <div className="flex flex-col gap-3 shrink-0 w-full sm:w-auto">
                 <button
                   onClick={() => setIsFormOpen((prev) => !prev)}
-                  className="group relative overflow-hidden bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-gray-950 font-bold px-7 py-3.5 rounded-2xl shadow-lg shadow-amber-500/20 hover:shadow-xl hover:shadow-amber-400/30 transition-all duration-300 flex items-center justify-center gap-2.5 text-sm"
+                  className="group inline-flex items-center justify-center gap-2.5 rounded-xl bg-[#ae2b2b] px-6 py-3.5 text-sm font-bold text-white shadow-sm transition hover:bg-[#8f1f1f] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae2b2b]/40 focus-visible:ring-offset-2"
                 >
                   <MessageSquare className="w-4 h-4" />
                   {isFormOpen ? "Hide Form" : "Share Feedback"}
-                  <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
+                  <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
                 </button>
                 <a
                   href="https://maps.google.com/?q=MKES+Law+College+SV+Road+Malad+West"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-white/[0.06] hover:bg-white/[0.10] text-white/70 hover:text-white/90 font-medium text-xs border border-white/[0.08] transition-all duration-300 text-center"
+                  className="inline-flex items-center justify-center gap-2 rounded-xl border border-[#d9c9bf] bg-white/60 px-5 py-2.5 text-center text-xs font-semibold text-[#6d5b54] transition hover:bg-white hover:text-[#ae2b2b]"
                 >
                   <MapPin className="w-3.5 h-3.5" /> Open in Google Maps
                 </a>
@@ -584,8 +618,8 @@ export default function ProjectFeedbackSection({
 
       {/* ── Testimonials Grid ── */}
       {filteredTestimonials.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-          {filteredTestimonials.map((t) => {
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+          {filteredTestimonials.map((t, index) => {
             const displayName = t.is_anonymous
               ? "Anonymous Visitor"
               : t.name || "Community Member";
@@ -600,8 +634,8 @@ export default function ProjectFeedbackSection({
 
             return (
               <div
-                key={t.id || Math.random()}
-                className="group relative rounded-2xl bg-white border border-gray-100 p-6 hover:border-gray-200 hover:shadow-[0_8px_32px_-8px_rgba(0,0,0,0.06)] transition-all duration-300 flex flex-col justify-between"
+                key={t.id || index}
+                className="group relative flex flex-col justify-between rounded-2xl border border-[#eee8e4] bg-white p-5 transition duration-200 hover:border-[#d9c5ba] hover:shadow-[0_12px_36px_-24px_rgba(80,42,29,0.35)] sm:p-6"
               >
                 {/* Stars Row */}
                 <div>
@@ -639,7 +673,7 @@ export default function ProjectFeedbackSection({
                 </div>
 
                 {/* Author Footer */}
-                <div className="mt-5 pt-4 border-t border-gray-50 flex items-center justify-between gap-3">
+                <div className="mt-5 flex items-center justify-between gap-3 border-t border-[#f1ece8] pt-4">
                   <div className="flex items-center gap-3 min-w-0">
                     <div className="h-9 w-9 rounded-full bg-gradient-to-br from-[#ae2b2b] to-[#6b1515] text-white flex items-center justify-center font-bold text-xs shadow-sm shrink-0">
                       {initial}
@@ -655,14 +689,28 @@ export default function ProjectFeedbackSection({
                       )}
                     </div>
                   </div>
-                  {t.created_at && (
-                    <span className="text-[10px] text-gray-300 shrink-0">
-                      {new Date(t.created_at).toLocaleDateString("en-IN", {
-                        day: "numeric",
-                        month: "short",
-                      })}
-                    </span>
-                  )}
+                  <div className="flex shrink-0 items-center gap-3">
+                    {t.created_at && (
+                      <span className="text-[11px] text-gray-400">
+                        {new Date(t.created_at).toLocaleDateString("en-IN", {
+                          day: "numeric",
+                          month: "short",
+                        })}
+                      </span>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => shareReview(t, t.id || index, commentBody, displayName)}
+                      aria-label={`Share feedback from ${displayName}`}
+                      className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-[11px] font-semibold text-[#8a6258] transition hover:bg-[#f8f1ed] hover:text-[#ae2b2b] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae2b2b]/30"
+                    >
+                      {sharedReviewId === (t.id || index) ? (
+                        <><Check className="h-3.5 w-3.5" /> Copied</>
+                      ) : (
+                        <><Share2 className="h-3.5 w-3.5" /> Share</>
+                      )}
+                    </button>
+                  </div>
                 </div>
               </div>
             );

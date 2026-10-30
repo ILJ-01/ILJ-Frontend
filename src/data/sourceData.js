@@ -1,5 +1,5 @@
 /**
- * Data definitions for the 5 Scriptural Source QR pages
+ * Data definitions for the 10 Scriptural Source QR pages
  */
 
 export const SOURCES = [
@@ -193,7 +193,10 @@ export const SOURCES = [
     qrCodeUrl: "/qr/qr-theory-of-karma.png",
     qrCardUrl: "/qr/card-theory-of-karma.png",
     shortSummary: "Explains the law of karma, actions and their consequences across lifetimes as described in Tatvarth Sutra.",
-    images: [],
+    images: [
+      { url: "/sources/theory-of-karma/page-1.jpeg", label: "Shree Tatvarth Sutra — Adhyay 8 (Sheet 1)", pageNumber: 1, caption: "Original Sutra text on the binding and shedding of Karma particles." },
+      { url: "/sources/theory-of-karma/page-2.jpeg", label: "Shree Tatvarth Sutra — Adhyay 8 (Sheet 2)", pageNumber: 2, caption: "Classification of eight types of Karma and their effects on the soul." }
+    ],
     highlights: [
       "Karmic cause and effect across rebirth cycles",
       "Classification of actions (good, neutral, bad)"
@@ -213,7 +216,14 @@ export const SOURCES = [
     qrCodeUrl: "/qr/qr-aparigraha.png",
     qrCardUrl: "/qr/card-aparigraha.png",
     shortSummary: "Discusses the principle of non‑possessiveness and detachment from material belongings.",
-    images: [],
+    images: [
+      {
+        url: "/sources/aparigraha/page-1.jpeg",
+        label: "Shree Uttaradhyayan Sutra — Adhyay 9",
+        pageNumber: 1,
+        caption: "Original source page on non-possessiveness and freedom from attachment."
+      }
+    ],
     highlights: [
       "Freedom from greed and possessiveness",
       "Path to spiritual purification"
@@ -233,7 +243,14 @@ export const SOURCES = [
     qrCodeUrl: "/qr/qr-anekantvad.png",
     qrCardUrl: "/qr/card-anekantvad.png",
     shortSummary: "Presents the doctrine of many‑sided reality and tolerance of differing viewpoints.",
-    images: [],
+    images: [
+      {
+        url: "/sources/anekantvad/page-1.jpeg",
+        label: "Shree Tatvarth Sutra — Adhyay 5",
+        pageNumber: 1,
+        caption: "Original source page on the many-sided nature of reality."
+      }
+    ],
     highlights: [
       "Sevenfold predication (Syadvada)",
       "Harmony of diverse perspectives"
@@ -253,7 +270,14 @@ export const SOURCES = [
     qrCodeUrl: "/qr/qr-sustainability.png",
     qrCardUrl: "/qr/card-sustainability.png",
     shortSummary: "Connects Jain principles of non‑violence and austerity to modern sustainability practices.",
-    images: [],
+    images: [
+      { url: "/sources/sustainability/page-1.jpeg", label: "Sustainability — Page 1", pageNumber: 1, caption: "Source material on Jain principles and sustainability." },
+      { url: "/sources/sustainability/page-2.jpeg", label: "Sustainability — Page 2", pageNumber: 2, caption: "Source material on Jain principles and sustainability." },
+      { url: "/sources/sustainability/page-3.jpeg", label: "Sustainability — Page 3", pageNumber: 3, caption: "Source material on Jain principles and sustainability." },
+      { url: "/sources/sustainability/page-4.jpeg", label: "Sustainability — Page 4", pageNumber: 4, caption: "Source material on Jain principles and sustainability." },
+      { url: "/sources/sustainability/page-5.jpeg", label: "Sustainability — Page 5", pageNumber: 5, caption: "Source material on Jain principles and sustainability." },
+      { url: "/sources/sustainability/page-6.jpeg", label: "Sustainability — Page 6", pageNumber: 6, caption: "Source material on Jain principles and sustainability." }
+    ],
     highlights: [
       "Ahimsa in ecological context",
       "Minimalist living as sustainable lifestyle"
@@ -273,7 +297,14 @@ export const SOURCES = [
     qrCodeUrl: "/qr/qr-food-science.png",
     qrCardUrl: "/qr/card-food-science.png",
     shortSummary: "Explores dietary guidelines, fasting, and nutritional wisdom from Jain teachings.",
-    images: [],
+    images: [
+      { url: "/sources/food-science/page-1.jpeg", label: "Food Science — Page 1", pageNumber: 1, caption: "Source material on food, diet, and health in Jain philosophy." },
+      { url: "/sources/food-science/page-2.jpeg", label: "Food Science — Page 2", pageNumber: 2, caption: "Source material on food, diet, and health in Jain philosophy." },
+      { url: "/sources/food-science/page-3.jpeg", label: "Food Science — Page 3", pageNumber: 3, caption: "Source material on food, diet, and health in Jain philosophy." },
+      { url: "/sources/food-science/page-4.jpeg", label: "Food Science — Page 4", pageNumber: 4, caption: "Source material on food, diet, and health in Jain philosophy." },
+      { url: "/sources/food-science/page-5.jpeg", label: "Food Science — Page 5", pageNumber: 5, caption: "Source material on food, diet, and health in Jain philosophy." },
+      { url: "/sources/food-science/page-6.jpeg", label: "Food Science — Page 6", pageNumber: 6, caption: "Source material on food, diet, and health in Jain philosophy." }
+    ],
     highlights: [
       "Satvic diet principles",
       "Fasting as detox and spiritual practice"

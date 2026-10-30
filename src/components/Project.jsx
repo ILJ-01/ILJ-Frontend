@@ -99,6 +99,7 @@ export default function Project() {
   const [isInquiryOpen, setIsInquiryOpen] = useState(false);
   const [isQnaOpen, setIsQnaOpen] = useState(false);
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
+  const [feedbackOpenRequest, setFeedbackOpenRequest] = useState(0);
   const [submitting, setSubmitting] = useState(false);
   const [inquiryForm, setInquiryForm] = useState({
     name: "",
@@ -904,14 +905,7 @@ export default function Project() {
                   {project.project_code === "PRJ-003" || project.title?.toLowerCase().includes("jainific") ? (
                     <>
                       <Button
-                        onClick={() => {
-                          const fbElem = document.getElementById("feedback-section");
-                          if (fbElem) {
-                            fbElem.scrollIntoView({ behavior: "smooth" });
-                          } else {
-                            setIsFeedbackOpen(true);
-                          }
-                        }}
+                        onClick={() => setFeedbackOpenRequest((request) => request + 1)}
                         className="bg-[#ae2b2b] hover:bg-[#8f1f1f] text-white px-6 py-2.5 rounded-xl font-bold border-0 cursor-pointer shadow-md hover:shadow-lg transition-all"
                       >
                         <MessageSquare className="w-4 h-4 mr-1.5" /> Share Feedback
@@ -921,7 +915,7 @@ export default function Project() {
                         onClick={() => navigate("/sources")}
                         className="border-[#ae2b2b]/30 text-[#ae2b2b] hover:bg-[#ae2b2b]/10 px-5 py-2.5 rounded-xl font-medium cursor-pointer"
                       >
-                        5 Scriptural Exhibits →
+                        10 Scriptural Exhibits →
                       </Button>
                     </>
                   ) : (
@@ -1138,6 +1132,7 @@ export default function Project() {
         <ProjectFeedbackSection
           project={project}
           testimonials={dbTestimonials}
+          openFormRequest={feedbackOpenRequest}
           defaultOpenForm={
             new URLSearchParams(location.search).get("open") === "feedback" ||
             new URLSearchParams(location.search).get("feedback") === "true" ||

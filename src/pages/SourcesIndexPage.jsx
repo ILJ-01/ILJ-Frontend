@@ -46,15 +46,21 @@ export default function SourcesIndexPage() {
             >
               {/* Card Thumbnail Area */}
               <div className="relative h-56 bg-gray-900/5 overflow-hidden flex items-center justify-center p-3 border-b border-gray-100">
-                <img
-                  src={source.images[0].url}
-                  alt={source.title}
-                  className="h-full w-auto object-contain rounded-lg shadow-sm group-hover:scale-105 transition-transform duration-300"
-                />
+                {source.images && source.images.length > 0 ? (
+                  <img
+                    src={source.images[0].url}
+                    alt={source.title}
+                    className="h-full w-auto object-contain rounded-lg shadow-sm group-hover:scale-105 transition-transform duration-300"
+                  />
+                ) : (
+                  <div className="h-full w-full flex items-center justify-center text-[#ae2b2b]/30">
+                    <BookOpen className="h-16 w-16" />
+                  </div>
+                )}
                 <div className="absolute top-3 left-3 bg-[#ae2b2b] text-white text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full shadow-sm">
                   Exhibit 0{index + 1}
                 </div>
-                {source.images.length > 1 && (
+                {source.images && source.images.length > 1 && (
                   <div className="absolute top-3 right-3 bg-black/75 backdrop-blur-xs text-white text-[10px] font-bold px-2 py-0.5 rounded-md flex items-center gap-1">
                     <Layers className="h-3 w-3" />
                     {source.images.length} Pages
