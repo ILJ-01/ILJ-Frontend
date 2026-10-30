@@ -132,6 +132,13 @@ function App() {
             <Route path="/psychology-of-emotions" element={<MainLayout><SourceDetailPage forcedSlug="psychology-of-emotions" /></MainLayout>} />
             <Route path="/evolution" element={<MainLayout><SourceDetailPage forcedSlug="theory-of-evolution" /></MainLayout>} />
             <Route path="/theory-of-evolution" element={<MainLayout><SourceDetailPage forcedSlug="theory-of-evolution" /></MainLayout>} />
+            {/* New source pages */}
+            <Route path="/karma" element={<MainLayout><SourceDetailPage forcedSlug="theory-of-karma" /></MainLayout>} />
+            <Route path="/theory-of-karma" element={<MainLayout><SourceDetailPage forcedSlug="theory-of-karma" /></MainLayout>} />
+            <Route path="/aparigraha" element={<MainLayout><SourceDetailPage forcedSlug="aparigraha" /></MainLayout>} />
+            <Route path="/anekantvad" element={<MainLayout><SourceDetailPage forcedSlug="anekantvad" /></MainLayout>} />
+            <Route path="/sustainability" element={<MainLayout><SourceDetailPage forcedSlug="sustainability" /></MainLayout>} />
+            <Route path="/food-science" element={<MainLayout><SourceDetailPage forcedSlug="food-science" /></MainLayout>} />
 
             {/* Admin Routes */}
             <Route path="/admin" element={<AdminLogin />} />

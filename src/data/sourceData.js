@@ -179,6 +179,107 @@ export const SOURCES = [
     ],
     tags: ["Evolution", "Tatvarth Sutra", "Biology", "Consciousness", "Sensory Evolution"]
   }
+  ,
+  {
+    id: "theory-of-karma",
+    slug: "theory-of-karma",
+    aliases: ["karma", "theory-of-karma"],
+    title: "Source for Theory of Karma",
+    hindiTitle: "कार्मा सिद्धान्त का आगम प्रमाण",
+    scriptureEnglish: "Shree Tatvarth Sutra, 8th Adhyay",
+    scriptureHindi: "श्री तत्त्वार्थ सूत्र, आठवां अध्याय",
+    author: "Acharya Umaswatiji (उमास्वाति जी)",
+    topic: "Karma Theory",
+    qrCodeUrl: "/qr/qr-theory-of-karma.png",
+    qrCardUrl: "/qr/card-theory-of-karma.png",
+    shortSummary: "Explains the law of karma, actions and their consequences across lifetimes as described in Tatvarth Sutra.",
+    images: [],
+    highlights: [
+      "Karmic cause and effect across rebirth cycles",
+      "Classification of actions (good, neutral, bad)"
+    ],
+    tags: ["Karma", "Tatvarth Sutra", "Spiritual Law"]
+  },
+  {
+    id: "aparigraha",
+    slug: "aparigraha",
+    aliases: ["non-attachment", "aparigraha"],
+    title: "Source for Aparigraha",
+    hindiTitle: "अपरिग्रह का आगम प्रमाण",
+    scriptureEnglish: "Shree Uttaradhyayan Sutra, 9th Adhyay",
+    scriptureHindi: "श्री उत्तराध्ययन सूत्र, ९ अध्याय",
+    author: "Bhagwan Mahavira (भगवान महावीर)",
+    topic: "Non‑attachment",
+    qrCodeUrl: "/qr/qr-aparigraha.png",
+    qrCardUrl: "/qr/card-aparigraha.png",
+    shortSummary: "Discusses the principle of non‑possessiveness and detachment from material belongings.",
+    images: [],
+    highlights: [
+      "Freedom from greed and possessiveness",
+      "Path to spiritual purification"
+    ],
+    tags: ["Aparigraha", "Uttaradhyayan Sutra", "Non‑attachment"]
+  },
+  {
+    id: "anekantvad",
+    slug: "anekantvad",
+    aliases: ["anekantvad", "multiple viewpoints"],
+    title: "Source for Anekantvad",
+    hindiTitle: "अनेकान्तवाद का आगम प्रमाण",
+    scriptureEnglish: "Shree Tatvarth Sutra, 5th Adhyay",
+    scriptureHindi: "श्री तत्त्वार्थ सूत्र, पांचवां अध्याय",
+    author: "Acharya Umaswatiji (उमास्वाति जी)",
+    topic: "Multiplicity of truth",
+    qrCodeUrl: "/qr/qr-anekantvad.png",
+    qrCardUrl: "/qr/card-anekantvad.png",
+    shortSummary: "Presents the doctrine of many‑sided reality and tolerance of differing viewpoints.",
+    images: [],
+    highlights: [
+      "Sevenfold predication (Syadvada)",
+      "Harmony of diverse perspectives"
+    ],
+    tags: ["Anekantvad", "Tatvarth Sutra", "Philosophy"]
+  },
+  {
+    id: "sustainability",
+    slug: "sustainability",
+    aliases: ["sustainability"],
+    title: "Source for Sustainability",
+    hindiTitle: "स्थिरता का आगम प्रमाण",
+    scriptureEnglish: "",
+    scriptureHindi: "",
+    author: "",
+    topic: "Environmental & Spiritual Sustainability",
+    qrCodeUrl: "/qr/qr-sustainability.png",
+    qrCardUrl: "/qr/card-sustainability.png",
+    shortSummary: "Connects Jain principles of non‑violence and austerity to modern sustainability practices.",
+    images: [],
+    highlights: [
+      "Ahimsa in ecological context",
+      "Minimalist living as sustainable lifestyle"
+    ],
+    tags: ["Sustainability", "Jainism", "Environment"]
+  },
+  {
+    id: "food-science",
+    slug: "food-science",
+    aliases: ["food-science", "food"],
+    title: "Source for Food Science",
+    hindiTitle: "भोज्य विज्ञान का आगम प्रमाण",
+    scriptureEnglish: "",
+    scriptureHindi: "",
+    author: "",
+    topic: "Food, diet, and health in Jain philosophy",
+    qrCodeUrl: "/qr/qr-food-science.png",
+    qrCardUrl: "/qr/card-food-science.png",
+    shortSummary: "Explores dietary guidelines, fasting, and nutritional wisdom from Jain teachings.",
+    images: [],
+    highlights: [
+      "Satvic diet principles",
+      "Fasting as detox and spiritual practice"
+    ],
+    tags: ["Food Science", "Jain Diet", "Health"]
+  }
 ];
 
 export function getSourceBySlug(slug) {
